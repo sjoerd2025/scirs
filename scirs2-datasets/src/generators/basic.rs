@@ -70,7 +70,7 @@ pub fn make_classification(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[[i, j]] = scale * rng.gen_range(-1.0f64..1.0f64);
+            centroids[[i, j]] = scale * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
@@ -284,18 +284,18 @@ pub fn make_time_series(
 
     for feature in 0..n_features {
         let trend_coef = if trend {
-            rng.gen_range(0.01f64..0.1f64)
+            rng.random_range(0.01f64..0.1f64)
         } else {
             0.0
         };
         let seasonality_period = rng.sample(Uniform::new(10, 50).expect("Operation failed")) as f64;
         let seasonality_amplitude = if seasonality {
-            rng.gen_range(1.0f64..5.0f64)
+            rng.random_range(1.0f64..5.0f64)
         } else {
             0.0
         };
 
-        let base_value = rng.gen_range(-10.0f64..10.0f64);
+        let base_value = rng.random_range(-10.0f64..10.0f64);
 
         for i in 0..n_samples {
             let t = i as f64;
@@ -392,7 +392,7 @@ pub fn make_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..center_box);
         }
     }
 
@@ -770,7 +770,7 @@ pub fn make_anisotropic_blobs(
 
     for i in 0..centers {
         for j in 0..n_features {
-            cluster_centers[[i, j]] = rng.gen_range(-center_box..center_box);
+            cluster_centers[[i, j]] = rng.random_range(-center_box..center_box);
         }
     }
 
@@ -793,7 +793,7 @@ pub fn make_anisotropic_blobs(
         };
 
         // Generate a random rotation angle for this cluster
-        let rotation_angle = rng.gen_range(0.0..(2.0 * PI));
+        let rotation_angle = rng.random_range(0.0..(2.0 * PI));
 
         for _ in 0..n_samples_center {
             // Generate point with anisotropic distribution (elongated along first axis)
@@ -908,7 +908,7 @@ pub fn make_hierarchical_clusters(
 
     for i in 0..n_main_clusters {
         for j in 0..n_features {
-            main_centers[[i, j]] = rng.gen_range(-center_box..center_box);
+            main_centers[[i, j]] = rng.random_range(-center_box..center_box);
         }
     }
 

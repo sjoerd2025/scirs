@@ -80,7 +80,7 @@
 //!
 //! // Reproducible random generation
 //! let mut rng = ChaCha8Rng::seed_from_u64(42);
-//! let sample = rng.gen::<f64>();
+//! let sample = rng.random::<f64>();
 //!
 //! // Sample from distributions
 //! let normal = Normal::new(0.0, 1.0).expect("Operation failed");

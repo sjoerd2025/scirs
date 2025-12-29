@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::all)]
 #![allow(dead_code)]
 #![allow(unreachable_patterns)]
@@ -37,7 +36,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-series = "0.1.0-rc.4"
+//! scirs2-series = "0.1.0"
 //! ```
 //!
 //! ```rust,no_run
@@ -51,7 +50,7 @@
 //! // result.trend, result.seasonal, result.residual
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //! - Change point detection
 //!   - PELT (Pruned Exact Linear Time) algorithm
 //!   - Binary segmentation

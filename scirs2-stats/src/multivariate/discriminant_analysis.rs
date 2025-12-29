@@ -361,8 +361,6 @@ impl LinearDiscriminantAnalysis {
 
     /// SVD-based solver (more numerically stable)
     fn solve_svd(&self, sw: &Array2<f64>, sb: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>)> {
-        use scirs2_core::ndarray::ndarray_linalg::SVD;
-
         // Cholesky decomposition of Sw = L * L^T
         let l = scirs2_linalg::cholesky(&sw.view(), None).map_err(|e| {
             StatsError::ComputationError(format!(
@@ -378,13 +376,9 @@ impl LinearDiscriminantAnalysis {
 
         let m = l_inv.dot(sb).dot(&l_inv.t());
 
-        // SVD of M
-        let (u, s, vt) = m
-            .svd(true, false)
+        // SVD of M using scirs2_linalg
+        let (u, s, _vt) = scirs2_linalg::svd(&m.view(), true, None)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
-
-        let u = u.expect("Operation failed");
-        let s = s;
 
         // Transform back: scalings = L^{-T} * U
         let scalings = l_inv.t().dot(&u);
@@ -427,8 +421,6 @@ impl LinearDiscriminantAnalysis {
         sw: &Array2<f64>,
         sb: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
-        use scirs2_core::ndarray::ndarray_linalg::Eigh;
-
         // Compute Sw^{-1} * Sb
         let sw_inv = scirs2_linalg::inv(&sw.view(), None).map_err(|e| {
             StatsError::ComputationError(format!(
@@ -439,10 +431,10 @@ impl LinearDiscriminantAnalysis {
 
         let a = sw_inv.dot(sb);
 
-        // Eigenvalue decomposition
-        let (eigenvalues, eigenvectors) = a
-            .eigh(scirs2_core::ndarray::ndarray_linalg::UPLO::Upper)
-            .map_err(|e| {
+        // Eigenvalue decomposition using scirs2_linalg
+        // Note: Using eigh_f64_lapack for symmetric eigenvalue decomposition
+        let (eigenvalues, eigenvectors) =
+            scirs2_linalg::eigh_f64_lapack(&a.view()).map_err(|e| {
                 StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e))
             })?;
 

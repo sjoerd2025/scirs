@@ -133,12 +133,12 @@ impl SecureRandom {
 
     /// Generate a cryptographically secure random boolean
     pub fn random_bool(&mut self) -> bool {
-        self.rng.rng.gen_bool(0.5)
+        self.rng.rng.random_bool(0.5)
     }
 
     /// Generate a cryptographically secure random boolean with given probability
     pub fn random_bool_with_probability(&mut self, p: f64) -> bool {
-        self.rng.rng.gen_bool(p)
+        self.rng.rng.random_bool(p)
     }
 
     /// Generate cryptographically secure random alphanumeric string

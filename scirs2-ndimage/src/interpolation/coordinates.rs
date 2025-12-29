@@ -474,7 +474,9 @@ where
     )?;
 
     // Convert result to 1D array
-    Ok(result.into_shape((n_points,)).expect("Operation failed"))
+    Ok(result
+        .into_shape_with_order((n_points,))
+        .expect("Operation failed"))
 }
 
 #[cfg(test)]

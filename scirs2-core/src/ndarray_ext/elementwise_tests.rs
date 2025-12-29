@@ -1,6 +1,4 @@
 use super::*;
-
-use super::*;
 use ::ndarray::array;
 
 #[test]

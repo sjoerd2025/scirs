@@ -230,9 +230,9 @@ impl RLParameterOptimizer {
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
         let mut rng = thread_rng();
 
-        if rng.gen::<f64>() < self.learning_params.epsilon {
+        if rng.random::<f64>() < self.learning_params.epsilon {
             // Explore: random action
-            let idx = rng.gen_range(0..self.action_space.len());
+            let idx = rng.random_range(0..self.action_space.len());
             self.action_space[idx].clone()
         } else {
             // Exploit: best known action
@@ -339,7 +339,7 @@ impl RLParameterOptimizer {
 
         let mut rng = thread_rng();
         let sample_indices: Vec<usize> = (0..batchsize)
-            .map(|_| rng.gen_range(0..self.experience_buffer.len()))
+            .map(|_| rng.random_range(0..self.experience_buffer.len()))
             .collect();
 
         for &idx in &sample_indices {

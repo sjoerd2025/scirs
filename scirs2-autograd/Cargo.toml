@@ -40,11 +40,8 @@ toml = { workspace = true }
 
 [features]
 default = []
-blas = ["scirs2-core/linalg"]
-openblas = ["scirs2-core/openblas"]
-netlib = ["scirs2-core/netlib"]
-# intel-mkl feature removed from scirs2-core to avoid conflicts
-# mkl = ["intel-mkl"]  # Legacy feature compatibility removed
+blas = ["scirs2-core/linalg"]  # BLAS/LAPACK via OxiBLAS (pure Rust)
+# NOTE: OpenBLAS/Netlib features removed - using pure Rust OxiBLAS for all platforms
 simd = ["scirs2-core/simd"]
 parallel = [] # Parallel processing support
 

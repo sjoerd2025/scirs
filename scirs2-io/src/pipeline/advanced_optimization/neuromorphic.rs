@@ -112,7 +112,7 @@ impl NeuromorphicOptimizer {
             // Encode each variable as a spike train
             for var in &problem.variables {
                 let spike_times: Vec<f64> = (0..20)
-                    .map(|_| rng.gen::<f64>() * 100.0 * var.value)
+                    .map(|_| rng.random::<f64>() * 100.0 * var.value)
                     .collect();
 
                 spike_trains.push(SpikeTrain {
@@ -187,11 +187,11 @@ impl SpikingNeuralNetwork {
         let mut rng = scirs2_core::random::thread_rng();
 
         for i in 0..num_neurons {
-            let num_connections = rng.gen_range(5..20);
+            let num_connections = rng.random_range(5..20);
             for _ in 0..num_connections {
-                let target = rng.gen_range(0..num_neurons);
+                let target = rng.random_range(0..num_neurons);
                 if target != i {
-                    connections[i].push(SynapticConnection::new(i, target, rng.gen::<f64>()));
+                    connections[i].push(SynapticConnection::new(i, target, rng.random::<f64>()));
                 }
             }
         }
@@ -375,7 +375,7 @@ impl SynapticConnection {
             source,
             target,
             weight,
-            delay: scirs2_core::random::thread_rng().gen_range(0.5..2.0), // Random delay
+            delay: scirs2_core::random::thread_rng().random_range(0.5..2.0), // Random delay
         }
     }
 }
@@ -593,7 +593,7 @@ impl NeuromorphicSolution {
         let variables = (0..dimensions)
             .map(|id| OptimizationVariable {
                 id,
-                value: rng.gen(),
+                value: rng.random(),
                 bounds: (0.0, 1.0),
             })
             .collect();

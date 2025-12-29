@@ -41,7 +41,7 @@ scirs2-metrics = { workspace = true, optional = true, default-features = true }
 # Preview/experimental modules
 scirs2-ndimage = { workspace = true, optional = true }
 scirs2-neural = { workspace = true, optional = true }
-# scirs2-optim moved to independent OptiRS project from v0.1.0-beta.2
+# scirs2-optim moved to independent OptiRS project
 scirs2-series = { workspace = true, optional = true }
 scirs2-text = { workspace = true, optional = true }
 scirs2-io = { workspace = true, optional = true }
@@ -53,8 +53,6 @@ scirs2-autograd = { workspace = true, optional = true }
 [dev-dependencies]
 approx = { workspace = true }
 criterion = { workspace = true }
-# NOTE: ndarray-linalg is already included via scirs2-core dependency chain
-# Adding it in dev-dependencies causes duplicate resolution and linker conflicts in doctests
 
 [features]
 default = ["standard"]
@@ -65,12 +63,7 @@ logging = []
 profiling = []
 memory_management = []
 
-# BLAS backend override features (optional - platform defaults are used if not specified)
-# These allow users to override platform defaults when needed
-# NOTE: macOS automatically uses Accelerate framework when linalg is enabled (no explicit feature needed)
-openblas = ["linalg", "scirs2-linalg/openblas-backend"]  # Force use of system OpenBLAS (Linux/Windows)
-netlib = ["linalg", "scirs2-linalg/netlib"]  # Force use of system Netlib BLAS
-# NOTE: intel-mkl removed due to conflicts with system BLAS
+# NOTE: OpenBLAS/Netlib features removed - using pure Rust OxiBLAS for all platforms
 
 # Functional groupings
 standard = [
@@ -101,7 +94,7 @@ transform = ["dep:scirs2-transform"]
 metrics = ["dep:scirs2-metrics"]
 ndimage = ["dep:scirs2-ndimage"]
 neural = ["dep:scirs2-neural"]
-# optim feature removed - moved to independent OptiRS project from v0.1.0-beta.2
+# optim feature removed - moved to independent OptiRS project
 series = ["dep:scirs2-series"]
 text = ["dep:scirs2-text"]
 io = ["dep:scirs2-io"]

@@ -1,27 +1,28 @@
-//! Convex hull algorithm implementations
+//! Convex hull algorithm implementations (Pure Rust)
 //!
 //! This module provides different algorithms for computing convex hulls,
-//! each with their own strengths and use cases.
+//! each with their own strengths and use cases. All implementations are
+//! pure Rust with no external C library dependencies.
 //!
 //! # Available Algorithms
 //!
-//! ## QHull
-//! - **Module**: [`qhull`]
+//! ## Quickhull (Pure Rust)
+//! - **Module**: [`quickhull`]
 //! - **Dimensions**: Any (1D, 2D, 3D, nD)
-//! - **Time Complexity**: O(n log n) for 2D, O(n^⌊d/2⌋) for d dimensions
+//! - **Time Complexity**: O(n log n) for 2D/3D, O(n^⌊d/2⌋) for d dimensions
 //! - **Use Case**: General purpose, robust for all dimensions
-//! - **Features**: Handles degenerate cases well, provides facet equations
+//! - **Features**: Pure Rust, handles degenerate cases, provides facet equations
 //!
-//! ## Graham Scan
-//! - **Module**: [`graham_scan`]  
+//! ## Graham Scan (Pure Rust)
+//! - **Module**: [`graham_scan`]
 //! - **Dimensions**: 2D only
 //! - **Time Complexity**: O(n log n)
 //! - **Use Case**: Educational, guaranteed output order
 //! - **Features**: Simple to understand, produces vertices in counterclockwise order
 //!
-//! ## Jarvis March (Gift Wrapping)
+//! ## Jarvis March (Gift Wrapping) (Pure Rust)
 //! - **Module**: [`jarvis_march`]
-//! - **Dimensions**: 2D only  
+//! - **Dimensions**: 2D only
 //! - **Time Complexity**: O(nh) where h is the number of hull vertices
 //! - **Use Case**: When hull has few vertices (h << n)
 //! - **Features**: Output-sensitive, good for small hulls
@@ -33,13 +34,13 @@
 //!
 //! # Examples
 //!
-//! ## Using QHull (Recommended)
+//! ## Using Quickhull (Recommended)
 //! ```rust
-//! use scirs2_spatial::convex_hull::algorithms::qhull::compute_qhull;
+//! use scirs2_spatial::convex_hull::algorithms::quickhull::compute_quickhull;
 //! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-//! let hull = compute_qhull(&points.view()).unwrap();
+//! let hull = compute_quickhull(&points.view()).expect("Operation failed");
 //! println!("Hull has {} vertices", hull.vertex_indices().len());
 //! ```
 //!
@@ -49,7 +50,7 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-//! let hull = compute_graham_scan(&points.view()).unwrap();
+//! let hull = compute_graham_scan(&points.view()).expect("Operation failed");
 //! println!("Hull vertices: {:?}", hull.vertex_indices());
 //! ```
 //!
@@ -59,7 +60,7 @@
 //! use scirs2_core::ndarray::array;
 //!
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
-//! let hull = compute_jarvis_march(&points.view()).unwrap();
+//! let hull = compute_jarvis_march(&points.view()).expect("Operation failed");
 //! println!("Hull computed with {} vertices", hull.vertex_indices().len());
 //! ```
 //!
@@ -71,14 +72,14 @@
 //! // Collinear points
 //! let collinear = array![[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]];
 //! if let Some(result) = handle_degenerate_case(&collinear.view()) {
-//!     let hull = result.unwrap();
+//!     let hull = result.expect("Operation failed");
 //!     println!("Handled degenerate case with {} vertices", hull.vertex_indices().len());
 //! }
 //! ```
 //!
 //! # Algorithm Selection Guidelines
 //!
-//! - **For general use**: Use QHull - it's robust and handles all dimensions
+//! - **For general use**: Use Quickhull - it's robust and handles all dimensions
 //! - **For 2D educational purposes**: Use Graham Scan for its simplicity
 //! - **For 2D with small expected hulls**: Use Jarvis March for output-sensitive performance
 //! - **For edge cases**: All algorithms automatically fall back to special case handlers
@@ -87,24 +88,24 @@
 //!
 //! | Algorithm | 2D Time | 3D Time | nD Time | Space | Robustness |
 //! |-----------|---------|---------|---------|-------|------------|
-//! | QHull | O(n log n) | O(n log n) | O(n^⌊d/2⌋) | O(n) | High |
+//! | Quickhull | O(n log n) | O(n log n) | O(n^⌊d/2⌋) | O(n) | High |
 //! | Graham Scan | O(n log n) | N/A | N/A | O(n) | Medium |
 //! | Jarvis March | O(nh) | N/A | N/A | O(n) | Medium |
 //!
 //! Where:
 //! - n = number of input points
-//! - h = number of hull vertices  
+//! - h = number of hull vertices
 //! - d = dimension
 
 pub mod graham_scan;
 pub mod jarvis_march;
-pub mod qhull;
+pub mod quickhull;
 pub mod special_cases;
 
 // Re-export the main computation functions for convenience
 pub use graham_scan::compute_graham_scan;
 pub use jarvis_march::compute_jarvis_march;
-pub use qhull::compute_qhull;
+pub use quickhull::compute_quickhull;
 pub use special_cases::{handle_degenerate_case, has_all_identical_points, is_all_collinear};
 
 /// Algorithm performance characteristics for selection guidance
@@ -146,7 +147,7 @@ pub fn get_algorithm_complexity(
     use crate::convex_hull::core::ConvexHullAlgorithm;
 
     match algorithm {
-        ConvexHullAlgorithm::QHull => {
+        ConvexHullAlgorithm::Quickhull => {
             let time_complexity = if dimension <= 3 {
                 AlgorithmComplexity::NLogN
             } else {
@@ -191,7 +192,7 @@ pub fn get_algorithm_complexity(
 ///
 /// // 3D dataset
 /// let algo = recommend_algorithm(1000, 3, None);
-/// assert_eq!(algo, ConvexHullAlgorithm::QHull);
+/// assert_eq!(algo, ConvexHullAlgorithm::Quickhull);
 /// ```
 pub fn recommend_algorithm(
     num_points: usize,
@@ -200,9 +201,9 @@ pub fn recommend_algorithm(
 ) -> crate::convex_hull::core::ConvexHullAlgorithm {
     use crate::convex_hull::core::ConvexHullAlgorithm;
 
-    // For dimensions > 2, only QHull is available
+    // For dimensions > 2, only Quickhull is available
     if dimension > 2 {
-        return ConvexHullAlgorithm::QHull;
+        return ConvexHullAlgorithm::Quickhull;
     }
 
     // For 2D, we have choices
@@ -215,15 +216,15 @@ pub fn recommend_algorithm(
         }
 
         // For educational purposes or when you need guaranteed vertex order
-        // you might prefer Graham Scan, but for general robustness, use QHull
+        // you might prefer Graham Scan, but for general robustness, use Quickhull
         if num_points < 100 {
             ConvexHullAlgorithm::GrahamScan // Simple and fast for small datasets
         } else {
-            ConvexHullAlgorithm::QHull // Most robust for larger datasets
+            ConvexHullAlgorithm::Quickhull // Most robust for larger datasets
         }
     } else {
         // For 1D or other edge cases
-        ConvexHullAlgorithm::QHull
+        ConvexHullAlgorithm::Quickhull
     }
 }
 
@@ -243,7 +244,7 @@ mod tests {
         assert_eq!(time, AlgorithmComplexity::OutputSensitive);
         assert_eq!(max_dim, Some(2));
 
-        let (time, _space, max_dim) = get_algorithm_complexity(ConvexHullAlgorithm::QHull, 5);
+        let (time, _space, max_dim) = get_algorithm_complexity(ConvexHullAlgorithm::Quickhull, 5);
         assert_eq!(time, AlgorithmComplexity::ExponentialDimension);
         assert_eq!(max_dim, None);
     }
@@ -256,7 +257,7 @@ mod tests {
 
         // 3D dataset
         let algo = recommend_algorithm(1000, 3, None);
-        assert_eq!(algo, ConvexHullAlgorithm::QHull);
+        assert_eq!(algo, ConvexHullAlgorithm::Quickhull);
 
         // Small 2D dataset
         let algo = recommend_algorithm(50, 2, None);
@@ -264,6 +265,6 @@ mod tests {
 
         // Large 2D dataset without hull size hint
         let algo = recommend_algorithm(5000, 2, None);
-        assert_eq!(algo, ConvexHullAlgorithm::QHull);
+        assert_eq!(algo, ConvexHullAlgorithm::Quickhull);
     }
 }

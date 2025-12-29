@@ -37,7 +37,7 @@ pub fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f6
             let amplitude = config.parameters.get("amplitude").unwrap_or(&1.0);
             let mut rng = scirs2_core::random::rng();
             for i in 0..length {
-                signal[i] = amplitude * rng.gen_range(-1.0..1.0);
+                signal[i] = amplitude * rng.random_range(-1.0..1.0);
             }
         }
         TestSignalType::PinkNoise => {
@@ -45,7 +45,7 @@ pub fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f6
             let mut rng = scirs2_core::random::rng();
             // Simplified pink noise generation
             for i in 0..length {
-                signal[i] = amplitude * rng.gen_range(-1.0..1.0) * (1.0 / (i + 1) as f64).sqrt();
+                signal[i] = amplitude * rng.random_range(-1.0..1.0) * (1.0 / (i + 1) as f64).sqrt();
             }
         }
         TestSignalType::Impulse => {
@@ -85,7 +85,7 @@ pub fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f6
             // Simplified fractal noise
             let mut rng = scirs2_core::random::rng();
             for i in 0..length {
-                signal[i] = amplitude * rng.gen_range(-1.0..1.0) * ((i + 1) as f64).powf(-hurst);
+                signal[i] = amplitude * rng.random_range(-1.0..1.0) * ((i + 1) as f64).powf(-hurst);
             }
         }
         TestSignalType::Composite => {
@@ -94,7 +94,7 @@ pub fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f6
             let mut rng = scirs2_core::random::rng();
             for (i, &ti) in t.iter().enumerate() {
                 let sinusoid = (2.0 * PI * 0.1 * ti / length as f64).sin();
-                let noise = 0.1 * rng.gen_range(-1.0..1.0);
+                let noise = 0.1 * rng.random_range(-1.0..1.0);
                 signal[i] = amplitude * (sinusoid + noise);
             }
         }
@@ -268,7 +268,7 @@ pub fn generate_random_signal(length: usize, amplitude: f64, seed: Option<u64>) 
 
     let mut signal = Array1::zeros(length);
     for i in 0..length {
-        signal[i] = amplitude * rng.gen_range(-1.0..1.0);
+        signal[i] = amplitude * rng.random_range(-1.0..1.0);
     }
     signal
 }

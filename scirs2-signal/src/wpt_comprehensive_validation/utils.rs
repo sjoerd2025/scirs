@@ -21,17 +21,17 @@ pub fn generate_test_signal(
 
     match signal_type {
         TestSignalType::WhiteNoise => {
-            Ok((0..length).map(|_| rng.gen::<f64>() - 0.5).collect())
+            Ok((0..length).map(|_| rng.random::<f64>() - 0.5).collect())
         }
         TestSignalType::Sinusoidal => {
-            let frequency = 0.1 + rng.gen::<f64>() * 0.3; // Random frequency between 0.1 and 0.4
+            let frequency = 0.1 + rng.random::<f64>() * 0.3; // Random frequency between 0.1 and 0.4
             Ok((0..length)
                 .map(|i| (2.0 * std::f64::consts::PI * frequency * i as f64 / length as f64).sin())
                 .collect())
         }
         TestSignalType::Chirp => {
-            let start_freq = 0.05 + rng.gen::<f64>() * 0.1;
-            let end_freq = 0.2 + rng.gen::<f64>() * 0.2;
+            let start_freq = 0.05 + rng.random::<f64>() * 0.1;
+            let end_freq = 0.2 + rng.random::<f64>() * 0.2;
             Ok((0..length)
                 .map(|i| {
                     let t = i as f64 / length as f64;
@@ -41,12 +41,12 @@ pub fn generate_test_signal(
                 .collect())
         }
         TestSignalType::PiecewiseConstant => {
-            let num_pieces = 4 + (rng.gen::<usize>() % 8); // 4-12 pieces
+            let num_pieces = 4 + (rng.random::<usize>() % 8); // 4-12 pieces
             let piece_length = length / num_pieces;
             let mut signal = Vec::with_capacity(length);
 
             for piece in 0..num_pieces {
-                let value = rng.gen::<f64>() - 0.5;
+                let value = rng.random::<f64>() - 0.5;
                 let start = piece * piece_length;
                 let end = if piece == num_pieces - 1 {
                     length
@@ -62,14 +62,14 @@ pub fn generate_test_signal(
             Ok(signal)
         }
         TestSignalType::PiecewisePolynomial => {
-            let num_pieces = 3 + (rng.gen::<usize>() % 5); // 3-8 pieces
+            let num_pieces = 3 + (rng.random::<usize>() % 5); // 3-8 pieces
             let piece_length = length / num_pieces;
             let mut signal = Vec::with_capacity(length);
 
             for piece in 0..num_pieces {
-                let a = rng.gen::<f64>() - 0.5;
-                let b = rng.gen::<f64>() - 0.5;
-                let c = rng.gen::<f64>() - 0.5;
+                let a = rng.random::<f64>() - 0.5;
+                let b = rng.random::<f64>() - 0.5;
+                let c = rng.random::<f64>() - 0.5;
 
                 let start = piece * piece_length;
                 let end = if piece == num_pieces - 1 {
@@ -100,7 +100,7 @@ pub fn generate_test_signal(
             for i in 0..length {
                 let freq = (i + 1) as f64 / length as f64;
                 let amplitude = 1.0 / freq.sqrt();
-                signal[i] += amplitude * (rng.gen::<f64>() - 0.5);
+                signal[i] += amplitude * (rng.random::<f64>() - 0.5);
             }
 
             // Add harmonic components
@@ -132,7 +132,7 @@ fn generate_fractal_recursive(
     }
 
     let mid = (start + end) / 2;
-    let noise = (rng.gen::<f64>() - 0.5) * scale;
+    let noise = (rng.random::<f64>() - 0.5) * scale;
 
     signal[mid] = (signal[start] + signal[end]) / 2.0 + noise;
 

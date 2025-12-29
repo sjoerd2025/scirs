@@ -55,7 +55,7 @@ use super::utils::{
 /// let signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() +
 ///     0.5 * (2.0 * PI * 15.0 * ti).sin() +
-///     0.1 * rng.gen_range(-1.0..1.0)
+///     0.1 * rng.random_range(-1.0..1.0)
 /// });
 ///
 /// let config = AdvancedEnhancedConfig::default();

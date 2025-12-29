@@ -263,7 +263,7 @@ impl DistancePool {
             }
 
             // Convert to boxed slice
-            Box::from_raw(std::slice::from_raw_parts_mut(ptr, size))
+            Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, size))
         }
     }
 

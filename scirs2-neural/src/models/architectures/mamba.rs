@@ -793,7 +793,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> S4Layer<F> {
                 let x_t: Array1<F> = x
                     .slice(s![b, t, ..])
                     .to_owned()
-                    .into_shape(d_model)
+                    .into_shape_with_order(d_model)
                     .map_err(|_| {
                         NeuralError::InferenceError("Failed to reshape input".to_string())
                     })?;

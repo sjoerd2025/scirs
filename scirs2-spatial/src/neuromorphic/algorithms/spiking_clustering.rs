@@ -216,7 +216,9 @@ impl SpikingNeuralClusterer {
         // Create output neurons (cluster centers)
         let mut rng = scirs2_core::random::rng();
         for _i in 0..self.num_clusters {
-            let position = (0..input_dims).map(|_| rng.gen_range(0.0..1.0)).collect();
+            let position = (0..input_dims)
+                .map(|_| rng.random_range(0.0..1.0))
+                .collect();
             let mut neuron = SpikingNeuron::new(position);
             neuron.set_threshold(self.spike_threshold);
             self.neurons.push(neuron);
@@ -226,7 +228,7 @@ impl SpikingNeuralClusterer {
         for i in 0..input_dims {
             for j in 0..self.num_clusters {
                 let output_idx = input_dims + j;
-                let weight = rng.gen_range(0.0..0.5);
+                let weight = rng.random_range(0.0..0.5);
                 let synapse = Synapse::new(i, output_idx, weight);
                 self.synapses.push(synapse);
             }

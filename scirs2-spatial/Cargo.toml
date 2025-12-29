@@ -26,9 +26,6 @@ num = { workspace = true }
 statrs = { workspace = true }
 approx = { workspace = true }
 
-# Computational geometry
-qhull = { workspace = true }
-
 # Temporary: num_complex needed for compatibility until scirs2_core::Complex64 is fully compatible
 num-complex = { workspace = true }
 

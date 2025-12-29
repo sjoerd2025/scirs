@@ -1,7 +1,7 @@
 [package]
 name = "scirs2-python"
-version = "0.2.0"
-authors = ["KitaSan <info@kitasan.io>"]
+version = "0.1.0"
+authors = ["COOLJAPAN OU (Team KitaSan) <contact@cooljapan.tech>"]
 edition = "2021"
 rust-version = "1.70"
 description = "Python bindings for SciRS2 - A comprehensive scientific computing library in Rust (SciPy alternative)"

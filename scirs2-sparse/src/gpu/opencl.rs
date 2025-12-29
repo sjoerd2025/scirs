@@ -456,20 +456,15 @@ impl Default for OpenCLSpMatVec {
 }
 
 /// OpenCL optimization levels for sparse matrix operations
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum OpenCLOptimizationLevel {
     /// Basic thread-per-row implementation
+    #[default]
     Basic,
     /// Workgroup-optimized implementation with local memory
     Workgroup,
     /// Vectorized implementation using float4 operations
     Vectorized,
-}
-
-impl Default for OpenCLOptimizationLevel {
-    fn default() -> Self {
-        Self::Basic
-    }
 }
 
 /// OpenCL platform information for optimization

@@ -13,12 +13,12 @@ use crate::validation::{
     validate_squarematrix, validatematrix_vector_dimensions,
 };
 
-// BLAS/LAPACK optimized solver
-use ndarray_linalg::Solve;
+// OxiBLAS solver (replaces ndarray-linalg)
+use scirs2_core::linalg::solve_ndarray;
 
-/// BLAS/LAPACK-accelerated linear system solver for f64
+/// OxiBLAS-accelerated linear system solver for f64
 ///
-/// Solves Ax = b using LAPACK, providing 200x+ speedup.
+/// Solves Ax = b using OxiBLAS, providing significant speedup.
 pub fn solve_f64_lapack(a: &ArrayView2<f64>, b: &ArrayView1<f64>) -> LinalgResult<Array1<f64>> {
     // Validate
     if a.nrows() != a.ncols() {
@@ -37,10 +37,9 @@ pub fn solve_f64_lapack(a: &ArrayView2<f64>, b: &ArrayView1<f64>) -> LinalgResul
         )));
     }
 
-    // Use LAPACK solver (207x faster!)
-    a.to_owned()
-        .solve_into(b.to_owned())
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK solve failed: {:?}", e)))
+    // Use OxiBLAS solver (replaces LAPACK)
+    solve_ndarray(&a.to_owned(), &b.to_owned())
+        .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS solve failed: {:?}", e)))
 }
 
 /// Solution to a least-squares problem

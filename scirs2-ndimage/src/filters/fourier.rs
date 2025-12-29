@@ -218,7 +218,7 @@ where
     // For higher dimensions, fall back to a general but simpler approach
     // Convert to 1D, apply filter, and reshape back
     let shape = input.shape().to_vec();
-    let flat_input = input.view().into_shape(input.len())?;
+    let flat_input = input.view().into_shape_with_order(input.len())?;
 
     // Create equivalent 1D sigma (use geometric mean of all dimensions)
     let sigma_1d = {
@@ -235,7 +235,7 @@ where
     let filtered_1d = fourier_gaussian_1d(&flat_owned, sigma_1d)?;
 
     // Reshape back to original dimensions and convert to correct dimension type
-    let result_dyn = filtered_1d.into_shape(shape)?;
+    let result_dyn = filtered_1d.into_shape_with_order(shape)?;
     let result = result_dyn.into_dimensionality::<D>().map_err(|_| {
         NdimageError::DimensionError("Failed to convert result to original dimension type".into())
     })?;
@@ -544,7 +544,7 @@ where
 
     // For higher dimensions, use simplified approach
     let shape = input.shape().to_vec();
-    let flat_input = input.view().into_shape(input.len())?;
+    let flat_input = input.view().into_shape_with_order(input.len())?;
 
     // Create equivalent 1D size (use geometric mean)
     let size_1d = {
@@ -558,7 +558,7 @@ where
     let filtered_1d = fourier_uniform_1d(&flat_owned, size_1d)?;
 
     // Reshape back to original dimensions and convert to correct dimension type
-    let result_dyn = filtered_1d.into_shape(shape)?;
+    let result_dyn = filtered_1d.into_shape_with_order(shape)?;
     let result = result_dyn.into_dimensionality::<D>().map_err(|_| {
         NdimageError::DimensionError("Failed to convert result to original dimension type".into())
     })?;
@@ -837,7 +837,7 @@ where
 
     // For higher dimensions, use simplified approach with radial symmetry
     let shape = input.shape().to_vec();
-    let flat_input = input.view().into_shape(input.len())?;
+    let flat_input = input.view().into_shape_with_order(input.len())?;
 
     // Create equivalent 1D size (use geometric mean)
     let size_1d = {
@@ -853,12 +853,12 @@ where
     let side_len = (flat_input.len() as f64).sqrt() as usize;
     let temp_2d = flat_input
         .view()
-        .into_shape((side_len, flat_input.len() / side_len))?;
+        .into_shape_with_order((side_len, flat_input.len() / side_len))?;
     let filtered_2d = fourier_ellipsoid_2d(&temp_2d.to_owned(), size_1d, size_1d, is_lowpass)?;
-    let filtered_1d = filtered_2d.into_shape(input.len())?;
+    let filtered_1d = filtered_2d.into_shape_with_order(input.len())?;
 
     // Reshape back to original dimensions
-    let result_dyn = filtered_1d.into_shape(shape)?;
+    let result_dyn = filtered_1d.into_shape_with_order(shape)?;
     let result = result_dyn.into_dimensionality::<D>().map_err(|_| {
         NdimageError::DimensionError("Failed to convert result back to original dimensions".into())
     })?;
@@ -1186,7 +1186,7 @@ where
 
     // For higher dimensions, use simplified approach
     let shape = input.shape().to_vec();
-    let flat_input = input.view().into_shape(input.len())?;
+    let flat_input = input.view().into_shape_with_order(input.len())?;
 
     // Create equivalent 1D shift (use mean of all shifts)
     let shift_1d = {
@@ -1199,7 +1199,7 @@ where
     let shifted_1d = fourier_shift_1d(&flat_input.to_owned(), shift_1d)?;
 
     // Reshape back to original dimensions
-    let result_dyn = shifted_1d.into_shape(shape)?;
+    let result_dyn = shifted_1d.into_shape_with_order(shape)?;
     let result = result_dyn.into_dimensionality::<D>().map_err(|_| {
         NdimageError::DimensionError("Failed to convert result back to original dimensions".into())
     })?;

@@ -1,13 +1,13 @@
 # scirs2-series TODO
 
-**Current Version**: 0.1.0-rc.4 (Released December 21, 2025)
+**Current Version**: 0.1.0 (Released December 29, 2025)
 **Status**: Production Ready - Comprehensive time series analysis for scientific computing
 
 This module provides comprehensive time series analysis functionality with feature parity to pandas and statsmodels. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module uses scirs2-core abstractions for consistent ecosystem integration.
 
 ---
 
-## 🎯 Current Release: rc.4 (December 2025)
+## 🎯 Current Release: stable (December 29, 2025)
 
 ### ✅ Production Status: COMPLETE
 
@@ -76,7 +76,7 @@ This module provides comprehensive time series analysis functionality with featu
 - ✅ Streaming time series analysis
 - ✅ Interactive visualization with Plotly integration
 
-### 🔧 RC.2 Implementation Status
+### 🔧 0.1.0 Implementation Status
 
 #### SciRS2 POLICY Implementation (ONGOING)
 - [x] Integration with scirs2-core error handling
@@ -239,7 +239,7 @@ This module provides comprehensive time series analysis functionality with featu
 
 ## 🎯 Production Release Summary
 
-**v0.1.0-rc.4 delivers:**
+**v0.1.0 delivers:**
 - ✅ **Comprehensive Functionality**: Feature parity with pandas/statsmodels
 - ✅ **Production Stability**: 188 tests with 100% pass rate
 - ✅ **Advanced Analytics**: Neural models, AutoML, ensemble methods
@@ -261,7 +261,7 @@ This release is suitable for:
 
 ## 🗺️ Roadmap
 
-- **✅ 0.1.0-rc.4** (2025-12-21): **CURRENT** - Production-ready with comprehensive features
+- **✅ 0.1.0** (2025-12-29): **CURRENT** - Production-ready with comprehensive features
 - **🎯 0.1.0** (2026-Q4): First stable release with full feature parity and API guarantees
 - **🎯 0.2.0** (2027+): Ecosystem integration and advanced features
 
@@ -269,4 +269,4 @@ This release is suitable for:
 
 **Built with ❤️ for the time series analysis community**
 
-*Version: 0.1.0-rc.4 | Released: December 21, 2025 | Next: 0.1.0 (Q4 2026)*
+*Version: 0.1.0 | Released: December 29, 2025 | Next: 0.1.0 (Q4 2026)*

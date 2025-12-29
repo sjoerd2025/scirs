@@ -2,11 +2,11 @@
 
 This module provides Fast Fourier Transform functionality similar to SciPy's fft module.
 
-## 🎯 **PRODUCTION STATUS: 0.1.0-rc.4 (Release Candidate 4)**
+## 🎯 **PRODUCTION STATUS: 0.1.0 (Stable Release)**
 
 **✅ ALL DEVELOPMENT COMPLETE - PRODUCTION READY**
 
-This Release Candidate 4 features comprehensive platform testing and final preparation for stable release. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), all major features, optimizations, GPU enhancements, and quality improvements have been implemented and tested with ecosystem consistency.
+This Stable Release features comprehensive platform testing and final preparation for stable release. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), all major features, optimizations, GPU enhancements, and quality improvements have been implemented and tested with ecosystem consistency.
 
 ---
 
@@ -132,7 +132,7 @@ This Release Candidate 4 features comprehensive platform testing and final prepa
 
 ## 🔮 **Post-Production Roadmap** (v0.2.0+)
 
-While 0.1.0-rc.4 is feature-complete and production-ready, future enhancements may include:
+While 0.1.0 is feature-complete and production-ready, future enhancements may include:
 
 ### **Advanced Features** (Low Priority)
 - [ ] Quantum computing integration
@@ -172,7 +172,7 @@ While 0.1.0-rc.4 is feature-complete and production-ready, future enhancements m
 
 ## 🎯 **FINAL STATUS: READY FOR PRODUCTION**
 
-**scirs2-fft v0.1.0-rc.4** represents a complete, production-ready FFT implementation with:
+**scirs2-fft v0.1.0** represents a complete, production-ready FFT implementation with:
 
 - **World-class performance** through multi-GPU and specialized hardware acceleration
 - **Comprehensive functionality** covering all major FFT variants and applications  
@@ -180,4 +180,4 @@ While 0.1.0-rc.4 is feature-complete and production-ready, future enhancements m
 - **Complete documentation** with examples and performance guides
 - **Future-proof architecture** ready for ecosystem expansion
 
-**This is Release Candidate 4 (rc.4). The module is production-ready with comprehensive GPU support, SIMD optimizations, and zero-warning code quality.**
+**This is Stable Release (stable). The module is production-ready with comprehensive GPU support, SIMD optimizations, and zero-warning code quality.**

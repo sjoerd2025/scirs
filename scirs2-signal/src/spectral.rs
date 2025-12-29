@@ -1122,7 +1122,7 @@ mod tests {
         // Add noise
         let mut rng = scirs2_core::random::rng();
         x.iter_mut().for_each(|val| {
-            *val += rng.gen_range(-0.1..0.1);
+            *val += rng.random_range(-0.1..0.1);
         });
 
         // Compute Welch's periodogram

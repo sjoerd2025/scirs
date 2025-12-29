@@ -419,7 +419,7 @@ pub fn validate_numerical_robustness_extreme() -> SignalResult<NumericalRobustne
     let noisy_signal: Vec<f64> = t.iter()
         .map(|&ti| {
             use scirs2_core::random::Rng;
-            (2.0 * PI * 10.0 * ti).sin() + noise_level * (rng.gen::<f64>() - 0.5)
+            (2.0 * PI * 10.0 * ti).sin() + noise_level * (rng.random::<f64>() - 0.5)
         })
         .collect();
 

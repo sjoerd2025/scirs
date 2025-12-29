@@ -199,13 +199,10 @@ impl PCA {
         n_components: usize,
         n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        use scirs2_core::ndarray::ndarray_linalg::SVD;
-
-        // Perform SVD: X = U * S * V^T
-        let (_u, s, vt) = data
-            .svd(true, true)
+        // Perform SVD: X = U * S * V^T using scirs2_linalg
+        let (_u, s, vt) = scirs2_linalg::svd(&data.view(), true, None)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
-        let v = vt.expect("Operation failed").t().to_owned();
+        let v = vt.t().to_owned();
 
         // Extract _components
         let components = v
@@ -235,7 +232,6 @@ impl PCA {
         n_components: usize,
         n_samples: usize,
     ) -> Result<(Array2<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
-        use scirs2_core::ndarray::ndarray_linalg::{QR, SVD};
         use scirs2_core::random::{rngs::StdRng, SeedableRng};
         use scirs2_core::random::{Distribution, Normal};
 
@@ -268,34 +264,34 @@ impl PCA {
         let mut q = data.dot(&omega);
 
         for _ in 0..n_iter {
-            // QR decomposition
-            let (q_mat, r) = q.qr().map_err(|e| {
+            // QR decomposition using scirs2_linalg
+            let (q_mat, _r) = scirs2_linalg::qr(&q.view(), None).map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
             q = q_mat;
 
             // Project back
             let z = data.t().dot(&q);
-            let (q_mat, r) = z.qr().map_err(|e| {
+            let (q_mat, _r) = scirs2_linalg::qr(&z.view(), None).map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
             q = data.dot(&q_mat);
         }
 
-        // Final QR decomposition
-        let (q_final, r) = q.qr().map_err(|e| {
+        // Final QR decomposition using scirs2_linalg
+        let (q_final, _r) = scirs2_linalg::qr(&q.view(), None).map_err(|e| {
             StatsError::ComputationError(format!("Final QR decomposition failed: {}", e))
         })?;
 
         // Project data onto subspace
         let b = q_final.t().dot(data);
 
-        // SVD of small matrix B
-        let (_u_small, s, vt) = b.svd(true, true).map_err(|e| {
+        // SVD of small matrix B using scirs2_linalg
+        let (_u_small, s, vt) = scirs2_linalg::svd(&b.view(), true, None).map_err(|e| {
             StatsError::ComputationError(format!("SVD of projected matrix failed: {}", e))
         })?;
 
-        let v = vt.expect("Operation failed").t().to_owned();
+        let v = vt.t().to_owned();
 
         // Extract _components
         let components = v
@@ -514,14 +510,9 @@ impl IncrementalPCA {
             .unwrap_or(n_features.min(self.n_samples_seen));
 
         if self.svd_u.is_none() {
-            // First batch - initialize with standard SVD
-            use scirs2_core::ndarray::ndarray_linalg::SVD;
-            let (u, s, vt) = centered_batch
-                .svd(true, true)
+            // First batch - initialize with standard SVD using scirs2_linalg
+            let (u, s, vt) = scirs2_linalg::svd(&centered_batch.view(), true, None)
                 .map_err(|e| StatsError::ComputationError(format!("Initial SVD failed: {}", e)))?;
-
-            let u = u.expect("Operation failed");
-            let vt = vt.expect("Operation failed");
 
             // Keep only n_components
             self.svd_u = Some(
@@ -553,9 +544,8 @@ impl IncrementalPCA {
             let projection = centered_batch.dot(v_old);
             let residual = &centered_batch - &projection.dot(&v_old.t());
 
-            // QR decomposition of residual
-            use scirs2_core::ndarray::ndarray_linalg::QR;
-            let (q_res, r_res) = residual.qr().map_err(|e| {
+            // QR decomposition of residual using scirs2_linalg
+            let (q_res, r_res) = scirs2_linalg::qr(&residual.view(), None).map_err(|e| {
                 StatsError::ComputationError(format!("QR decomposition failed: {}", e))
             })?;
 
@@ -579,14 +569,11 @@ impl IncrementalPCA {
                 }
             }
 
-            // SVD of augmented matrix
-            use scirs2_core::ndarray::ndarray_linalg::SVD;
-            let (u_aug, s_aug, vt_aug) = augmented.svd(true, true).map_err(|e| {
-                StatsError::ComputationError(format!("Augmented SVD failed: {}", e))
-            })?;
-
-            let u_aug = u_aug.expect("Operation failed");
-            let vt_aug = vt_aug.expect("Operation failed");
+            // SVD of augmented matrix using scirs2_linalg
+            let (u_aug, s_aug, vt_aug) = scirs2_linalg::svd(&augmented.view(), true, None)
+                .map_err(|e| {
+                    StatsError::ComputationError(format!("Augmented SVD failed: {}", e))
+                })?;
 
             // Update U
             let mut u_new = Array2::zeros((old_n + batchsize, n_components));

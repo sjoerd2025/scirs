@@ -1,19 +1,12 @@
 fn main() {
-    // Platform-specific BLAS/LAPACK linking
-    #[cfg(target_os = "linux")]
-    {
-        // Link against system OpenBLAS on Linux
-        println!("cargo:rustc-link-lib=openblas");
-        println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
-        println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu/openblas-pthread");
-    }
+    // NOTE: Pure Rust implementation using OxiBLAS
+    // All system BLAS/LAPACK dependencies have been removed
+    // Linear algebra operations now use Pure Rust OxiBLAS (enabled via 'linalg' feature)
 
     #[cfg(target_os = "macos")]
     {
-        // macOS uses Accelerate framework - handled by .cargo/config.toml
-        // No explicit linking needed here
-
         // Compile MPSGraph Objective-C wrapper if mpsgraph feature is enabled
+        // Note: This is a GPU-specific feature and unavoidable for Metal acceleration
         #[cfg(feature = "mpsgraph")]
         {
             cc::Build::new()

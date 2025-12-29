@@ -1,6 +1,6 @@
 # scirs2-io Production Status
 
-**Version**: 0.1.0-rc.4 (Release Candidate 4 - Platform Testing & Preparation)
+**Version**: 0.1.0 (Stable Release - Platform Testing & Preparation)
 
 This module provides production-ready input/output functionality for scientific data formats, comparable to SciPy's io module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this release features comprehensive platform testing and ecosystem consistency.
 
@@ -93,7 +93,7 @@ This module provides production-ready input/output functionality for scientific 
 
 ## Migration Notes for v1.0
 
-This alpha.5 release represents feature-complete functionality for the 1.0 release. Key areas for v1.0:
+This release represents feature-complete functionality for the 1.0 release. Key areas for v1.0:
 
 1. **API Stabilization**: Current APIs are considered stable
 2. **Performance Tuning**: Further optimization based on user feedback
@@ -117,6 +117,6 @@ For production release contributions:
 
 ---
 
-**Status**: Production-ready for 0.1.0-rc.4 release
+**Status**: Production-ready for 0.1.0 release
 **Quality Level**: Enterprise-ready with comprehensive testing
 **API Stability**: Stable (semver compatibility maintained)

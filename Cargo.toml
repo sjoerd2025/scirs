@@ -29,9 +29,9 @@ members = [
     "scirs2-optimize", # 518+ compilation errors
     "scirs2-stats", # Working on fixing compilation errors
     "scirs2-cluster", # Re-enabled after fixing workspace conflict
-    # "scirs2-optim", # Moved to independent OptiRS project from v0.1.0-beta.2
+    # "scirs2-optim", # Moved to independent OptiRS project
     "scirs2-special", # Compilation errors - enabling to fix
-    # "scirs2-python", # Unified Python bindings for PyPI (v0.2.0+) - Not ready for v0.1.0-rc.4
+    # "scirs2-python", # Unified Python bindings for PyPI (v0.2.0+) - Not ready for v0.1.0
 ]
 resolver = "2"
 
@@ -47,8 +47,14 @@ dead_code = "allow"
 unpredictable_function_pointer_comparisons = "allow"
 unknown_lints = "allow"
 
+[workspace.lints.clippy]
+# Prevent new unwrap() calls - use expect() or proper error handling
+unwrap_used = "warn"
+# Allow expect() with descriptive messages
+expect_used = "allow"
+
 [workspace.package]
-version = "0.1.0-rc.4"
+version = "0.1.0"
 edition = "2021"
 authors = ["SciRS2 Team"]
 description = "A Rust port of SciPy with AI/ML extensions - Scientific Computing and AI Library"
@@ -59,8 +65,8 @@ categories = ["science", "mathematics", "algorithms", "ai"]
 
 [workspace.dependencies]
 # Core array computing
-ndarray = { version = "0.17.1", default-features = false, features = ["std", "serde", "rayon"] }
-ndarray-stats = "0.6.0"
+ndarray = { version = "0.17.1", default-features = false, features = ["std", "serde", "rayon", "approx"] }
+ndarray-stats = "0.7.0"
 ndarray-rand = "0.16.0"
 ndarray-npy = "0.10.0"
 # Numerical libraries
@@ -70,7 +76,7 @@ num-integer = "0.1.46"
 
 # Parallelization and performance
 rayon = "1.11.0"
-wide = "1.1.0"  # SIMD acceleration library
+wide = "1.1.1"  # SIMD acceleration library
 num_cpus = "1.17.0"
 
 # Random number generation
@@ -86,14 +92,15 @@ thiserror = "2.0.17"
 approx = "0.5.1"
 criterion = "0.8.1"
 once_cell = "1.21.3"
-tempfile = "3.23.0"
+tempfile = "3.24.0"
 tokio-test = "0.4.4"
-cc = "1.2.11"  # Build-time C/C++/Objective-C compiler
+cc = "1.2.51"  # Build-time C/C++/Objective-C compiler
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-bincode = { version = "2.0.1", features = ["serde"] }
+# OxiCode - Modern successor to bin-code with SIMD optimization
+oxicode = { version = "0.1", features = ["serde", "simd"] }
 chrono = "0.4.42"
 
 # Python bindings (optional)
@@ -102,7 +109,7 @@ chrono = "0.4.42"
 # Only enable extension-module in crates that produce actual Python extension modules (e.g., scirs2-python)
 pyo3 = { version = "0.27.2", features = ["auto-initialize"] }
 numpy = { version = "0.27.1" }  # Keep for non-SciRS2 compatibility
-scirs2-numpy = { version = "0.1.0-rc.4", path = "./scirs2-numpy" }  # SciRS2 fork with ndarray 0.17
+scirs2-numpy = { version = "0.1.0", path = "./scirs2-numpy" }  # SciRS2 fork with ndarray 0.17
 
 # Linear algebra and math (heavy dependencies - minimize features)
 nalgebra = { version = "0.34.1", default-features = false }
@@ -110,19 +117,21 @@ rustfft = { version = "6.4.1", default-features = false }
 argmin = { version = "0.11.0", default-features = false }
 sprs = { version = "0.11.4", default-features = false }
 
-# Platform-specific BLAS/LAPACK backends
-# ndarray-linalg with different backends - choose only one per platform
-ndarray-linalg = { version = "0.18.0", default-features = false }
+# OxiBLAS - Pure Rust BLAS/LAPACK implementation (replaces OpenBLAS)
+# Using crates.io 0.1 series for stable releases
+oxiblas = { version = "0.1", features = ["parallel"] }
+oxiblas-ndarray = { version = "0.1" }
+oxiblas-blas = { version = "0.1" }
+oxiblas-lapack = { version = "0.1" }
+oxiblas-core = { version = "0.1" }
+oxiblas-matrix = { version = "0.1" }
 
-# BLAS backends - platform-specific configuration:
-# - macOS: Use Accelerate framework (system BLAS, no source build)
-# - Linux: Use system OpenBLAS (openblas-system feature, no source build)
-# - Windows: Use openblas-src as fallback
-blas-src = { version = "0.14", default-features = false }
-cblas-sys = { version = "0.3.0", default-features = false }
-blas = { version = "0.23.0", default-features = false }
-# NOTE: openblas-src is intentionally removed from workspace - use system libraries only
-# NOTE: intel-mkl-src removed to avoid conflicts with system BLAS
+# DEPRECATED: OpenBLAS dependencies - replaced by OxiBLAS
+# ndarray-linalg = { version = "0.18.0", default-features = false }
+# blas-src = { version = "0.14", default-features = false }
+# cblas-sys = { version = "0.3.0", default-features = false }
+# blas = { version = "0.23.0", default-features = false }
+# NOTE: All OpenBLAS/system BLAS dependencies removed - using pure Rust OxiBLAS
 
 # Serialization and data handling
 either = "1.15.0"
@@ -147,7 +156,7 @@ hex = "0.4"
 digest = "0.10"
 data-encoding = "2.9"
 glob = "0.3"
-zip = "6.0"
+zip = "7.0"
 dirs = "6.0.0"
 urlencoding = "2.1"
 url = "2.5.7"
@@ -180,9 +189,9 @@ memmap2 = { version = "0.9.9" }
 bytemuck = { version = "1.24", features = ["derive"] }
 snap = { version = "1.1.1" }
 brotli = { version = "8.0.2" }
-cranelift-module = { version = "0.126.1" }
-cranelift-jit = { version = "0.126.1" }
-cranelift-frontend = { version = "0.126.1" }
+cranelift-module = { version = "0.127.0" }
+cranelift-jit = { version = "0.127.0" }
+cranelift-frontend = { version = "0.127.0" }
 plotly = { version = "0.13.5" }
 plotters = { version = "0.3.7" }
 reqwest = { version = "0.12", features = ["blocking", "json"] }
@@ -197,7 +206,6 @@ ordered-float = "5.1.0"
 kamadak-exif = "0.6"
 hdf5 = "0.8.1"
 ureq = "3.1"
-qhull = "0.4.0"
 parking_lot = "0.12.5"
 serde_yaml = "0.9"
 toml = "0.9"
@@ -259,8 +267,7 @@ ahash = { version = "0.8" }
 
 # Database drivers
 rusqlite = { version = "=0.37.0" }
-sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio-rustls", "postgres", "mysql"] }
-duckdb = { version = "1.4.3" } # Must update to this version
+# sqlx removed - not used (postgres/mysql implementations are stubs)
 mongodb = { version = "3.4" }
 redis = { version = "1.0" }
 
@@ -301,35 +308,35 @@ eframe = { version = "0.33" }
 # Python integration (optional)
 
 # Base scirs2 crates
-scirs2-core = { version = "0.1.0-rc.4", path = "./scirs2-core" }
-scirs2 = { version = "0.1.0-rc.4", path = "./scirs2", default-features = false }
-scirs2-linalg = { version = "0.1.0-rc.4", path = "./scirs2-linalg" }
-scirs2-integrate = { version = "0.1.0-rc.4", path = "./scirs2-integrate" }
-scirs2-interpolate = { version = "0.1.0-rc.4", path = "./scirs2-interpolate" }
-scirs2-optimize = { version = "0.1.0-rc.4", path = "./scirs2-optimize" }
-scirs2-fft = { version = "0.1.0-rc.4", path = "./scirs2-fft" }
-scirs2-stats = { version = "0.1.0-rc.4", path = "./scirs2-stats" }
-scirs2-special = { version = "0.1.0-rc.4", path = "./scirs2-special" }
-scirs2-signal = { version = "0.1.0-rc.4", path = "./scirs2-signal" }
-scirs2-sparse = { version = "0.1.0-rc.4", path = "./scirs2-sparse" }
-scirs2-spatial = { version = "0.1.0-rc.4", path = "./scirs2-spatial" }
+scirs2-core = { version = "0.1.0", path = "./scirs2-core" }
+scirs2 = { version = "0.1.0", path = "./scirs2", default-features = false }
+scirs2-linalg = { version = "0.1.0", path = "./scirs2-linalg" }
+scirs2-integrate = { version = "0.1.0", path = "./scirs2-integrate" }
+scirs2-interpolate = { version = "0.1.0", path = "./scirs2-interpolate" }
+scirs2-optimize = { version = "0.1.0", path = "./scirs2-optimize" }
+scirs2-fft = { version = "0.1.0", path = "./scirs2-fft" }
+scirs2-stats = { version = "0.1.0", path = "./scirs2-stats" }
+scirs2-special = { version = "0.1.0", path = "./scirs2-special" }
+scirs2-signal = { version = "0.1.0", path = "./scirs2-signal" }
+scirs2-sparse = { version = "0.1.0", path = "./scirs2-sparse" }
+scirs2-spatial = { version = "0.1.0", path = "./scirs2-spatial" }
 
 # Advanced modules
-scirs2-cluster = { version = "0.1.0-rc.4", path = "./scirs2-cluster" }
-scirs2-ndimage = { version = "0.1.0-rc.4", path = "./scirs2-ndimage" }
-scirs2-io = { version = "0.1.0-rc.4", path = "./scirs2-io" }
-scirs2-datasets = { version = "0.1.0-rc.4", path = "./scirs2-datasets" }
+scirs2-cluster = { version = "0.1.0", path = "./scirs2-cluster" }
+scirs2-ndimage = { version = "0.1.0", path = "./scirs2-ndimage" }
+scirs2-io = { version = "0.1.0", path = "./scirs2-io" }
+scirs2-datasets = { version = "0.1.0", path = "./scirs2-datasets" }
 
 # AI/ML modules
-scirs2-neural = { version = "0.1.0-rc.4", path = "./scirs2-neural" }
-# scirs2-optim moved to independent OptiRS project from v0.1.0-beta.2
-scirs2-graph = { version = "0.1.0-rc.4", path = "./scirs2-graph" }
-scirs2-transform = { version = "0.1.0-rc.4", path = "./scirs2-transform" }
-scirs2-metrics = { version = "0.1.0-rc.4", path = "./scirs2-metrics", default-features = false }
-scirs2-text = { version = "0.1.0-rc.4", path = "./scirs2-text" }
-scirs2-vision = { version = "0.1.0-rc.4", path = "./scirs2-vision" }
-scirs2-series = { version = "0.1.0-rc.4", path = "./scirs2-series" }
-scirs2-autograd = { version = "0.1.0-rc.4", path = "./scirs2-autograd" }
+scirs2-neural = { version = "0.1.0", path = "./scirs2-neural" }
+# scirs2-optim moved to independent OptiRS project
+scirs2-graph = { version = "0.1.0", path = "./scirs2-graph" }
+scirs2-transform = { version = "0.1.0", path = "./scirs2-transform" }
+scirs2-metrics = { version = "0.1.0", path = "./scirs2-metrics", default-features = false }
+scirs2-text = { version = "0.1.0", path = "./scirs2-text" }
+scirs2-vision = { version = "0.1.0", path = "./scirs2-vision" }
+scirs2-series = { version = "0.1.0", path = "./scirs2-series" }
+scirs2-autograd = { version = "0.1.0", path = "./scirs2-autograd" }
 
 
 [profile.release]

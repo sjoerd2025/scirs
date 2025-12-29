@@ -4,8 +4,6 @@
 //! implementations meet or exceed performance of standard Rust libraries while providing
 //! enhanced functionality for scientific computing workflows.
 
-#![allow(deprecated)]
-//!
 //! # Benchmark Categories
 //!
 //! 1. **Core RNG Performance**: Basic random number generation speed
@@ -21,7 +19,8 @@
 //! cargo bench --bench random_performance_bench
 //! ```
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
 use std::time::Duration;
 
 // Core module imports

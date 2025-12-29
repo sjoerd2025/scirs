@@ -357,7 +357,7 @@ where
         };
 
         for i in 0..self.max_components {
-            let idx = rng.gen_range(0..n_samples_);
+            let idx = rng.random_range(0..n_samples_);
             means.row_mut(i).assign(&data.row(idx));
         }
 

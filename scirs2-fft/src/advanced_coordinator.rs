@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 /// Central coordinator for advanced FFT operations
 #[derive(Debug)]
 #[allow(dead_code)]
-pub struct advancedFftCoordinator<F: Float + Debug> {
+pub struct AdvancedFftCoordinator<F: Float + Debug> {
     /// Intelligent algorithm selector
     algorithm_selector: Arc<RwLock<IntelligentAlgorithmSelector<F>>>,
     /// Performance optimization engine
@@ -1228,7 +1228,7 @@ pub struct PrefetchStatistics {
     pub memory_overhead: usize,
 }
 
-impl<F: Float + Debug + std::ops::AddAssign> advancedFftCoordinator<F> {
+impl<F: Float + Debug + std::ops::AddAssign> AdvancedFftCoordinator<F> {
     /// Create a new advanced FFT coordinator
     pub fn new(config: advancedFftConfig) -> FFTResult<Self> {
         Ok(Self {
@@ -2361,16 +2361,16 @@ pub struct FftPerformanceMetrics {
 /// Create a new Advanced FFT coordinator with default configuration
 #[allow(dead_code)]
 pub fn create_advanced_fft_coordinator<F: Float + Debug + std::ops::AddAssign>(
-) -> FFTResult<advancedFftCoordinator<F>> {
-    advancedFftCoordinator::new(advancedFftConfig::default())
+) -> FFTResult<AdvancedFftCoordinator<F>> {
+    AdvancedFftCoordinator::new(advancedFftConfig::default())
 }
 
 /// Create a new Advanced FFT coordinator with custom configuration
 #[allow(dead_code)]
 pub fn create_advanced_fft_coordinator_with_config<F: Float + Debug + std::ops::AddAssign>(
     config: advancedFftConfig,
-) -> FFTResult<advancedFftCoordinator<F>> {
-    advancedFftCoordinator::new(config)
+) -> FFTResult<AdvancedFftCoordinator<F>> {
+    AdvancedFftCoordinator::new(config)
 }
 
 #[allow(dead_code)]

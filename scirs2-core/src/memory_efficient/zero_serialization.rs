@@ -136,7 +136,7 @@
 //! Files saved with zero-copy serialization have the following structure:
 //!
 //! 1. Header Length (8 bytes): u64 indicating the size of the serialized header
-//! 2. Header (variable size): Bincode-serialized ZeroCopyHeader struct containing:
+//! 2. Header (variable size): Oxicode-serialized ZeroCopyHeader struct containing:
 //!    - Type name (string)
 //!    - Element size in bytes (usize)
 //!    - Array shape (`Vec<usize>`)
@@ -610,8 +610,8 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         };
 
         // Serialize header
-        let cfg = bincode::config::standard();
-        let header_bytes = bincode::serde::encode_to_vec(&header, cfg).map_err(|e| {
+        let cfg = oxicode::config::standard();
+        let header_bytes = oxicode::serde::encode_to_vec(&header, cfg).map_err(|e| {
             CoreError::ValidationError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
@@ -675,9 +675,9 @@ impl<A: ZeroCopySerializable> ZeroCopySerialization<A> for MemoryMappedArray<A> 
         file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
-        let cfg = bincode::config::standard();
+        let cfg = oxicode::config::standard();
         let (header, _len): (ZeroCopyHeader, usize) =
-            bincode::serde::decode_from_slice(&header_bytes, cfg).map_err(|e| {
+            oxicode::serde::decode_owned_from_slice(&header_bytes, cfg).map_err(|e| {
                 CoreError::ValidationError(
                     ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
@@ -938,9 +938,9 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
-        let cfg = bincode::config::standard();
+        let cfg = oxicode::config::standard();
         let (header, _len): (ZeroCopyHeader, usize) =
-            bincode::serde::decode_from_slice(&header_bytes, cfg).map_err(|e| {
+            oxicode::serde::decode_owned_from_slice(&header_bytes, cfg).map_err(|e| {
                 CoreError::ValidationError(
                     ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
@@ -1057,9 +1057,9 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         file.read_exact(&mut header_bytes)?;
 
         // Deserialize header
-        let cfg = bincode::config::standard();
+        let cfg = oxicode::config::standard();
         let (mut header, _len): (ZeroCopyHeader, usize) =
-            bincode::serde::decode_from_slice(&header_bytes, cfg).map_err(|e| {
+            oxicode::serde::decode_owned_from_slice(&header_bytes, cfg).map_err(|e| {
                 CoreError::ValidationError(
                     ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
@@ -1075,8 +1075,8 @@ impl<A: ZeroCopySerializable> MemoryMappedArray<A> {
         })?);
 
         // Serialize updated header
-        let cfg = bincode::config::standard();
-        let new_header_bytes = bincode::serde::encode_to_vec(&header, cfg).map_err(|e| {
+        let cfg = oxicode::config::standard();
+        let new_header_bytes = oxicode::serde::encode_to_vec(&header, cfg).map_err(|e| {
             CoreError::ValidationError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),

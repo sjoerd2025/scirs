@@ -476,10 +476,10 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     MemoryMappedArray::<f64>::save_array(&data, &zero_copy_path, None)?;
     let zero_copy_save_time = start.elapsed();
 
-    // 2. Traditional serialization (using bincode)
+    // 2. Traditional serialization (using oxicode)
     let traditional_path = tempdir.join("traditional_perf.bin");
     let start = Instant::now();
-    let serialized = bincode::serde::encode_to_vec(&data, bincode::config::standard())?;
+    let serialized = oxicode::serde::encode_to_vec(&data, oxicode::config::standard())?;
     let mut file = File::create(&traditional_path)?;
     file.write_all(&serialized)?;
     let traditional_save_time = start.elapsed();
@@ -496,7 +496,7 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
     let mut buffer = Vec::new();
     std::io::Read::read_to_end(&mut file, &mut buffer)?;
     let (loaded_traditional, _len): (Array2<f64>, usize) =
-        bincode::serde::decode_from_slice(&buffer, bincode::config::standard())?;
+        oxicode::serde::decode_owned_from_slice(&buffer, oxicode::config::standard())?;
     let traditional_load_time = start.elapsed();
 
     // 5. Array access time (zero-copy)
@@ -513,7 +513,7 @@ fn performance_comparison(tempdir: &Path) -> Result<(), Box<dyn std::error::Erro
 
     // 6. Array access time (traditional)
     let (loaded_traditional, _len): (Array2<f64>, usize) =
-        bincode::serde::decode_from_slice(&buffer, bincode::config::standard())?;
+        oxicode::serde::decode_owned_from_slice(&buffer, oxicode::config::standard())?;
     let start = Instant::now();
     let mut _sum = 0.0;
     for i in 0..10 {

@@ -22,7 +22,7 @@ pub fn test_irregular_sampling(
 
     // Generate irregular time points
     for i in 1..100 {
-        t_irregular.push(t_irregular[i - 1] + 0.05 + 0.1 * rng.gen_range(0.0..1.0));
+        t_irregular.push(t_irregular[i - 1] + 0.05 + 0.1 * rng.random_range(0.0..1.0));
     }
 
     let f_true = 2.0; // True frequency
@@ -206,7 +206,7 @@ pub fn test_noise_robustness(
             let mut rng = scirs2_core::random::thread_rng();
             let signal: Vec<f64> = t
                 .iter()
-                .map(|&ti| (2.0 * PI * f_true * ti).sin() + noise_std * rng.gen_range(-1.0..1.0))
+                .map(|&ti| (2.0 * PI * f_true * ti).sin() + noise_std * rng.random_range(-1.0..1.0))
                 .collect();
 
             // Compute periodogram

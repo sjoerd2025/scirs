@@ -4,7 +4,6 @@
 //! basis for all random number generation across the SCIRS2 scientific computing ecosystem.
 
 use ::ndarray::{Array, Dimension, Ix2, IxDyn};
-use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::{Rng, RngCore, SeedableRng};
 use rand_distr::{Distribution, Uniform};
@@ -22,9 +21,7 @@ pub struct Random<R = rand::rngs::ThreadRng> {
 
 impl Default for Random<rand::rngs::ThreadRng> {
     fn default() -> Self {
-        Random {
-            rng: rand::thread_rng(),
-        }
+        Random { rng: rand::rng() }
     }
 }
 
@@ -94,17 +91,39 @@ impl<R: Rng> Random<R> {
     }
 
     /// Generate a random value in a range
+    pub fn random_range<T, B>(&mut self, range: B) -> T
+    where
+        T: rand_distr::uniform::SampleUniform,
+        B: rand_distr::uniform::SampleRange<T>,
+    {
+        rand::Rng::random_range(&mut self.rng, range)
+    }
+
+    /// Generate a random boolean
+    pub fn random_bool(&mut self, p: f64) -> bool {
+        rand::Rng::random_bool(&mut self.rng, p)
+    }
+
+    /// Generate a random value of the inferred type
+    pub fn random<T>(&mut self) -> T
+    where
+        rand_distr::StandardUniform: rand_distr::Distribution<T>,
+    {
+        rand::Rng::random(&mut self.rng)
+    }
+
+    /// Backward-compat alias for `random_range`
     pub fn gen_range<T, B>(&mut self, range: B) -> T
     where
         T: rand_distr::uniform::SampleUniform,
         B: rand_distr::uniform::SampleRange<T>,
     {
-        self.rng.gen_range(range)
+        self.random_range(range)
     }
 
-    /// Generate a random boolean
+    /// Backward-compat alias for `random_bool`
     pub fn gen_bool(&mut self, p: f64) -> bool {
-        self.rng.gen_bool(p)
+        self.random_bool(p)
     }
 
     /// Fill a slice with random values
@@ -113,7 +132,7 @@ impl<R: Rng> Random<R> {
         rand_distr::StandardUniform: rand_distr::Distribution<T>,
     {
         for item in slice.iter_mut() {
-            *item = self.rng.gen();
+            *item = rand::Rng::random(&mut self.rng);
         }
     }
 

@@ -252,12 +252,11 @@ pub fn init_integration_registry() -> &'static std::sync::Mutex<IntegrationRegis
         let mut registry = IntegrationRegistry::new();
 
         // Register autograd module
-        let autograd_info =
-            ModuleInfo::new("scirs2-autograd".to_string(), "0.1.0-beta.4".to_string())
-                .with_feature("automatic_differentiation".to_string())
-                .with_feature("computation_graphs".to_string())
-                .with_feature("gradient_computation".to_string())
-                .with_api_version("1.0".to_string());
+        let autograd_info = ModuleInfo::new("scirs2-autograd".to_string(), "0.1.0".to_string())
+            .with_feature("automatic_differentiation".to_string())
+            .with_feature("computation_graphs".to_string())
+            .with_feature("gradient_computation".to_string())
+            .with_api_version("1.0".to_string());
 
         registry
             .register_module(autograd_info)

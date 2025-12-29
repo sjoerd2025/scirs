@@ -1,6 +1,4 @@
 #![recursion_limit = "512"]
-// TODO: Address deprecated code usage and remove this allow
-#![allow(deprecated)]
 // TODO: Remove dead code or justify why it's kept
 #![allow(dead_code)]
 // Clippy allow attributes for non-critical warnings
@@ -115,7 +113,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-core = { version = "0.1.0-rc.4", features = ["simd", "parallel"] }
+//! scirs2-core = { version = "0.1.0", features = ["simd", "parallel"] }
 //! ```
 //!
 //! ### SIMD Operations
@@ -359,7 +357,7 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.1.0-rc.4** (Released December 21, 2025)
+//! Current version: **0.1.0** (Released December 29, 2025)
 //!
 //! ## 📚 Examples
 //!
@@ -391,6 +389,8 @@ pub mod gpu_registry;
 pub mod io;
 #[cfg(feature = "jit")]
 pub mod jit;
+#[cfg(feature = "linalg")]
+pub mod linalg;
 #[cfg(feature = "logging")]
 pub mod logging;
 #[cfg(feature = "memory_management")]

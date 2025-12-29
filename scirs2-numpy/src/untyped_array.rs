@@ -201,7 +201,7 @@ pub trait PyUntypedArrayMethods<'py>: Sealed {
 
     /// Returns a slice which contains dimmensions of the array.
     ///
-    /// See also [`ndarray.shape`][ndaray-shape] and [`PyArray_DIMS`][PyArray_DIMS].
+    /// See also [`ndarray.shape`][ndarray-shape] and [`PyArray_DIMS`][PyArray_DIMS].
     ///
     /// # Example
     ///

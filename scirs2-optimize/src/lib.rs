@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::all)]
 #![allow(dead_code)]
 #![allow(unreachable_patterns)]
@@ -44,7 +43,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-optimize = "0.1.0-rc.4"
+//! scirs2-optimize = "0.1.0"
 //! ```
 //!
 //! ### Unconstrained Minimization (Rosenbrock Function)

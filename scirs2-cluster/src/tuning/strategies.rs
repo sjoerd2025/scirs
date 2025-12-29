@@ -209,13 +209,13 @@ where
 
             for (name, param) in &search_space.parameters {
                 let value = match param {
-                    HyperParameter::Integer { min, max } => rng.gen_range(*min..=*max) as f64,
-                    HyperParameter::Float { min, max } => rng.gen_range(*min..=*max),
+                    HyperParameter::Integer { min, max } => rng.random_range(*min..=*max) as f64,
+                    HyperParameter::Float { min, max } => rng.random_range(*min..=*max),
                     HyperParameter::Categorical { choices } => {
-                        rng.gen_range(0..choices.len()) as f64
+                        rng.random_range(0..choices.len()) as f64
                     }
                     HyperParameter::Boolean => {
-                        if rng.gen_range(0.0..1.0) < 0.5 {
+                        if rng.random_range(0.0..1.0) < 0.5 {
                             1.0
                         } else {
                             0.0
@@ -224,11 +224,11 @@ where
                     HyperParameter::LogUniform { min, max } => {
                         let log_min = min.ln();
                         let log_max = max.ln();
-                        let log_value = rng.gen_range(log_min..=log_max);
+                        let log_value = rng.random_range(log_min..=log_max);
                         log_value.exp()
                     }
                     HyperParameter::IntegerChoices { choices } => {
-                        let idx = rng.gen_range(0..choices.len());
+                        let idx = rng.random_range(0..choices.len());
                         choices[idx] as f64
                     }
                 };
@@ -374,17 +374,17 @@ where
                 let parent2 = self.tournament_selection(&population, &mut rng)?;
 
                 // Crossover
-                let (mut child1, mut child2) = if rng.gen_range(0.0..1.0) < crossover_rate {
+                let (mut child1, mut child2) = if rng.random_range(0.0..1.0) < crossover_rate {
                     self.crossover(&parent1, &parent2, search_space, &mut rng)?
                 } else {
                     (parent1.clone(), parent2.clone())
                 };
 
                 // Mutation
-                if rng.gen_range(0.0..1.0) < mutation_rate {
+                if rng.random_range(0.0..1.0) < mutation_rate {
                     self.mutate(&mut child1, search_space, &mut rng)?;
                 }
-                if rng.gen_range(0.0..1.0) < mutation_rate {
+                if rng.random_range(0.0..1.0) < mutation_rate {
                     self.mutate(&mut child2, search_space, &mut rng)?;
                 }
 
@@ -418,7 +418,7 @@ where
         let mut best_individual = None;
 
         for _ in 0..tournament_size {
-            let idx = rng.gen_range(0..population.len());
+            let idx = rng.random_range(0..population.len());
             let individual = &population[idx];
 
             // In a real implementation, we would evaluate fitness here
@@ -447,7 +447,7 @@ where
             let val2 = parent2.get(param_name).copied().unwrap_or(0.0);
 
             // Uniform crossover
-            if rng.gen_range(0.0..1.0) < 0.5 {
+            if rng.random_range(0.0..1.0) < 0.5 {
                 child1.insert(param_name.clone(), val1);
                 child2.insert(param_name.clone(), val2);
             } else {
@@ -467,7 +467,7 @@ where
         rng: &mut scirs2_core::random::rngs::StdRng,
     ) -> Result<()> {
         for (param_name, param_spec) in &search_space.parameters {
-            if rng.gen_range(0.0..1.0) < 0.1 {
+            if rng.random_range(0.0..1.0) < 0.1 {
                 // 10% chance to mutate each parameter
                 let new_value = self.sample_parameter(param_spec, rng);
                 individual.insert(param_name.clone(), new_value);
@@ -479,11 +479,11 @@ where
     /// Sample a value from a parameter specification
     fn sample_parameter(&self, param_spec: &HyperParameter, rng: &mut scirs2_core::random::rngs::StdRng) -> f64 {
         match param_spec {
-            HyperParameter::Integer { min, max } => rng.gen_range(*min..=*max) as f64,
-            HyperParameter::Float { min, max } => rng.gen_range(*min..=*max),
-            HyperParameter::Categorical { choices } => rng.gen_range(0..choices.len()) as f64,
+            HyperParameter::Integer { min, max } => rng.random_range(*min..=*max) as f64,
+            HyperParameter::Float { min, max } => rng.random_range(*min..=*max),
+            HyperParameter::Categorical { choices } => rng.random_range(0..choices.len()) as f64,
             HyperParameter::Boolean => {
-                if rng.gen_range(0.0..1.0) < 0.5 {
+                if rng.random_range(0.0..1.0) < 0.5 {
                     1.0
                 } else {
                     0.0
@@ -492,11 +492,11 @@ where
             HyperParameter::LogUniform { min, max } => {
                 let log_min = min.ln();
                 let log_max = max.ln();
-                let log_value = rng.gen_range(log_min..=log_max);
+                let log_value = rng.random_range(log_min..=log_max);
                 log_value.exp()
             }
             HyperParameter::IntegerChoices { choices } => {
-                let idx = rng.gen_range(0..choices.len());
+                let idx = rng.random_range(0..choices.len());
                 choices[idx] as f64
             }
         }
@@ -650,7 +650,7 @@ where
             AcquisitionFunction::ThompsonSampling => {
                 // Sample from posterior
                 let mut rng = scirs2_core::random::thread_rng();
-                let sample: f64 = rng.gen_range(0.0..1.0);
+                let sample: f64 = rng.random_range(0.0..1.0);
                 mean + std_dev * self.inverse_normal_cdf(sample)
             }
         }

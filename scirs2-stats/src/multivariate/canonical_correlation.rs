@@ -278,8 +278,6 @@ impl CanonicalCorrelationAnalysis {
         cxy: &Array2<f64>,
         n_components: usize,
     ) -> Result<(Array2<f64>, Array2<f64>, Array1<f64>)> {
-        use scirs2_core::ndarray::ndarray_linalg::SVD;
-
         // Regularized versions of covariance matrices
         let cxx_reg = self.regularize_covariance(cxx)?;
         let cyy_reg = self.regularize_covariance(cyy)?;
@@ -291,13 +289,9 @@ impl CanonicalCorrelationAnalysis {
         // Form the matrix for SVD: Cxx^{-1/2} * Cxy * Cyy^{-1/2}
         let k = cxx_inv_sqrt.dot(cxy).dot(&cyy_inv_sqrt);
 
-        // SVD of K
-        let (u, s, vt) = k
-            .svd(true, true)
+        // SVD of K using scirs2_linalg
+        let (u, s, vt) = scirs2_linalg::svd(&k.view(), true, None)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed in CCA: {}", e)))?;
-
-        let u = u.expect("Operation failed");
-        let vt = vt.expect("Operation failed");
 
         // Extract the desired number of _components
         let n_comp = n_components.min(s.len());
@@ -330,11 +324,9 @@ impl CanonicalCorrelationAnalysis {
 
     /// Compute inverse square root of a symmetric positive definite matrix
     fn compute_inverse_sqrt(&self, matrix: &Array2<f64>) -> Result<Array2<f64>> {
-        use scirs2_core::ndarray::ndarray_linalg::Eigh;
-
-        let (eigenvalues, eigenvectors) = matrix
-            .eigh(scirs2_core::ndarray::ndarray_linalg::UPLO::Upper)
-            .map_err(|e| {
+        // Eigenvalue decomposition using scirs2_linalg
+        let (eigenvalues, eigenvectors) =
+            scirs2_linalg::eigh_f64_lapack(&matrix.view()).map_err(|e| {
                 StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e))
             })?;
 
@@ -348,7 +340,7 @@ impl CanonicalCorrelationAnalysis {
         }
 
         // Compute inverse square root
-        let inv_sqrt_eigenvalues = eigenvalues.mapv(|x| x.sqrt().recip());
+        let inv_sqrt_eigenvalues = eigenvalues.mapv(|x: f64| x.sqrt().recip());
         let mut inv_sqrt = Array2::zeros(matrix.dim());
 
         for i in 0..eigenvalues.len() {

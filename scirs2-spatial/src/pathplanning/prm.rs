@@ -317,7 +317,7 @@ impl PRMPlanner {
         for i in 0..self.dimension {
             let lower = self.bounds.0[i];
             let upper = self.bounds.1[i];
-            config[i] = self.rng.gen_range(lower..upper);
+            config[i] = self.rng.random_range(lower..upper);
         }
 
         config
@@ -331,7 +331,7 @@ impl PRMPlanner {
         for i in 0..self.dimension {
             let lower = (target[i] - radius).max(self.bounds.0[i]);
             let upper = (target[i] + radius).min(self.bounds.1[i]);
-            config[i] = self.rng.gen_range(lower..upper);
+            config[i] = self.rng.random_range(lower..upper);
         }
 
         config

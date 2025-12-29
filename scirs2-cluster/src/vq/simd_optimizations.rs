@@ -246,7 +246,7 @@ where
             .into()
     } else {
         whiten_simd_sequential(obs)?
-            .into_shape((n_samples, n_features))
+            .into_shape_with_order((n_samples, n_features))
             .expect("Operation failed");
         return whiten_simd_sequential(obs);
     };

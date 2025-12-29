@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::useless_vec)]
@@ -40,7 +39,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-metrics = "0.1.0-rc.4"
+//! scirs2-metrics = "0.1.0"
 //! ```
 //!
 //! ```rust,no_run
@@ -59,7 +58,7 @@
 //! let mse = mean_squared_error(&y_true_reg, &y_pred_reg).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //!
 //! # Classification Metrics
 //!
@@ -392,7 +391,7 @@
 //! use scirs2_core::ndarray::{Array, Ix1};
 //! use scirs2_metrics::evaluation::train_test_split;
 //!
-//! let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape(Ix1(10)).unwrap();
+//! let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape_with_order(Ix1(10)).unwrap();
 //! let y = &x * 2.;
 //!
 //! let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).unwrap();

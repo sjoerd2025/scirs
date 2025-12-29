@@ -21,10 +21,7 @@ use std::hash::Hash;
 ///
 /// # Returns
 /// * A community structure with node assignments and modularity
-#[deprecated(
-    since = "0.1.0-beta.2",
-    note = "Use `fluid_communities_result` instead"
-)]
+#[deprecated(note = "Use `fluid_communities_result` instead")]
 #[allow(dead_code)]
 pub fn fluid_communities<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
@@ -55,7 +52,7 @@ where
         let mut fluids = vec![0.0; num_communities];
         // Assign random initial fluid
         use scirs2_core::random::Rng;
-        let initial_fluid = rng.gen_range(0..num_communities);
+        let initial_fluid = rng.random_range(0..num_communities);
         fluids[initial_fluid] = 1.0;
         node_fluids.insert(node.clone(), fluids);
     }
@@ -105,7 +102,7 @@ where
             } else {
                 // If all fluids are zero, assign random fluid
                 use scirs2_core::random::Rng;
-                let random_fluid = rng.gen_range(0..num_communities);
+                let random_fluid = rng.random_range(0..num_communities);
                 fluid_sums[random_fluid] = 1.0;
             }
 

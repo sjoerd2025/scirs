@@ -167,7 +167,7 @@ where
     let mut rng = scirs2_core::random::rng();
     let mut b = Array1::zeros(n);
     for i in 0..n {
-        b[i] = F::from(rng.gen_range(-1.0..=1.0)).unwrap_or(F::zero());
+        b[i] = F::from(rng.random_range(-1.0..=1.0)).unwrap_or(F::zero());
     }
 
     // Normalize the vector
@@ -811,7 +811,7 @@ where
         // Random initialization
         let mut rng = scirs2_core::random::rng();
         for i in 0..n {
-            v[i] = F::from(rng.gen_range(-1.0..=1.0)).unwrap_or(F::zero());
+            v[i] = F::from(rng.random_range(-1.0..=1.0)).unwrap_or(F::zero());
         }
 
         // Normalize

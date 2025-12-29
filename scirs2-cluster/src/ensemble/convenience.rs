@@ -293,7 +293,7 @@ fn apply_differential_privacy(
     let mut rng = scirs2_core::random::thread_rng();
 
     for label in result.consensus_labels.iter_mut() {
-        if rng.gen::<f64>() < 0.05 {
+        if rng.random::<f64>() < 0.05 {
             // 5% chance to flip
             *label = (*label + 1) % 3; // Simple label flipping
         }

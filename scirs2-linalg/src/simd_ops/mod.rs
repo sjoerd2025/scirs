@@ -448,12 +448,14 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> LinalgResult<f6
 }
 
 /// Get platform capabilities for SIMD optimization
+#[cfg(feature = "simd")]
 #[allow(dead_code)]
 pub fn get_platform_capabilities() -> PlatformCapabilities {
     PlatformCapabilities::detect()
 }
 
 /// Create an auto-optimizer for automatic SIMD/GPU selection
+#[cfg(feature = "simd")]
 #[allow(dead_code)]
 pub fn create_auto_optimizer() -> AutoOptimizer {
     AutoOptimizer::new()

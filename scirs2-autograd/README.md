@@ -6,7 +6,7 @@
 [![Build Status](https://img.shields.io/badge/tests-404%20passing-brightgreen)](https://github.com/cool-japan/scirs)
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-green)](https://github.com/cool-japan/scirs)
 
-**Production-Ready Automatic Differentiation for Rust (v0.1.0-rc.4)**
+**Production-Ready Automatic Differentiation for Rust (v0.1.0)**
 
 A high-performance automatic differentiation library for SciRS2, providing functionality comparable to PyTorch/TensorFlow's autograd systems with native Rust performance and safety guarantees.
 
@@ -44,7 +44,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-autograd = "0.1.0-rc.4"
+scirs2-autograd = "0.1.0"
 ```
 
 ### Optional Features
@@ -53,7 +53,7 @@ Enable performance optimizations and additional backends:
 
 ```toml
 [dependencies]
-scirs2-autograd = { version = "0.1.0-rc.4", features = ["blas", "simd"] }
+scirs2-autograd = { version = "0.1.0", features = ["blas", "simd"] }
 ```
 
 **Available Features:**
@@ -96,18 +96,19 @@ run(|ctx| {
 ### Neural Network Training
 
 ```rust
-use scirs2_autograd::{tensor_ops::*, VariableEnvironment};
+use scirs2_autograd::{tensor_ops::*, ndarray_ext, VariableEnvironment};
 use scirs2_autograd::optimizers::adam::Adam;
 
 // Build a 2-layer MLP for classification
 let mut env = VariableEnvironment::new();
-let mut rng = scirs2_autograd::ndarray_ext::ArrayRng::<f32>::default();
+let mut rng = ndarray_ext::ArrayRng::<f32>::default();
 
-// Initialize network parameters  
+// Initialize network parameters
+// Note: Use ndarray_ext::zeros for NdArray, not tensor_ops::zeros which returns Tensor
 env.name("w1").set(rng.glorot_uniform(&[784, 128]));
-env.name("b1").set(zeros(&[1, 128]));
+env.name("b1").set(ndarray_ext::zeros(&[1, 128]));
 env.name("w2").set(rng.glorot_uniform(&[128, 10]));
-env.name("b2").set(zeros(&[1, 10]));
+env.name("b2").set(ndarray_ext::zeros(&[1, 10]));
 
 // Setup Adam optimizer
 let adam = Adam::default(
@@ -149,6 +150,32 @@ for epoch in 0..100 {
     });
 }
 ```
+
+## ⚠️ Important API Notes
+
+### `ndarray_ext` vs `tensor_ops` Functions
+
+There are two sets of array creation functions with **different return types**:
+
+| Module | Function | Returns | Use For |
+|--------|----------|---------|---------|
+| `ndarray_ext::zeros` | `zeros(&[shape])` | `NdArray<T>` | Variable initialization, data storage |
+| `tensor_ops::zeros` | `zeros(&shape, ctx)` | `Tensor<F>` | Computation graph operations |
+
+**Common Mistake:**
+```rust
+// ❌ WRONG: tensor_ops::zeros returns Tensor, but .set() expects NdArray
+use scirs2_autograd::tensor_ops::*;
+env.name("b1").set(zeros(&[1, 128], ctx));  // Type error!
+
+// ✅ CORRECT: Use ndarray_ext::zeros for variable initialization
+use scirs2_autograd::ndarray_ext;
+env.name("b1").set(ndarray_ext::zeros(&[1, 128]));
+```
+
+**Rule of Thumb:**
+- Use `ndarray_ext::*` for **data** (variable initialization, feeding values)
+- Use `tensor_ops::*` for **computations** (inside `env.run(|ctx| { ... })`)
 
 ## 🎯 Advanced Features
 
@@ -252,7 +279,7 @@ T::CheckpointProfiler::reset_statistics();
 
 ## 🚀 Production Readiness
 
-SciRS2 Autograd v0.1.0-rc.4 is **Release Candidate 4** and is **production-ready**:
+SciRS2 Autograd v0.1.0 is **Stable Release** and is **production-ready**:
 
 - ✅ **Stable API:** No breaking changes expected before v1.0
 - ✅ **Comprehensive Testing:** All core functionality thoroughly tested

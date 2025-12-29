@@ -78,8 +78,8 @@ fn generate_gaussian_noise(noise_level: f64) -> f64 {
         HAVE_SPARE = true;
 
         let mut rng = scirs2_core::random::rng();
-        let u = rng.gen::<f64>();
-        let v = rng.gen::<f64>();
+        let u = rng.random::<f64>();
+        let v = rng.random::<f64>();
 
         let magnitude = noise_level * (-2.0_f64 * u.ln()).sqrt();
         let angle = 2.0 * PI * v;

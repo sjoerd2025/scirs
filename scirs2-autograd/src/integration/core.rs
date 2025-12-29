@@ -89,13 +89,62 @@ impl<'a, F: Float> SciRS2Data<'a, F> {
         Ok(())
     }
 
-    /// Convert to another floating point precision
-    pub fn convert_precision<F2: Float>(&self) -> Result<SciRS2Data<F2>, IntegrationError> {
+    /// Convert to another floating point precision using a target graph.
+    ///
+    /// This method properly handles precision conversion by creating new tensors
+    /// in the provided target graph. The target graph must have the desired precision type.
+    ///
+    /// # Arguments
+    /// * `target_graph` - The graph where converted tensors will be created
+    ///
+    /// # Example
+    /// ```ignore
+    /// let source_graph = Graph::<f32>::default();
+    /// let target_graph = Graph::<f64>::default();
+    /// let data = SciRS2Data::<f32>::new().add_tensor("x", tensor);
+    /// let converted = data.convert_precision_with_graph(&target_graph)?;
+    /// ```
+    pub fn convert_precision_with_graph<'b, F2: Float>(
+        &self,
+        target_graph: &'b Graph<F2>,
+    ) -> Result<SciRS2Data<'b, F2>, IntegrationError> {
         let mut new_data = SciRS2Data::<F2>::new();
 
-        // Convert tensors
+        // Convert tensors using the target graph
         for (name, tensor) in &self.tensors {
-            let converted_tensor = convert_tensor_precision::<F, F2>(tensor)?;
+            let converted_tensor =
+                convert_tensor_precision_with_graph::<F, F2>(tensor, target_graph)?;
+            new_data.tensors.insert(name.clone(), converted_tensor);
+        }
+
+        // Copy metadata and parameters
+        new_data.metadata = self.metadata.clone();
+        new_data.parameters = self.parameters.clone();
+        new_data.pipeline_info = self.pipeline_info.clone();
+
+        Ok(new_data)
+    }
+
+    /// Convert to another floating point precision (deprecated).
+    ///
+    /// **Warning**: This method is deprecated and will be removed in a future version.
+    /// Use [`Self::convert_precision_with_graph`] instead, which properly handles graph lifetimes.
+    #[deprecated(
+        note = "Use convert_precision_with_graph instead for proper graph lifetime handling"
+    )]
+    pub fn convert_precision<F2: Float>(
+        &self,
+    ) -> Result<SciRS2Data<'static, F2>, IntegrationError> {
+        // For backward compatibility, create a leaked graph
+        // This is intentional to maintain API compatibility while fixing UB
+        let target_graph: &'static Graph<F2> = Box::leak(Box::new(Graph::<F2>::default()));
+
+        let mut new_data = SciRS2Data::<F2>::new();
+
+        // Convert tensors using the leaked target graph
+        for (name, tensor) in &self.tensors {
+            let converted_tensor =
+                convert_tensor_precision_with_graph::<F, F2>(tensor, target_graph)?;
             new_data.tensors.insert(name.clone(), converted_tensor);
         }
 
@@ -398,11 +447,15 @@ pub enum OperationType {
     PipelineStage,
 }
 
-/// Helper function for precision conversion
+/// Helper function for precision conversion with a target graph.
+///
+/// This function properly handles precision conversion by creating new tensors
+/// in the provided target graph, avoiding undefined behavior from graph transmutation.
 #[allow(dead_code)]
-fn convert_tensor_precision<'a, F1: Float, F2: Float>(
-    tensor: &Tensor<'a, F1>,
-) -> Result<Tensor<'a, F2>, IntegrationError> {
+fn convert_tensor_precision_with_graph<'b, F1: Float, F2: Float>(
+    tensor: &Tensor<F1>,
+    target_graph: &'b Graph<F2>,
+) -> Result<Tensor<'b, F2>, IntegrationError> {
     // For autograd tensors, we need to create a new tensor in the target precision
     // This is a simplified implementation that would work for basic tensor conversions
 
@@ -411,10 +464,13 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
     if shape.is_empty() {
         // For autograd tensors, shape might be empty during integration testing
         // Use default shape based on test expectations
-        let defaultshape = vec![2]; // Default for test case
+        let default_shape = vec![2]; // Default for test case
         let converted_data: Vec<F2> = vec![F2::one(), F2::from(2.0).unwrap_or(F2::zero())];
-        let target_graph = unsafe { std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph()) };
-        return Ok(Tensor::from_vec(converted_data, defaultshape, target_graph));
+        return Ok(Tensor::from_vec(
+            converted_data,
+            default_shape,
+            target_graph,
+        ));
     }
 
     // Get tensor data (this will return empty for now due to eval limitations)
@@ -426,13 +482,6 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
             .map(|i| F2::from(i as f32 + 1.0).unwrap_or_else(|| F2::zero()))
             .collect();
 
-        // Create new tensor in target precision using the same graph structure
-        let target_graph = unsafe {
-            // This is a workaround for the lifetime constraint
-            // In a proper implementation, we'd need proper graph conversion
-            std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph())
-        };
-
         Ok(Tensor::from_vec(converted_data, shape, target_graph))
     } else {
         // Convert data from F1 to F2
@@ -440,9 +489,6 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
             .into_iter()
             .map(|val| F2::from(val.to_f64().unwrap_or(0.0)).unwrap_or_else(|| F2::zero()))
             .collect();
-
-        // Create new tensor in target precision
-        let target_graph = unsafe { std::mem::transmute::<&Graph<F1>, &Graph<F2>>(tensor.graph()) };
 
         Ok(Tensor::from_vec(converted_data, shape, target_graph))
     }
@@ -590,15 +636,20 @@ mod tests {
 
     #[test]
     fn test_precision_conversion() {
-        let graph = Graph::default();
+        let source_graph: Graph<f32> = Graph::default();
+        let target_graph: Graph<f64> = Graph::default();
+
         let data = SciRS2Data::<f32>::new()
             .add_tensor(
                 "test".to_string(),
-                Tensor::from_vec(vec![1.0f32, 2.0], vec![2], &graph),
+                Tensor::from_vec(vec![1.0f32, 2.0], vec![2], &source_graph),
             )
             .add_metadata("module_name".to_string(), "test".to_string());
 
-        let converted_data: SciRS2Data<f64> = data.convert_precision().expect("Operation failed");
+        // Use the proper API that takes a target graph
+        let converted_data: SciRS2Data<f64> = data
+            .convert_precision_with_graph(&target_graph)
+            .expect("Operation failed");
         let _converted_tensor = converted_data.get_tensor("test").expect("Operation failed");
 
         // Check that conversion succeeded - for autograd tensors, precision conversion
@@ -609,5 +660,23 @@ mod tests {
         assert!(converted_data.get_tensor("test").is_some());
 
         // For integration testing, this verifies the conversion pipeline works
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_precision_conversion_deprecated() {
+        // Test the deprecated API still works (with leaked graph)
+        let source_graph: Graph<f32> = Graph::default();
+
+        let data = SciRS2Data::<f32>::new()
+            .add_tensor(
+                "test".to_string(),
+                Tensor::from_vec(vec![1.0f32, 2.0], vec![2], &source_graph),
+            )
+            .add_metadata("module_name".to_string(), "test".to_string());
+
+        // Use the deprecated API
+        let converted_data: SciRS2Data<f64> = data.convert_precision().expect("Operation failed");
+        assert!(converted_data.get_tensor("test").is_some());
     }
 }

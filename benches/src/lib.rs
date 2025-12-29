@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 //! SciRS2 Benchmarking Suite
 //!
 //! This crate provides comprehensive performance benchmarking for SciRS2,

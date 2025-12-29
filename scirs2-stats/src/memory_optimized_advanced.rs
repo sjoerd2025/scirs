@@ -537,7 +537,7 @@ where
                 let j = {
                     use scirs2_core::random::Rng;
                     let mut rng = scirs2_core::random::thread_rng();
-                    rng.gen_range(0..total_count)
+                    rng.random_range(0..total_count)
                 };
                 if j < values.len() {
                     values[j] = value;

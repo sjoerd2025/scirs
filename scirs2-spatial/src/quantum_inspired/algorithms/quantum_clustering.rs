@@ -276,7 +276,7 @@ impl QuantumClusterer {
         let mut selected_indices = Vec::new();
 
         // First centroid: random selection
-        let first_idx = rng.gen_range(0..n_points);
+        let first_idx = rng.random_range(0..n_points);
         selected_indices.push(first_idx);
 
         // Remaining centroids: weighted by distance to closest existing centroid
@@ -300,7 +300,7 @@ impl QuantumClusterer {
             // Select next centroid with probability proportional to squared distance
             let total_distance: f64 = distances.iter().sum();
             let mut cumulative = 0.0;
-            let random_value = rng.gen_range(0.0..total_distance);
+            let random_value = rng.random_range(0.0..total_distance);
 
             for (i, &distance) in distances.iter().enumerate() {
                 cumulative += distance;

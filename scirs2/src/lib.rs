@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 //! # SciRS2 - Scientific Computing for Rust
 //!
 //! **SciRS2** is a comprehensive scientific computing and AI/ML infrastructure for Rust,
@@ -60,7 +59,7 @@
 //! | [`validation`] | Input validation utilities |
 //!
 //! **Note**: ML optimization algorithms have been moved to the independent
-//! [OptiRS](https://github.com/cool-japan/optirs) project from v0.1.0-beta.2.
+//! [OptiRS](https://github.com/cool-japan/optirs) project.
 //!
 //! ## 🚀 Quick Start
 //!
@@ -70,14 +69,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.1.0-rc.4", features = ["linalg", "stats"] }
+//! scirs2 = { version = "0.1.0", features = ["linalg", "stats"] }
 //! ```
 //!
 //! Or install all features:
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.1.0-rc.4", features = ["full"] }
+//! scirs2 = { version = "0.1.0", features = ["full"] }
 //! ```
 //!
 //! ### Linear Algebra Example
@@ -230,11 +229,11 @@
 //!
 //! SciRS2 follows semantic versioning and provides:
 //!
-//! - **API Stability**: Release Candidate releases maintain API compatibility
+//! - **API Stability**: Stable releases maintain API compatibility
 //! - **Deprecation Policy**: 2-release deprecation cycle
 //! - **Production Features**: Enterprise-grade error handling and diagnostics
 //!
-//! Current version: **0.1.0-rc.4** (Released December 21, 2025)
+//! Current version: **0.1.0** (Released December 29, 2025)
 //!
 //! ## 🤝 Ecosystem Integration
 //!
@@ -313,7 +312,7 @@ pub use scirs2_datasets as datasets;
 #[cfg(feature = "neural")]
 pub use scirs2_neural as neural;
 
-// optim module moved to independent OptiRS project from v0.1.0-beta.2
+// optim module moved to independent OptiRS project
 
 #[cfg(feature = "graph")]
 pub use scirs2_graph as graph;

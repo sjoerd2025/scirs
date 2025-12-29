@@ -525,9 +525,10 @@ impl Default for MetalSpMatVec {
 }
 
 /// Metal optimization levels for sparse matrix operations
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum MetalOptimizationLevel {
     /// Basic thread-per-row implementation
+    #[default]
     Basic,
     /// SIMD group optimized implementation
     SimdGroup,
@@ -535,12 +536,6 @@ pub enum MetalOptimizationLevel {
     AppleSilicon,
     /// Neural Engine preparation (future feature)
     NeuralEngine,
-}
-
-impl Default for MetalOptimizationLevel {
-    fn default() -> Self {
-        Self::Basic
-    }
 }
 
 /// Metal device information for optimization

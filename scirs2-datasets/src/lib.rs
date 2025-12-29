@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 //! # SciRS2 Datasets - Dataset Loading and Generation
 //!
 //! **scirs2-datasets** provides dataset utilities modeled after scikit-learn's `datasets` module,
@@ -28,7 +27,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-datasets = "0.1.0-rc.4"
+//! scirs2-datasets = "0.1.0"
 //! ```
 //!
 //! ```rust
@@ -42,7 +41,7 @@
 //! let data = make_classification(100, 5, 3, 2, 4, Some(42)).expect("Operation failed");
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //!
 //! # Examples
 //!

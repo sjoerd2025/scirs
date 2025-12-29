@@ -1,7 +1,7 @@
 # SciRS2-Python Performance Guide
 
 **Version**: 0.2.0
-**Last Updated**: 2025-12-21
+**Last Updated**: 2025-12-29
 **Benchmark Data**: 79 tests across statistics, linear algebra, and FFT modules
 
 ---
@@ -508,13 +508,10 @@ print(f"  Kurtosis: {kurtosis:.4f} (scirs2)")
 
 ## Additional Resources
 
-- **Full Benchmark Report**: [MASTER-PERFORMANCE-REPORT.md](/tmp/MASTER-PERFORMANCE-REPORT.md)
-- **API Documentation**: [docs/api/](/Users/kitasan/work/scirs/scirs2-python/docs/api/)
-- **User Guides**: [docs/guides/](/Users/kitasan/work/scirs/scirs2-python/docs/guides/)
 - **GitHub Issues**: Report performance issues at https://github.com/cool-japan/scirs/issues
 
 ---
 
-**Last Updated**: 2025-12-21
+**Last Updated**: 2025-12-29
 **Benchmark Version**: Phase 4 (79 tests)
-**scirs2-python Version**: 0.2.0
+**scirs2-python Version**: 0.1.0

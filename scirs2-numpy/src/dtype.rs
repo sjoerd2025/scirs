@@ -166,7 +166,7 @@ pub trait PyArrayDescrMethods<'py>: Sealed {
     ///
     /// Equivalent to [`numpy.dtype.itemsize`][dtype-itemsize].
     ///
-    /// [dtype-itemsiize]: https://numpy.org/doc/stable/reference/generated/numpy.dtype.itemsize.html
+    /// [dtype-itemsize]: https://numpy.org/doc/stable/reference/generated/numpy.dtype.itemsize.html
     fn itemsize(&self) -> usize;
 
     /// Returns the required alignment (bytes) of this type descriptor according to the compiler.

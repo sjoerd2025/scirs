@@ -67,6 +67,285 @@ mod kaiser;
 // Re-export kaiser functions for backward compatibility
 pub use kaiser::{kaiser, kaiser_bessel_derived};
 
+// ============================================================================
+// Type-safe Window API using Enums
+// ============================================================================
+
+/// Window type specification with embedded parameters
+///
+/// This enum provides a type-safe way to specify window functions with their
+/// parameters, addressing the limitation of string-only APIs. Each variant
+/// includes the parameters specific to that window type.
+///
+/// # Example
+///
+/// ```
+/// use scirs2_signal::window::{WindowType, generate_window};
+///
+/// // Create a Tukey window with alpha=0.3
+/// let window = generate_window(WindowType::Tukey { alpha: 0.3 }, 64, true)
+///     .expect("Failed to create window");
+///
+/// // Create a Kaiser window with beta=14.0
+/// let window = generate_window(WindowType::Kaiser { beta: 14.0 }, 128, true)
+///     .expect("Failed to create window");
+///
+/// // Non-parameterized windows work too
+/// let window = generate_window(WindowType::Hamming, 64, true)
+///     .expect("Failed to create window");
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum WindowType {
+    // ---- Cosine Family (no parameters) ----
+    /// Hamming window - raised cosine with α=0.54
+    Hamming,
+    /// Hann (Hanning) window - raised cosine
+    Hann,
+    /// Blackman window - three-term cosine sum
+    Blackman,
+    /// Blackman-Harris window - four-term cosine sum, very low sidelobes
+    BlackmanHarris,
+    /// Nuttall window - four-term cosine sum, minimum sidelobe level
+    Nuttall,
+    /// Flat-top window - maximum amplitude accuracy
+    FlatTop,
+    /// Cosine window (sine window) - half-period cosine
+    Cosine,
+    /// Bartlett-Hann window - combination of Bartlett and Hann
+    BartHann,
+
+    // ---- Triangular Family (no parameters) ----
+    /// Bartlett (triangular) window - triangular shape with zero endpoints
+    Bartlett,
+    /// Triangular window - triangular shape, may have non-zero endpoints
+    Triangular,
+    /// Parzen window - piecewise cubic approximation to Gaussian
+    Parzen,
+    /// Welch window - parabolic shape
+    Welch,
+
+    // ---- Rectangular Family (no parameters) ----
+    /// Rectangular (boxcar) window - uniform weighting
+    Rectangular,
+
+    // ---- Exponential Family (with parameters) ----
+    /// Kaiser window with shape parameter beta
+    ///
+    /// * `beta` - Shape parameter (typical: 0-20, higher = narrower main lobe)
+    ///   - beta=0: rectangular window
+    ///   - beta=5: similar to Hamming
+    ///   - beta=6: similar to Hann
+    ///   - beta=8.6: similar to Blackman
+    Kaiser {
+        /// Shape parameter controlling main lobe width vs sidelobe level
+        beta: f64,
+    },
+
+    /// Gaussian window with standard deviation parameter
+    ///
+    /// * `std` - Standard deviation relative to window length (typical: 0.1-0.5)
+    Gaussian {
+        /// Standard deviation (smaller = wider frequency response)
+        std: f64,
+    },
+
+    /// Tukey (tapered cosine) window
+    ///
+    /// * `alpha` - Taper fraction (0.0 = rectangular, 1.0 = Hann)
+    Tukey {
+        /// Fraction of window inside cosine tapered region (0.0 to 1.0)
+        alpha: f64,
+    },
+
+    /// General exponential window
+    ///
+    /// * `tau` - Decay time constant
+    Exponential {
+        /// Time constant for exponential decay
+        tau: f64,
+    },
+
+    /// Lanczos window (sinc window)
+    ///
+    /// * `a` - Number of lobes (typically 2 or 3)
+    Lanczos {
+        /// Number of lobes on each side
+        a: f64,
+    },
+
+    // ---- Specialized Windows (with parameters) ----
+    /// Bohman window - convolution of two half-duration cosine lobes
+    Bohman,
+
+    /// Poisson (exponential) window
+    ///
+    /// * `alpha` - Decay parameter (larger = faster decay at edges)
+    Poisson {
+        /// Decay rate parameter
+        alpha: f64,
+    },
+
+    /// Discrete Prolate Spheroidal Sequence (DPSS/Slepian) window
+    ///
+    /// * `nw` - Time-bandwidth product (typical: 2.0-4.0)
+    DPSS {
+        /// Time-bandwidth product (half-bandwidth × sequence length)
+        nw: f64,
+    },
+
+    /// Kaiser-Bessel derived window (used in AAC audio coding)
+    ///
+    /// * `beta` - Shape parameter (similar to Kaiser)
+    KaiserBesselDerived {
+        /// Shape parameter
+        beta: f64,
+    },
+}
+
+impl WindowType {
+    /// Get the name of this window type as a string
+    pub fn name(&self) -> &'static str {
+        match self {
+            WindowType::Hamming => "hamming",
+            WindowType::Hann => "hann",
+            WindowType::Blackman => "blackman",
+            WindowType::BlackmanHarris => "blackmanharris",
+            WindowType::Nuttall => "nuttall",
+            WindowType::FlatTop => "flattop",
+            WindowType::Cosine => "cosine",
+            WindowType::BartHann => "barthann",
+            WindowType::Bartlett => "bartlett",
+            WindowType::Triangular => "triang",
+            WindowType::Parzen => "parzen",
+            WindowType::Welch => "welch",
+            WindowType::Rectangular => "rectangular",
+            WindowType::Kaiser { .. } => "kaiser",
+            WindowType::Gaussian { .. } => "gaussian",
+            WindowType::Tukey { .. } => "tukey",
+            WindowType::Exponential { .. } => "exponential",
+            WindowType::Lanczos { .. } => "lanczos",
+            WindowType::Bohman => "bohman",
+            WindowType::Poisson { .. } => "poisson",
+            WindowType::DPSS { .. } => "dpss",
+            WindowType::KaiserBesselDerived { .. } => "kaiser_bessel_derived",
+        }
+    }
+
+    /// Check if this window type requires parameters
+    pub fn requires_parameters(&self) -> bool {
+        matches!(
+            self,
+            WindowType::Kaiser { .. }
+                | WindowType::Gaussian { .. }
+                | WindowType::Tukey { .. }
+                | WindowType::Exponential { .. }
+                | WindowType::Lanczos { .. }
+                | WindowType::Poisson { .. }
+                | WindowType::DPSS { .. }
+                | WindowType::KaiserBesselDerived { .. }
+        )
+    }
+}
+
+impl std::fmt::Display for WindowType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            WindowType::Kaiser { beta } => write!(f, "Kaiser(β={})", beta),
+            WindowType::Gaussian { std } => write!(f, "Gaussian(σ={})", std),
+            WindowType::Tukey { alpha } => write!(f, "Tukey(α={})", alpha),
+            WindowType::Exponential { tau } => write!(f, "Exponential(τ={})", tau),
+            WindowType::Lanczos { a } => write!(f, "Lanczos(a={})", a),
+            WindowType::Poisson { alpha } => write!(f, "Poisson(α={})", alpha),
+            WindowType::DPSS { nw } => write!(f, "DPSS(NW={})", nw),
+            WindowType::KaiserBesselDerived { beta } => {
+                write!(f, "KaiserBesselDerived(β={})", beta)
+            }
+            _ => write!(f, "{}", self.name()),
+        }
+    }
+}
+
+/// Generate a window using the type-safe WindowType enum
+///
+/// This is the recommended API for window generation as it provides:
+/// - Type safety through enum variants
+/// - Clear parameter specification through struct fields
+/// - IDE autocompletion for window types and parameters
+///
+/// # Arguments
+///
+/// * `window_type` - Window specification with embedded parameters
+/// * `length` - Length of the window
+/// * `symmetric` - If true, generates symmetric window; if false, periodic
+///
+/// # Returns
+///
+/// * `SignalResult<Vec<f64>>` - The window coefficients
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_signal::window::{WindowType, generate_window};
+///
+/// // Parameterized windows with clear parameter names
+/// let tukey = generate_window(WindowType::Tukey { alpha: 0.25 }, 64, true).unwrap();
+/// let kaiser = generate_window(WindowType::Kaiser { beta: 14.0 }, 128, true).unwrap();
+/// let gaussian = generate_window(WindowType::Gaussian { std: 0.4 }, 64, true).unwrap();
+///
+/// // Non-parameterized windows
+/// let hamming = generate_window(WindowType::Hamming, 64, true).unwrap();
+/// let blackman = generate_window(WindowType::Blackman, 128, true).unwrap();
+/// ```
+pub fn generate_window(
+    window_type: WindowType,
+    length: usize,
+    symmetric: bool,
+) -> SignalResult<Vec<f64>> {
+    if length == 0 {
+        return Err(SignalError::ValueError(
+            "Window length must be positive".to_string(),
+        ));
+    }
+
+    match window_type {
+        // Cosine family
+        WindowType::Hamming => families::cosine::hamming(length, symmetric),
+        WindowType::Hann => families::cosine::hann(length, symmetric),
+        WindowType::Blackman => families::cosine::blackman(length, symmetric),
+        WindowType::BlackmanHarris => families::cosine::blackmanharris(length, symmetric),
+        WindowType::Nuttall => families::cosine::nuttall(length, symmetric),
+        WindowType::FlatTop => families::cosine::flattop(length, symmetric),
+        WindowType::Cosine => families::cosine::cosine(length, symmetric),
+        WindowType::BartHann => families::cosine::barthann(length, symmetric),
+
+        // Triangular family
+        WindowType::Bartlett => families::triangular::bartlett(length, symmetric),
+        WindowType::Triangular => families::triangular::triang(length, symmetric),
+        WindowType::Parzen => families::triangular::parzen(length, symmetric),
+        WindowType::Welch => families::triangular::welch(length, symmetric),
+
+        // Rectangular family
+        WindowType::Rectangular => families::rectangular::boxcar(length, symmetric),
+
+        // Exponential family (parameterized)
+        WindowType::Kaiser { beta } => families::exponential::kaiser(length, beta, symmetric),
+        WindowType::Gaussian { std } => families::exponential::gaussian(length, std, symmetric),
+        WindowType::Tukey { alpha } => families::exponential::tukey(length, alpha, symmetric),
+        WindowType::Exponential { tau } => {
+            families::exponential::exponential(length, tau, symmetric)
+        }
+        WindowType::Lanczos { a } => families::exponential::lanczos(length, a, symmetric),
+
+        // Specialized windows
+        WindowType::Bohman => families::specialized::bohman(length, symmetric),
+        WindowType::Poisson { alpha } => families::specialized::poisson(length, alpha, symmetric),
+        WindowType::DPSS { nw } => families::specialized::dpss_approximation(length, nw, symmetric),
+        WindowType::KaiserBesselDerived { beta } => {
+            crate::window::kaiser::kaiser_bessel_derived(length, beta, symmetric)
+        }
+    }
+}
+
 /// Helper function to handle small or incorrect window lengths
 pub(crate) fn _len_guards(m: usize) -> bool {
     // Return true for trivial windows with length 0 or 1

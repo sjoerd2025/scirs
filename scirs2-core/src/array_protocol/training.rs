@@ -21,8 +21,7 @@ use std::time::Instant;
 
 use ::ndarray::{Array, Array0, Dimension};
 use rand::seq::SliceRandom;
-use rand::Rng;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 
 use crate::array_protocol::grad::{GradientDict, Optimizer};
 use crate::array_protocol::ml_ops::ActivationFunc;

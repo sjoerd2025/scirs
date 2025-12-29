@@ -136,7 +136,7 @@ impl NeuralNetwork {
         (0..output_size)
             .map(|_| {
                 (0..input_size)
-                    .map(|_| rng.gen_range(-bound..bound))
+                    .map(|_| rng.random_range(-bound..bound))
                     .collect()
             })
             .collect()

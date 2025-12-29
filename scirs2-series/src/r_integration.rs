@@ -1108,7 +1108,7 @@ pub unsafe extern "C" fn scirs_free_neural_forecaster(forecaster: *mut RNeuralFo
 #[cfg(feature = "r")]
 #[no_mangle]
 pub extern "C" fn scirs_get_version() -> *const c_char {
-    static VERSION: &str = "0.1.0-beta.1\0";
+    static VERSION: &str = "0.1.0\0";
     VERSION.as_ptr() as *const c_char
 }
 

@@ -39,7 +39,7 @@ fn classification_optimization_example() -> Result<(), Box<dyn std::error::Error
     let mut f1_optimizer = MetricOptimizer::<f64>::new("f1_score", true);
 
     // Simulate training epochs with different predictions
-    let training_epochs = vec![
+    let training_epochs = [
         array![1, 0, 0, 1, 0, 1, 1, 0, 1, 0], // Epoch 1
         array![1, 0, 1, 1, 0, 1, 0, 0, 1, 0], // Epoch 2
         array![1, 0, 1, 1, 0, 1, 0, 0, 1, 1], // Epoch 3
@@ -112,7 +112,7 @@ fn regression_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
     let mut mse_optimizer = MetricOptimizer::<f64>::new("mse", false);
 
     // Simulate training with improving predictions
-    let training_predictions = vec![
+    let training_predictions = [
         array![1.5, 2.8, 2.2, 4.5, 4.8], // Epoch 1: Large errors
         array![1.2, 2.3, 2.8, 4.2, 4.9], // Epoch 2: Better
         array![1.1, 2.1, 2.9, 4.1, 5.0], // Epoch 3: Even better

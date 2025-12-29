@@ -39,7 +39,7 @@ pub fn inject_missing_data(
             // Missing Completely at Random - uniform probability
             for i in 0..n_samples {
                 for j in 0..n_features {
-                    if rng.gen_range(0.0f64..1.0) < missing_rate {
+                    if rng.random_range(0.0f64..1.0) < missing_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -55,7 +55,7 @@ pub fn inject_missing_data(
 
                 for j in 1..n_features {
                     // Skip first feature
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -70,7 +70,7 @@ pub fn inject_missing_data(
                     let normalized_val = (value + 10.0) / 20.0; // Normalize roughly to [0,1]
                     let adjusted_rate = missing_rate * normalized_val.clamp(0.1, 3.0);
 
-                    if rng.gen_range(0.0f64..1.0) < adjusted_rate {
+                    if rng.random_range(0.0f64..1.0) < adjusted_rate {
                         missing_mask[[i, j]] = true;
                         data[[i, j]] = f64::NAN;
                     }
@@ -164,7 +164,7 @@ pub fn inject_outliers(
 
                 // Modify each feature to be an outlier
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -189,7 +189,7 @@ pub fn inject_outliers(
                 features_to_modify.truncate(n_features_to_modify);
 
                 for &j in &features_to_modify {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -208,7 +208,7 @@ pub fn inject_outliers(
                 // Generate cluster center for this collective outlier
                 let mut outlier_center = vec![0.0; n_features];
                 for j in 0..n_features {
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0
@@ -224,7 +224,7 @@ pub fn inject_outliers(
                     outlier_mask[outlier_idx] = true;
 
                     for j in 0..n_features {
-                        let noise = rng.gen_range(-0.5f64..0.5f64) * feature_stds[j];
+                        let noise = rng.random_range(-0.5f64..0.5f64) * feature_stds[j];
                         data[[outlier_idx, j]] = outlier_center[j] + noise;
                     }
                 }
@@ -271,8 +271,8 @@ pub fn add_time_series_noise(
                         rng.sample(Uniform::new(0, n_samples).expect("Operation failed"));
                     let feature_idx =
                         rng.sample(Uniform::new(0, n_features).expect("Operation failed"));
-                    let spike_magnitude = rng.gen_range(5.0..=15.0) * strength;
-                    let direction = if rng.gen_range(0.0f64..1.0) < 0.5 {
+                    let spike_magnitude = rng.random_range(5.0..=15.0) * strength;
+                    let direction = if rng.random_range(0.0f64..1.0) < 0.5 {
                         -1.0
                     } else {
                         1.0

@@ -44,7 +44,7 @@ pub fn analyze_basis_selection_consistency(
             let mut noisy_signal = test_signal.clone();
             let mut rng = scirs2_core::random::rng();
             for i in 0..noisy_signal.len() {
-                noisy_signal[i] += rng.gen_range(-0.01..0.01);
+                noisy_signal[i] += rng.random_range(-0.01..0.01);
             }
 
             // Measure basis selection consistency (placeholder)

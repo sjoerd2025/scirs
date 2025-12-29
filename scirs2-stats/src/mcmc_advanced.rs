@@ -676,7 +676,7 @@ where
         } else {
             let accept_prob = (-energydiff).exp();
             let mut rng = scirs2_core::random::thread_rng();
-            let u: f64 = rng.gen_range(0.0..1.0);
+            let u: f64 = rng.random_range(0.0..1.0);
             F::from(u).expect("Failed to convert to float") < accept_prob
         }
     }

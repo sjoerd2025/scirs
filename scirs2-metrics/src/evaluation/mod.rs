@@ -47,7 +47,7 @@ pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
 /// use scirs2_core::ndarray::{Array, Ix1};
 /// use scirs2_metrics::evaluation::train_test_split;
 ///
-/// let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape(Ix1(10)).expect("Operation failed");
+/// let x = Array::<f64, Ix1>::linspace(0., 9., 10).into_shape_with_order(Ix1(10)).expect("Operation failed");
 /// let y = &x * 2.;
 ///
 /// let (train_arrays, test_arrays) = train_test_split(&[&x, &y], 0.3, Some(42)).expect("Operation failed");

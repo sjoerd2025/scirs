@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::excessive_precision)]
 #![allow(clippy::redundant_closure)]
 #![allow(clippy::legacy_numeric_constants)]
@@ -45,7 +44,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-special = "0.1.0-rc.4"
+//! scirs2-special = "0.1.0"
 //! ```
 //!
 //!
@@ -97,8 +96,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.4
-//! - **Release Date**: December 21, 2025
+//! - **Version**: 0.1.0
+//! - **Release Date**: December 29, 2025
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)
 
 // Export error types

@@ -57,7 +57,7 @@ impl<T> ScientificSliceRandom<T> for [T] {
         if self.is_empty() {
             None
         } else {
-            let index = rng.gen_range(0..self.len());
+            let index = rng.random_range(0..self.len());
             Some(&self[index])
         }
     }
@@ -73,7 +73,7 @@ impl<T> ScientificSliceRandom<T> for [T] {
         let k = amount;
 
         for i in (n - k)..n {
-            let mut j = rng.gen_range(0..=i);
+            let mut j = rng.random_range(0..=i);
             if selected.contains(&j) {
                 j = i;
             }
@@ -89,7 +89,7 @@ impl<T> ScientificSliceRandom<T> for [T] {
         amount: usize,
     ) -> Vec<&T> {
         (0..amount)
-            .map(|_| &self[rng.gen_range(0..self.len())])
+            .map(|_| &self[rng.random_range(0..self.len())])
             .collect()
     }
 
@@ -127,7 +127,7 @@ impl<T> ScientificSliceRandom<T> for [T] {
 
         let mut result = Vec::with_capacity(amount);
         for _ in 0..amount {
-            let u = rng.gen_range(0.0..1.0);
+            let u = rng.random_range(0.0..1.0);
             match cumulative.binary_search_by(|&x| x.partial_cmp(&u).expect("Operation failed")) {
                 Ok(idx) => result.push(&self[idx]),
                 Err(idx) => result.push(&self[idx.min(self.len() - 1)]),
@@ -235,7 +235,7 @@ pub mod convenience {
             None
         } else {
             let mut rng = thread_rng();
-            let index = rng.gen_range(0..slice.len());
+            let index = rng.random_range(0..slice.len());
             Some(&slice[index])
         }
     }
@@ -320,7 +320,7 @@ pub mod algorithms {
         }
 
         let interval = data.len() as f64 / n as f64;
-        let start = rng.gen_range(0.0..interval);
+        let start = rng.random_range(0.0..interval);
 
         (0..n)
             .map(|i| {

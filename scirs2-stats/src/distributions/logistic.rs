@@ -615,17 +615,19 @@ mod tests {
     fn test_logistic_rvs() {
         let logistic = Logistic::new(0.0, 1.0).expect("Operation failed");
 
-        // Generate samples
-        let samples = logistic.rvs(100).expect("Operation failed");
+        // Generate samples (larger sample size for better statistical stability)
+        let samples = logistic.rvs(1000).expect("Operation failed");
 
         // Check the number of samples
-        assert_eq!(samples.len(), 100);
+        assert_eq!(samples.len(), 1000);
 
         // Calculate sample mean and check it's reasonably close to loc = 0
         let sum: f64 = samples.iter().sum();
         let mean = sum / samples.len() as f64;
 
-        // The mean could be off due to randomness, but should be within a reasonable range
+        // For logistic(0,1): variance = π²/3 ≈ 3.29, so std ≈ 1.81
+        // With n=1000, standard error ≈ 0.057
+        // Using 5 standard errors gives tolerance ≈ 0.29, use 0.5 for safety
         assert!(mean.abs() < 0.5);
     }
 

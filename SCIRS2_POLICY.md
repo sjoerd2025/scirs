@@ -182,7 +182,7 @@ let mut rng = thread_rng();
 let arr = array![[1, 2], [3, 4]];
 let slice = arr.slice(s![.., 0]);
 
-// ✅ Correct - SciRS2-Core unified abstractions (v0.1.0-beta.4+)
+// ✅ Correct - SciRS2-Core unified abstractions (v0.1.0+)
 use scirs2_core::random::*;
 use scirs2_core::ndarray::*;
 
@@ -194,7 +194,7 @@ let slice = arr.slice(s![.., 0]);  // s! macro works
 
 ## Migration Strategy
 
-### For Beta.3 and Beyond
+### For v0.1.0 and Beyond
 
 1. **Phase 1**: Document policy (✅ Completed - This document)
 2. **Phase 2**: Systematic refactoring of all non-core code (✅ Completed - All 23 crates)
@@ -627,17 +627,17 @@ By following these policies, we achieve:
 7. **Version Control**: Simplified dependency management
 8. **Type Safety**: Consistent types across the ecosystem
 
-## Recent Enhancements (v0.1.0-beta.4)
+## Recent Enhancements (v0.1.0)
 
 ### Stable Core Abstractions
-As of beta.4, `scirs2_core::random` provides:
+As of v0.1.0, `scirs2_core::random` provides:
 - ✅ All `rand_distr` distributions (Beta, Cauchy, ChiSquared, FisherF, LogNormal, StudentT, Weibull, etc.)
 - ✅ Unified distribution interface with enhanced sampling
 - ✅ Full compatibility with ToRSh and other ecosystem projects
 - ✅ Production-ready stability and performance
 
 ### Unified NDArray Module
-As of beta.4, `scirs2_core::ndarray` provides:
+As of v0.1.0, `scirs2_core::ndarray` provides:
 - ✅ Complete ndarray functionality including all macros (`array!`, `s!`, `azip!`)
 - ✅ All array types, views, and operations
 - ✅ Single unified import point for all array operations
@@ -664,36 +664,26 @@ Remember: When in doubt, use the core abstractions!
 
 ## Policy Version
 - **Version**: 3.0.0 (Enhanced - Dependency Management)
-- **Effective Date**: SciRS2 v0.1.0-RC.1
-- **Last Updated**: 2025-12-21
+- **Effective Date**: SciRS2 v0.1.0
+- **Last Updated**: 2025-12-29
 - **Status**: Active - Migration Complete
 
-## Current Status (v0.1.0-rc.4)
+## Current Status (v0.1.0)
 
-### Policy Compliance Audit (2025-10-03)
+### Policy Compliance Audit
 
 **Investigation Results:**
 - Total Non-Core Crates: 23
-- **Policy Violations: 23/23 (100%)** ❌
-
-### Violation Breakdown
-
-| Violation Type | Affected Crates | Severity |
-|---------------|----------------|----------|
-| Direct `ndarray` import | 23/23 (100%) | 🔴 Critical |
-| Direct `num-traits`, `num-complex` | 22/23 (96%) | 🔴 Critical |
-| Direct `rand` import | 21/23 (91%) | 🔴 Critical |
-| Direct `rand_distr` import | 15/23 (65%) | 🟡 High |
-| Direct `ndarray-rand` import | 5/23 (22%) | 🟡 Medium |
+- **Policy Violations: 23/23 (100%)** 
 
 ### Migration Roadmap
 
-#### Phase 1: Core Infrastructure (v0.1.0-RC.1) ✅
+#### Phase 1: Core Infrastructure (v0.1.0) ✅
 1. ✅ Enhanced `scirs2-core::ndarray` with full ecosystem (array feature)
 2. ✅ Policy documentation updated with Cargo.toml guidelines
 3. ✅ Dependency mapping table completed
 
-#### Phase 2: High Priority Crates (v0.1.0-RC.1) ✅
+#### Phase 2: High Priority Crates (v0.1.0) ✅
 1. ✅ scirs2-linalg - Linear algebra foundation
 2. ✅ scirs2-stats - Statistical computing foundation
 3. ✅ scirs2-ndimage - Image processing foundation
@@ -701,14 +691,14 @@ Remember: When in doubt, use the core abstractions!
 5. ✅ scirs2-integrate - Integration and ODEs
 6. ✅ scirs2-interpolate - Interpolation methods
 
-#### Phase 3: Core Numerical Modules (v0.1.0-RC.1) ✅
+#### Phase 3: Core Numerical Modules (v0.1.0) ✅
 7. ✅ scirs2-special - Special functions
 8. ✅ scirs2-fft - Fast Fourier Transform
 9. ✅ scirs2-signal - Signal processing
 10. ✅ scirs2-sparse - Sparse matrices
 11. ✅ scirs2-spatial - Spatial algorithms
 
-#### Phase 4: Advanced & ML Modules (v0.1.0-RC.1) ✅
+#### Phase 4: Advanced & ML Modules (v0.1.0) ✅
 12. ✅ scirs2-cluster - Clustering algorithms
 13. ✅ scirs2-io - Input/output utilities
 14. ✅ scirs2-datasets - Sample datasets
@@ -722,11 +712,11 @@ Remember: When in doubt, use the core abstractions!
 22. ✅ scirs2-series - Time series analysis
 23. ✅ scirs2 - Main integration crate
 
-**Status**: All 23 crates are now POLICY-compliant (100% complete as of v0.1.0-RC.1)
+**Status**: All 23 crates are now POLICY-compliant (100% complete as of v0.1.0)
 
 ### Enforcement Strategy
 
-Starting from v0.1.0-RC.2:
+Starting from v0.1.0:
 1. **New Code**: Must follow policy from day one
 2. **Existing Code**: Gradual migration with priority order
 3. **CI Checks**: Automated policy compliance checks (planned)

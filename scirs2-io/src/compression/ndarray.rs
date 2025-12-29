@@ -8,7 +8,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 
 use ::serde::{Deserialize, Serialize};
-use bincode::{config, serde as bincode_serde};
+use oxicode::{config, serde as oxicode_serde};
 use scirs2_core::ndarray::{ArrayBase, Data, Dimension, IxDyn, OwnedRepr};
 
 use super::{compress_data, decompress_data, CompressionAlgorithm};
@@ -76,9 +76,9 @@ where
     D: Dimension + Serialize,
 {
     // Convert array data to a flat vector for compression
-    // bincode2: encode array structure (shape + data) via serde-compatible API
+    // OxiCode: encode array structure (shape + data) via serde-compatible API with SIMD optimizations
     let cfg = config::standard();
-    let flat_data: Vec<u8> = bincode_serde::encode_to_vec(array, cfg)
+    let flat_data: Vec<u8> = oxicode_serde::encode_to_vec(array, cfg)
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     // Compress the flattened data
@@ -105,7 +105,7 @@ where
     };
 
     // Serialize and save to file
-    let serialized = bincode_serde::encode_to_vec(&compressed_array, cfg)
+    let serialized = oxicode_serde::encode_to_vec(&compressed_array, cfg)
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     File::create(path)
@@ -143,7 +143,7 @@ where
     // Deserialize the compressed array structure
     let cfg = config::standard();
     let (compressed_array, _len): (CompressedArray, usize) =
-        bincode_serde::decode_from_slice(&serialized, cfg)
+        oxicode_serde::decode_owned_from_slice(&serialized, cfg)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     // Determine algorithm from metadata
@@ -165,7 +165,7 @@ where
 
     // Deserialize the array
     let (array, _len): (ArrayBase<OwnedRepr<A>, D>, usize) =
-        bincode_serde::decode_from_slice(&decompressed_data, cfg)
+        oxicode_serde::decode_owned_from_slice(&decompressed_data, cfg)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     Ok(array)
@@ -221,7 +221,7 @@ where
 
         // Serialize the chunk
         let cfg = config::standard();
-        let serialized_chunk = bincode_serde::encode_to_vec(&chunk_data, cfg)
+        let serialized_chunk = oxicode_serde::encode_to_vec(&chunk_data, cfg)
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         // Compress the chunk
@@ -263,7 +263,7 @@ where
 
     // Write metadata _size and metadata first
     let cfg = config::standard();
-    let serialized_metadata = bincode_serde::encode_to_vec(&metadata, cfg)
+    let serialized_metadata = oxicode_serde::encode_to_vec(&metadata, cfg)
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     let metadata_size = serialized_metadata.len() as u64;
@@ -325,7 +325,7 @@ where
 
     let cfg = config::standard();
     let (metadata, _len): (CompressedArrayMetadata, usize) =
-        bincode_serde::decode_from_slice(&metadata_bytes, cfg)
+        oxicode_serde::decode_owned_from_slice(&metadata_bytes, cfg)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     // Determine algorithm from metadata
@@ -372,7 +372,7 @@ where
 
         // Deserialize chunk elements and add to our collection
         let (chunk_elements, _len): (Vec<A>, usize) =
-            bincode_serde::decode_from_slice(&decompressed_chunk, cfg)
+            oxicode_serde::decode_owned_from_slice(&decompressed_chunk, cfg)
                 .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
         all_elements.extend(chunk_elements);
@@ -412,7 +412,7 @@ where
 {
     // Serialize the array once
     let cfg = config::standard();
-    let serialized = bincode_serde::encode_to_vec(array, cfg)
+    let serialized = oxicode_serde::encode_to_vec(array, cfg)
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     let original_size = serialized.len();

@@ -423,7 +423,7 @@ from pyo3_setuptools_rust import Pyo3RustExtension, build_rust
 
 setup(
     name="scirs2-ndimage",
-    version="0.1.0-beta.4",
+    version="0.1.0",
     author="SciRS2 Team",
     author_email="contact@scirs2.org",
     description="High-performance N-dimensional image processing library",
@@ -444,7 +444,7 @@ setup(
         "numpy>=1.19.0",
     ],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
@@ -495,7 +495,7 @@ Examples
 from ._rust import *
 from . import filters, morphology, measurements, interpolation, segmentation, features
 
-__version__ = "0.1.0-beta.4"
+__version__ = "0.1.0"
 __author__ = "SciRS2 Team"
 
 # Expose commonly used functions at the top level

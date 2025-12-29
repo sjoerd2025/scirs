@@ -585,7 +585,7 @@ impl NeuralSpatialOptimizer {
                 let mut rng = scirs2_core::random::rng();
                 let mut selected = Vec::new();
                 for _ in 0..params.num_clusters {
-                    let idx = rng.gen_range(0..n_points);
+                    let idx = rng.random_range(0..n_points);
                     selected.push(idx);
                 }
 

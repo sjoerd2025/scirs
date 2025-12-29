@@ -367,20 +367,15 @@ impl Default for CudaSpMatVec {
 }
 
 /// CUDA optimization levels for sparse matrix operations
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum CudaOptimizationLevel {
     /// Basic thread-per-row implementation
+    #[default]
     Basic,
     /// Vectorized implementation with shared memory
     Vectorized,
     /// Warp-level implementation for better memory coalescing
     WarpLevel,
-}
-
-impl Default for CudaOptimizationLevel {
-    fn default() -> Self {
-        Self::Basic
-    }
 }
 
 /// CUDA memory management for sparse matrices

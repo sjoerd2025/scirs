@@ -229,7 +229,7 @@ impl ParallelRng {
                     pool.with_rng(|rng| {
                         (0..data.len())
                             .map(|_| {
-                                let idx = rng.gen_range(0..data.len());
+                                let idx = rng.random_range(0..data.len());
                                 data[idx].clone()
                             })
                             .collect()
@@ -245,7 +245,7 @@ impl ParallelRng {
                     pool.with_rng(|rng| {
                         (0..data.len())
                             .map(|_| {
-                                let idx = rng.gen_range(0..data.len());
+                                let idx = rng.random_range(0..data.len());
                                 data[idx].clone()
                             })
                             .collect()

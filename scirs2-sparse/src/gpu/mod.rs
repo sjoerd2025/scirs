@@ -380,11 +380,12 @@ impl Default for GpuSpMatVec {
 }
 
 /// Cross-platform optimization hints
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum OptimizationHint {
     /// Basic optimization level
     Basic,
     /// Balanced optimization (default)
+    #[default]
     Balanced,
     /// Maximum performance optimization
     Maximum,
@@ -421,12 +422,6 @@ impl OptimizationHint {
             OptimizationHint::Maximum => MetalOptimizationLevel::AppleSilicon,
             OptimizationHint::MemoryOptimized => MetalOptimizationLevel::AppleSilicon,
         }
-    }
-}
-
-impl Default for OptimizationHint {
-    fn default() -> Self {
-        Self::Balanced
     }
 }
 

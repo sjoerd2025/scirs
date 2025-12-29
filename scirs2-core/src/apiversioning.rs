@@ -51,7 +51,7 @@ impl Version {
     pub const CURRENT: Self = Self::new(0, 1, 0);
 
     /// Current beta release identifier
-    pub const CURRENT_BETA: &'static str = "0.1.0-beta.4";
+    pub const CURRENT_BETA: &'static str = "0.1.0";
 
     /// Check if this version is compatible with another
     pub fn is_compatible_with(&self, other: &Version) -> bool {
@@ -1214,7 +1214,7 @@ mod tests {
             Version::new(1, 2, 3)
         );
         assert_eq!(
-            Version::parse("0.1.0-beta.4").expect("Operation failed"),
+            Version::parse("0.1.0").expect("Operation failed"),
             Version::new(0, 1, 0)
         );
         assert_eq!(

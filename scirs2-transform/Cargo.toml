@@ -36,7 +36,7 @@ statrs = { workspace = true }
 # Optional dependencies for new features
 tokio = { workspace = true, optional = true, features = ["full"] }
 serde = { workspace = true, optional = true, features = ["derive"] }
-bincode = { workspace = true, optional = true }
+oxicode = { workspace = true, optional = true }  # Binary serialization (SIMD-optimized)
 tch = { workspace = true, optional = true }
 prometheus = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
@@ -48,7 +48,7 @@ serde_json = { workspace = true, optional = true }
 default = []
 simd = ["scirs2-core/simd"]
 gpu = ["scirs2-core/gpu"]
-distributed = ["dep:tokio", "dep:serde", "dep:bincode"]
+distributed = ["dep:tokio", "dep:serde", "dep:oxicode"]  # SIMD-optimized serialization
 auto-feature-engineering = ["dep:tch"]
 monitoring = ["dep:prometheus", "dep:serde_json"]
 # Enable external ML library wrappers

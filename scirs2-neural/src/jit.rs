@@ -1588,7 +1588,7 @@ impl FusionOptimizer {
         // Reshape to target output if needed
         if current_output.shape() != outputshape {
             current_output = current_output
-                .into_shape(outputshape)
+                .into_shape_with_order(outputshape)
                 .map_err(|e| NeuralError::ComputationError(format!("Shape error: {}", e)))?;
         Ok(current_output)
     /// Execute horizontal fusion (parallel operations)

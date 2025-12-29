@@ -350,10 +350,7 @@ pub trait SparseElement:
     ///
     /// This method is deprecated to avoid ambiguity with `num_traits::Zero::zero()`.
     /// Use `sparse_zero()` instead.
-    #[deprecated(
-        since = "0.1.0-rc.4",
-        note = "Use `sparse_zero()` instead to avoid ambiguity with num_traits::Zero"
-    )]
+    #[deprecated(note = "Use `sparse_zero()` instead to avoid ambiguity with num_traits::Zero")]
     #[must_use]
     fn zero() -> Self {
         Self::sparse_zero()
@@ -365,10 +362,7 @@ pub trait SparseElement:
     ///
     /// This method is deprecated to avoid ambiguity with `num_traits::One::one()`.
     /// Use `sparse_one()` instead.
-    #[deprecated(
-        since = "0.1.0-rc.4",
-        note = "Use `sparse_one()` instead to avoid ambiguity with num_traits::One"
-    )]
+    #[deprecated(note = "Use `sparse_one()` instead to avoid ambiguity with num_traits::One")]
     #[must_use]
     fn one() -> Self {
         Self::sparse_one()

@@ -42,8 +42,7 @@ pub use ndarray_rand::{rand_distr as distributions, RandomExt, SamplingStrategy}
 
 // Note: ndarray_rand is compatible with both ndarray 0.16 and 0.17
 
-#[cfg(feature = "linalg")]
-pub use ndarray_linalg;
+// NOTE: ndarray_linalg removed - using OxiBLAS via scirs2_core::linalg module
 
 #[cfg(feature = "array_stats")]
 pub use ndarray_stats::{

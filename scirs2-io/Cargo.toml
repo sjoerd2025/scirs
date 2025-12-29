@@ -23,7 +23,7 @@ byteorder = { workspace = true }
 image = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-bincode = { workspace = true }
+oxicode = { workspace = true }  # Binary serialization (SIMD-optimized)
 rmp-serde = { workspace = true }
 flate2 = { workspace = true }
 lz4 = { workspace = true }
@@ -71,8 +71,7 @@ snap = { workspace = true }
 brotli = { workspace = true }
 # Database drivers
 rusqlite = { workspace = true, optional = true }
-sqlx = { workspace = true, optional = true, default-features = false, features = ["runtime-tokio-rustls", "macros"] }
-duckdb = { workspace = true, optional = true, features = ["bundled"] }
+# sqlx removed - postgres/mysql implementations are stubs only
 mongodb = { workspace = true, optional = true }
 redis = { workspace = true, optional = true }
 # Real-time streaming
@@ -102,13 +101,12 @@ gpu = []
 exif = []
 # Database features
 sqlite = ["dep:rusqlite"]
-postgres = ["dep:sqlx", "async"]
-mysql = ["dep:sqlx", "async"]
-duckdb = ["dep:duckdb"]
+postgres = ["async"]  # Stub implementation only (no actual sqlx dependency)
+mysql = ["async"]     # Stub implementation only (no actual sqlx dependency)
 mongodb = ["dep:mongodb", "async"]
 redis = ["dep:redis"]
 database = ["sqlite", "postgres", "mysql"]
-database-full = ["database", "duckdb"]  # Includes DuckDB (requires compatible Arrow/chrono versions)
+database-full = ["database"]  # Full database support
 # Real-time streaming features
 websocket = ["dep:tokio-tungstenite", "async"]
 mqtt = ["dep:rumqttc", "async"]
@@ -116,7 +114,6 @@ sse = ["dep:eventsource-client", "async", "reqwest"]
 grpc = ["dep:tonic", "dep:prost", "async"]
 realtime = ["websocket", "mqtt", "sse", "grpc"]
 all = ["csv", "compression", "validation", "hdf5", "async", "reqwest", "aws-sdk-s3", "google-cloud-storage", "azure-storage-blobs", "gpu", "exif", "database", "mongodb", "redis", "realtime"]
-all-experimental = ["all", "duckdb"]  # Includes experimental features (may have dependency conflicts)
 
 [[example]]
 name = "hdf5_example"

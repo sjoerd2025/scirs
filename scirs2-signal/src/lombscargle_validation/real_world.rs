@@ -62,13 +62,13 @@ pub fn test_astronomical_scenarios(tolerance: f64) -> SignalResult<f64> {
     let mut current_time = 0.0;
     for _ in 0..n_obs {
         // Random gaps between observations (0.1 to 2.0 days)
-        current_time += rng.gen_range(0.1..2.0);
+        current_time += rng.random_range(0.1..2.0);
         times.push(current_time);
 
         // Variable star signal with noise
         let phase = 2.0 * std::f64::consts::PI * current_time / period;
         let signal = 1.0 + 0.3 * phase.sin() + 0.1 * (2.0 * phase).sin(); // Fundamental + harmonic
-        let noise = 0.05 * rng.gen_range(-1.0..1.0); // 5% noise
+        let noise = 0.05 * rng.random_range(-1.0..1.0); // 5% noise
         brightness.push(signal + noise);
     }
 
@@ -131,7 +131,7 @@ pub fn test_physiological_scenarios(tolerance: f64) -> SignalResult<f64> {
             let very_low = 0.5 * (2.0 * std::f64::consts::PI * 0.02 * ti).sin(); // VLF: 0.01-0.04 Hz
             let low = 0.3 * (2.0 * std::f64::consts::PI * 0.1 * ti).sin(); // LF: 0.04-0.15 Hz
             let high = 0.2 * (2.0 * std::f64::consts::PI * 0.25 * ti).sin(); // HF: 0.15-0.4 Hz
-            let noise = 0.1 * rng.gen_range(-1.0..1.0);
+            let noise = 0.1 * rng.random_range(-1.0..1.0);
 
             1.0 + very_low + low + high + noise
         })
@@ -204,7 +204,7 @@ pub fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
     for day in 0..(n_years as f64 * days_per_year) as i32 {
         for measurement in 0..measurements_per_day {
             // Simulate data gaps (missing data)
-            if rng.gen_range(0.0..1.0) < 0.95 {
+            if rng.random_range(0.0..1.0) < 0.95 {
                 // 95% data availability
                 let time_hours = day as f64 * 24.0 + measurement as f64 * 6.0;
                 times.push(time_hours / 24.0); // Convert to days
@@ -215,7 +215,7 @@ pub fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
                 let daily = 5.0
                     * (2.0 * std::f64::consts::PI * measurement as f64 / measurements_per_day)
                         .sin();
-                let noise = 2.0 * rng.gen_range(-1.0..1.0);
+                let noise = 2.0 * rng.random_range(-1.0..1.0);
 
                 temperatures.push(20.0 + seasonal + daily + noise); // Base temp 20°C
             }
@@ -319,7 +319,7 @@ pub fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
         // Generate white noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 * 0.01).collect();
         let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.gen_range(-1.0..1.0))
+            .map(|_| rng.random_range(-1.0..1.0))
             .collect();
 
         match lombscargle(
@@ -386,7 +386,7 @@ pub fn test_bayesian_validation(tolerance: f64) -> SignalResult<f64> {
     let signal: Vec<f64> = t
         .iter()
         .map(|&ti| {
-            (2.0 * std::f64::consts::PI * true_freq * ti).sin() + 0.2 * rng.gen_range(-1.0..1.0)
+            (2.0 * std::f64::consts::PI * true_freq * ti).sin() + 0.2 * rng.random_range(-1.0..1.0)
         })
         .collect();
 
@@ -486,7 +486,7 @@ pub fn test_information_theory_metrics(tolerance: f64) -> SignalResult<f64> {
     }
 
     // Test 2: White noise should have high entropy
-    let signal_noise: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
+    let signal_noise: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
     match lombscargle(
         &t,

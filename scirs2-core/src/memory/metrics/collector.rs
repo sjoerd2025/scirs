@@ -7,8 +7,10 @@ use std::sync::{Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use crate::memory::metrics::event::{MemoryEvent, MemoryEventType};
-use rand::prelude::*;
-use rand::Rng;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
+
+use crate::random::Rng;
 #[cfg(feature = "memory_metrics")]
 #[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
@@ -28,7 +30,11 @@ impl Default for Random {
 
 impl Random {
     fn gen_range(&mut self, range: std::ops::Range<f64>) -> f64 {
-        self.rng.gen_range(range)
+        self.rng.random_range(range)
+    }
+
+    fn random_range(&mut self, range: std::ops::Range<f64>) -> f64 {
+        self.rng.random_range(range)
     }
 }
 
@@ -156,7 +162,7 @@ impl MemoryMetricsCollector {
         // Sample events if sampling rate < 1.0
         if self.config.samplingrate < 1.0 {
             let mut rng = self.rng.lock().expect("Operation failed");
-            if rng.gen_range(0.0..1.0) > self.config.samplingrate {
+            if rng.random_range(0.0..1.0) > self.config.samplingrate {
                 return;
             }
         }

@@ -1,7 +1,6 @@
 use super::*;
-
-use super::*;
 use scirs2_core::ndarray::array;
+use std::time::Duration;
 
 #[test]
 fn test_precision_mode() {

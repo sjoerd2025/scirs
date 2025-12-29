@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::redundant_closure)]
 #![allow(clippy::clone_on_copy)]
 #![allow(clippy::unnecessary_lazy_evaluations)]
@@ -59,7 +58,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-io = "0.1.0-rc.4"
+//! scirs2-io = "0.1.0"
 //! ```
 //!
 //! ```rust,no_run
@@ -74,7 +73,7 @@
 //! let (headers, data) = read_csv("data.csv", Some(config)).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //!
 //! ## Modules
 //!

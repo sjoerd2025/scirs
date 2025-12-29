@@ -516,8 +516,8 @@ where
     })?;
 
     // Parse weight from attributes if needed
-    let weight = if weighted && attributes.is_some() {
-        parse_weight_from_attributes(attributes.expect("Operation failed"))?
+    let weight = if let (true, Some(attrs)) = (weighted, attributes) {
+        parse_weight_from_attributes(attrs)?
     } else {
         E::default()
     };
@@ -577,8 +577,8 @@ where
     })?;
 
     // Parse weight from attributes if needed
-    let weight = if weighted && attributes.is_some() {
-        parse_weight_from_attributes(attributes.expect("Operation failed"))?
+    let weight = if let (true, Some(attrs)) = (weighted, attributes) {
+        parse_weight_from_attributes(attrs)?
     } else {
         E::default()
     };

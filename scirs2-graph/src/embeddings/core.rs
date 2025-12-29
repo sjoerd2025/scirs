@@ -25,7 +25,9 @@ impl Embedding {
 
     /// Create a random embedding
     pub fn random(dimensions: usize, rng: &mut impl Rng) -> Self {
-        let vector: Vec<f64> = (0..dimensions).map(|_| rng.gen_range(-0.5..0.5)).collect();
+        let vector: Vec<f64> = (0..dimensions)
+            .map(|_| rng.random_range(-0.5..0.5))
+            .collect();
         Embedding { vector }
     }
 

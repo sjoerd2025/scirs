@@ -153,7 +153,7 @@ generate_report() {
 # SciRS2-Spatial Advanced Modules Performance Validation Report
 
 **Generated:** $(date)
-**Version:** 0.1.0-beta.1
+**Version:** 0.1.0
 
 ## Executive Summary
 

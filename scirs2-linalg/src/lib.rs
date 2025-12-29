@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::new_without_default)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::manual_slice_size_calculation)]
@@ -49,9 +48,9 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-linalg = "0.1.0-rc.4"
+//! scirs2-linalg = "0.1.0"
 //! # Optional features
-//! scirs2-linalg = { version = "0.1.0-rc.4", features = ["simd", "parallel", "gpu"] }
+//! scirs2-linalg = { version = "0.1.0", features = ["simd", "parallel", "gpu"] }
 //! ```
 //!
 //! ### Basic Matrix Operations
@@ -210,8 +209,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.4
-//! - **Release Date**: December 21, 2025
+//! - **Version**: 0.1.0
+//! - **Release Date**: December 29, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-linalg](https://docs.rs/scirs2-linalg)
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)
@@ -412,6 +411,9 @@ pub mod prelude {
     //! ```
     //! use scirs2_linalg::prelude::*;
     //! ```
+
+    // Re-export approx traits for array comparison
+    pub use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
     // Pure Rust implementations
     pub use super::attention::{

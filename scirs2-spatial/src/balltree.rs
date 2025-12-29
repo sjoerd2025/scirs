@@ -803,7 +803,10 @@ mod tests {
 
     #[test]
     fn test_ball_tree_empty_input() {
-        let data = arr2(&[[0.0f64; 2]; 0]);
+        let data = arr2(&{
+            #[allow(clippy::zero_repeat_side_effects)]
+            [[0.0f64; 2]; 0]
+        });
         let result = BallTree::with_euclidean_distance(&data.view(), 2);
         assert!(result.is_err());
     }

@@ -168,7 +168,7 @@ pub fn generate_white_noise(n: usize, std_dev: f64) -> Vec<f64> {
     let mut rng = scirs2_core::random::rng();
 
     (0..n)
-        .map(|_| std_dev * rng.gen_range(-1.0..1.0))
+        .map(|_| std_dev * rng.random_range(-1.0..1.0))
         .collect()
 }
 

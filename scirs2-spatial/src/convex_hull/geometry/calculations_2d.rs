@@ -95,6 +95,15 @@ pub fn compute_2d_hull_equations(
     let n = vertex_indices.len();
     let mut equations = Array2::zeros((n, 3)); // 2D equations: ax + by + c = 0
 
+    // Compute centroid for outward normal orientation
+    let mut centroid = [0.0, 0.0];
+    for &idx in vertex_indices {
+        centroid[0] += points[[idx, 0]];
+        centroid[1] += points[[idx, 1]];
+    }
+    centroid[0] /= n as f64;
+    centroid[1] /= n as f64;
+
     for i in 0..n {
         let j = (i + 1) % n;
         let p1 = [
@@ -106,14 +115,34 @@ pub fn compute_2d_hull_equations(
             points[[vertex_indices[j], 1]],
         ];
 
-        // Line equation: (y2-y1)x - (x2-x1)y + (x2-x1)y1 - (y2-y1)x1 = 0
-        let a = p2[1] - p1[1];
-        let b = p1[0] - p2[0];
-        let c = (p2[0] - p1[0]) * p1[1] - (p2[1] - p1[1]) * p1[0];
+        // Edge direction
+        let dx = p2[0] - p1[0];
+        let dy = p2[1] - p1[1];
 
-        equations[[i, 0]] = a;
-        equations[[i, 1]] = b;
-        equations[[i, 2]] = c;
+        // Normal perpendicular to edge (rotate 90 degrees)
+        let len = (dx * dx + dy * dy).sqrt();
+        if len < 1e-10 {
+            continue;
+        }
+        let mut nx = -dy / len;
+        let mut ny = dx / len;
+
+        // Offset: -n · p1
+        let mut offset = -(nx * p1[0] + ny * p1[1]);
+
+        // Check if normal points outward (away from centroid)
+        // A point at centroid should satisfy n·c + offset < 0
+        let centroid_val = nx * centroid[0] + ny * centroid[1] + offset;
+        if centroid_val > 0.0 {
+            // Normal points inward, flip it
+            nx = -nx;
+            ny = -ny;
+            offset = -offset;
+        }
+
+        equations[[i, 0]] = nx;
+        equations[[i, 1]] = ny;
+        equations[[i, 2]] = offset;
     }
 
     equations

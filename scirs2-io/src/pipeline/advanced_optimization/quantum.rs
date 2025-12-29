@@ -38,7 +38,7 @@ impl QuantumState {
         for (i, qubit) in self.qubits.iter_mut().enumerate().take(dimensions) {
             qubit.set_superposition_state(
                 self.superposition_weights[i],
-                rng.gen::<f64>() * 2.0 * std::f64::consts::PI,
+                rng.random::<f64>() * 2.0 * std::f64::consts::PI,
             );
         }
 
@@ -52,7 +52,7 @@ impl QuantumState {
         let mut rng = scirs2_core::random::thread_rng();
         for i in 0..dimensions {
             for j in (i + 1)..dimensions {
-                let entanglement_strength = (rng.gen::<f64>() * 0.5).exp();
+                let entanglement_strength = (rng.random::<f64>() * 0.5).exp();
                 self.entanglement_matrix[i][j] = entanglement_strength;
                 self.entanglement_matrix[j][i] = entanglement_strength;
             }
@@ -127,7 +127,7 @@ impl Qubit {
 
     pub fn measure(&self) -> f64 {
         let mut rng = scirs2_core::random::thread_rng();
-        if rng.gen::<f64>() < self.amplitude_alpha.powi(2) {
+        if rng.random::<f64>() < self.amplitude_alpha.powi(2) {
             0.0
         } else {
             1.0
@@ -265,9 +265,9 @@ impl QuantumAnnealer {
         let mut rng = scirs2_core::random::thread_rng();
         let mut new_state = state.to_vec();
         for value in &mut new_state {
-            if rng.gen::<f64>() < self.tunneling_probability {
-                let tunnel_distance = temperature * rng.gen::<f64>();
-                *value += tunnel_distance * (rng.gen::<f64>() - 0.5) * 2.0;
+            if rng.random::<f64>() < self.tunneling_probability {
+                let tunnel_distance = temperature * rng.random::<f64>();
+                *value += tunnel_distance * (rng.random::<f64>() - 0.5) * 2.0;
                 *value = value.clamp(0.0, 1.0);
             }
         }
@@ -279,7 +279,7 @@ impl QuantumAnnealer {
             false
         } else {
             let mut rng = scirs2_core::random::thread_rng();
-            rng.gen::<f64>() < (-energy_delta / temperature).exp()
+            rng.random::<f64>() < (-energy_delta / temperature).exp()
         }
     }
 
@@ -429,7 +429,7 @@ impl QuantumOptimizer {
         // Apply rotation gates for fine-tuning
         let mut rng = scirs2_core::random::thread_rng();
         for i in 0..dimensions {
-            let rotation_angle = rng.gen::<f64>() * std::f64::consts::PI;
+            let rotation_angle = rng.random::<f64>() * std::f64::consts::PI;
             self.quantum_state.apply_quantum_gate(
                 QuantumGate::Rotation {
                     angle: rotation_angle,

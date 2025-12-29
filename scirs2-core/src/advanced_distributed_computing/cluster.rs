@@ -704,7 +704,7 @@ impl ClusterMetadata {
     fn default() -> Self {
         Self {
             name: "advanced-cluster".to_string(),
-            version: "0.1.0-beta.4".to_string(),
+            version: "0.1.0".to_string(),
             created_at: Instant::now(),
             administrator: "system".to_string(),
             security_policy: SecurityPolicy {

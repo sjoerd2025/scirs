@@ -16,6 +16,7 @@
 //! any array type implementing the ArrayProtocol trait.
 
 use ::ndarray::{Array, Ix1};
+
 use rand::Rng;
 
 use crate::array_protocol::ml_ops::ActivationFunc;

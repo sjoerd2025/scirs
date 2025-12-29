@@ -3,7 +3,6 @@
 //! Provides optimization algorithms similar to scipy.optimize
 
 // Allow deprecated with_gil for callback patterns where GIL must be acquired from Rust
-#![allow(deprecated)]
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -44,6 +43,7 @@ fn minimize_scalar_py(
 
     let fun_clone = fun.clone().unbind();
     let f = move |x: f64| -> f64 {
+        #[allow(deprecated)]
         Python::with_gil(|py| {
             let result = fun_clone
                 .bind(py)
@@ -107,6 +107,7 @@ fn brentq_py(
 ) -> PyResult<Py<PyAny>> {
     let fun_clone = fun.clone().unbind();
     let f = |x: f64| -> f64 {
+        #[allow(deprecated)]
         Python::with_gil(|py| {
             let result = fun_clone
                 .bind(py)
@@ -305,6 +306,7 @@ fn minimize_py(
     let fun_arc = std::sync::Arc::new(fun.clone().unbind());
     let f = move |x: &ArrayView1<f64>| -> f64 {
         let fun_clone = fun_arc.clone();
+        #[allow(deprecated)]
         Python::with_gil(|py| {
             let x_vec: Vec<f64> = x.to_vec();
             let result = fun_clone
@@ -361,6 +363,7 @@ fn differential_evolution_py(
     let fun_arc = std::sync::Arc::new(fun.clone().unbind());
     let f = move |x: &ArrayView1<f64>| -> f64 {
         let fun_clone = fun_arc.clone();
+        #[allow(deprecated)]
         Python::with_gil(|py| {
             let x_vec: Vec<f64> = x.to_vec();
             let result = fun_clone
@@ -477,6 +480,7 @@ fn curve_fit_py(
         let xdata_ref = &xdata_clone;
         let ydata_ref = &ydata_clone;
 
+        #[allow(deprecated)]
         Python::with_gil(|py| {
             let mut residuals = Vec::with_capacity(n_data);
 

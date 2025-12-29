@@ -167,7 +167,7 @@ fn generate_classification_chunk_gpu(
 
     for i in 0..n_centroids {
         for j in 0..n_informative {
-            centroids[i * n_informative + j] = 2.0 * rng.gen_range(-1.0f64..1.0f64);
+            centroids[i * n_informative + j] = 2.0 * rng.random_range(-1.0f64..1.0f64);
         }
     }
 
@@ -380,7 +380,7 @@ fn make_regression_gpu_impl(
     // Generate coefficient matrix on GPU
     let mut coefficients = vec![0.0; n_informative];
     for coeff in coefficients.iter_mut().take(n_informative) {
-        *coeff = rng.gen_range(-2.0f64..2.0f64);
+        *coeff = rng.random_range(-2.0f64..2.0f64);
     }
 
     // Generate data matrix in chunks

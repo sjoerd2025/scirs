@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::manual_div_ceil)]
 #![allow(clippy::needless_return)]
 #![allow(clippy::manual_ok_err)]
@@ -40,7 +39,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-sparse = "0.1.0-rc.4"
+//! scirs2-sparse = "0.1.0"
 //! ```
 //!
 //! ```rust
@@ -53,7 +52,7 @@
 //! let sparse = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //!
 //! ## Matrix vs. Array API
 //!

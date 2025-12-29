@@ -722,12 +722,9 @@ impl MLPipeline {
         let mut indices: Vec<usize> = (0..n_samples).collect();
 
         // Use proper random shuffling based on configuration
-        if self.config.stratify && target.is_some() {
+        if let (true, Some(t)) = (self.config.stratify, target) {
             // Implement stratified shuffling
-            self.stratified_shuffle(
-                &mut indices,
-                target.expect("Target required for stratified split"),
-            )?;
+            self.stratified_shuffle(&mut indices, t)?;
         } else {
             // Regular shuffling with optional random state
             match self.config.random_state {

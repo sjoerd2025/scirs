@@ -40,7 +40,7 @@ pub fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult
         let mut rng = scirs2_core::random::rng();
         let n = 100;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, 5.0, 50).to_vec();
 
@@ -79,7 +79,7 @@ pub fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<
         let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = t
             .iter()
-            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, fs / 2.0, 50).to_vec();

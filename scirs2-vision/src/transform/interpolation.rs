@@ -16,11 +16,12 @@ use image::{DynamicImage, GenericImageView, ImageBuffer, Pixel, Rgba};
 use scirs2_core::ndarray::{Array1, Array2};
 
 /// Interpolation methods for image resampling
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum InterpolationMethod {
     /// Nearest-neighbor interpolation (fast but low quality)
     Nearest,
     /// Bilinear interpolation (good balance of speed and quality)
+    #[default]
     Bilinear,
     /// Bicubic interpolation (higher quality)
     Bicubic,
@@ -28,12 +29,6 @@ pub enum InterpolationMethod {
     Lanczos3,
     /// Edge-preserving interpolation (preserves edges while smoothing)
     EdgePreserving,
-}
-
-impl Default for InterpolationMethod {
-    fn default() -> Self {
-        Self::Bilinear
-    }
 }
 
 /// Resize an image using the specified interpolation method

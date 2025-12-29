@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust, providing SciPy-compatible APIs while leveraging Rust's performance, safety, and concurrency features.
 
-**Note**: From v0.1.0-beta.2, the ML optimization module (scirs2-optim) has been separated into the independent [OptiRS](https://github.com/cool-japan/optirs) project for better modularity and focused development.
+**Note**: The ML optimization module (scirs2-optim) has been separated into the independent [OptiRS](https://github.com/cool-japan/optirs) project for better modularity and focused development.
 
-**Important**: From v0.1.0-beta.4, the [SciRS2 POLICY](SCIRS2_POLICY.md) is in effect. All non-core crates must use scirs2-core abstractions instead of direct external dependencies.
+**Important**: From v0.1.0, the [SciRS2 POLICY](SCIRS2_POLICY.md) is in effect. All non-core crates must use scirs2-core abstractions instead of direct external dependencies.
 
 ## Development Commands
 
@@ -49,13 +49,13 @@ When implementing SciPy-compatible functionality, directly read these source fil
 - Run `cargo clippy` before every commit
 
 ### SciRS2 Ecosystem Policy
-**CRITICAL**: Follow the [SciRS2 POLICY](SCIRS2_POLICY.md) for all development (Updated v0.1.0-RC.1):
+**CRITICAL**: Follow the [SciRS2 POLICY](SCIRS2_POLICY.md) for all development (Updated v0.1.0):
 - **Core Rule**: Only `scirs2-core` may use external dependencies directly
 - **All other crates** (including tests, examples, benchmarks) MUST use SciRS2-Core abstractions
 - **Prohibited**: Direct `rand::`, `rand_distr::`, `ndarray::`, `num_complex::` imports in non-core code
 - **Required**: Use `scirs2_core::random::*`, `scirs2_core::ndarray::*`, `scirs2_core::numeric::*`, etc.
 
-**✅ POLICY Compliance Complete (Established v0.1.0-RC.1, Current: v0.1.0-rc.4)**:
+**✅ POLICY Compliance Complete (Current: v0.1.0 Stable)**:
 - All 23 crates are POLICY-compliant (100%)
 - `scirs2_core::random` - ALL rand_distr distributions (Beta, Cauchy, StudentT, etc.)
 - `scirs2_core::ndarray` - Complete ndarray including macros (`array!`, `s!`, `azip!`)
@@ -163,7 +163,7 @@ scirs2/                  # Main integration crate (re-exports all modules)
 ├── scirs2-datasets/   # Sample datasets
 ├── scirs2-autograd/   # Automatic differentiation
 ├── scirs2-neural/     # Neural networks
-# Note: scirs2-optim moved to independent OptiRS project from beta.2
+# Note: scirs2-optim moved to independent OptiRS project
 ├── scirs2-graph/      # Graph processing
 ├── scirs2-transform/  # Data transformation
 ├── scirs2-metrics/    # ML metrics
@@ -314,11 +314,12 @@ The project uses GitHub Actions with:
 - Comprehensive test coverage
 
 ## Version Information
-- Current version: 0.1.0-rc.4 (Release Candidate 4)
-- Release date: December 21, 2025
+- Current version: 0.1.0 (Stable Release)
+- Release date: December 29, 2025
 - Repository: https://github.com/cool-japan/scirs
 - Main branch: master
 - ML Optimization: Independent [OptiRS](https://github.com/cool-japan/optirs) project
-- SciRS2 POLICY: ✅ **COMPLETE** - All 23 crates compliant (v0.1.0-rc.4)
+- SciRS2 POLICY: ✅ **COMPLETE** - All 23 crates compliant (v0.1.0 Stable)
 - Python Bindings: scirs2-python with PyO3 integration
 - Documentation: Comprehensive updates for production readiness
+- Code Quality: 11,416 tests passing, zero warnings policy compliance

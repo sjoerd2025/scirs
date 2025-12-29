@@ -222,7 +222,7 @@ fn error_diagnostics_demo() -> CoreResult<()> {
     println!("🔍 5. Advanced Error Diagnostics and Analysis");
 
     // Simulate different types of errors for diagnostics
-    let errors = vec![
+    let errors = [
         CoreError::MemoryError(error_context!(
             "Out of memory during large matrix multiplication"
         )),

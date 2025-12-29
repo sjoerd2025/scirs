@@ -182,11 +182,11 @@ impl SearchSpace {
         let mut layers = Vec::new();
         let mut connections = Vec::new();
         // Sample number of layers
-        let num_layers = rng.gen_range(self.config.min_layers..=self.config.max_layers);
+        let num_layers = rng.random_range(self.config.min_layers..=self.config.max_layers);
         // Sample layers
         for i in 0..num_layers {
             if let Some(layer_choice) = self.layer_choices.get(i) {
-                let idx = rng.gen_range(0..layer_choice.choices.len());
+                let idx = rng.random_range(0..layer_choice.choices.len());
                 layers.push(layer_choice.choices[idx].clone());
             }
         // Sample connections if branches are allowed
@@ -234,18 +234,18 @@ impl SearchSpace {
         for (i, layer) in mutated.layers.iter_mut().enumerate() {
             if rng.random::<f32>() < mutation_rate {
                 if let Some(layer_choice) = self.layer_choices.get(i) {
-                    let idx = rng.gen_range(0..layer_choice.choices.len());
+                    let idx = rng.random_range(0..layer_choice.choices.len());
                     *layer = layer_choice.choices[idx].clone();
         // Add or remove layers
         if rng.random::<f32>() < mutation_rate {
-            if mutated.layers.len() < self.config.max_layers && rng.gen_bool(0.5) {
+            if mutated.layers.len() < self.config.max_layers && rng.random_bool(0.5) {
                 // Add a layer
                 let pos = mutated.layers.len();
                 if let Some(layer_choice) = self.layer_choices.get(pos) {
                     mutated.layers.push(layer_choice.choices[idx].clone());
             } else if mutated.layers.len() > self.config.min_layers {
                 // Remove a layer
-                let idx = rng.gen_range(0..mutated.layers.len());
+                let idx = rng.random_range(0..mutated.layers.len());
                 mutated.layers.remove(idx);
                 // Update connections
                 mutated.connections.retain(|(i..j)| *i != idx && *j != idx);
@@ -283,14 +283,14 @@ impl SearchSpace {
         // Determine child length
         let min_len = parent1.layers.len().min(parent2.layers.len());
         let max_len = parent1.layers.len().max(parent2.layers.len());
-        let child_len = rng.gen_range(min_len..=max_len);
+        let child_len = rng.random_range(min_len..=max_len);
         let mut child_layers = Vec::new();
         let mut child_connections = Vec::new();
         // Crossover layers
         for i in 0..child_len {
             let layer = if i < parent1.layers.len() && i < parent2.layers.len() {
                 // Both parents have this layer..choose randomly
-                if rng.gen_bool(0.5) {
+                if rng.random_bool(0.5) {
                     parent1.layers[i].clone()
                 } else {
                     parent2.layers[i].clone()
@@ -312,10 +312,10 @@ impl SearchSpace {
                 .filter(|(i, j)| *i < child_len && *j < child_len)
                 .collect();
         // Crossover multipliers
-        let width_multiplier = if rng.gen_bool(0.5) {
+        let width_multiplier = if rng.random_bool(0.5) {
             parent1.width_multiplier
             parent2.width_multiplier
-        let depth_multiplier = if rng.gen_bool(0.5) {
+        let depth_multiplier = if rng.random_bool(0.5) {
             parent1.depth_multiplier
             parent2.depth_multiplier
             layers: child_layers,

@@ -39,7 +39,7 @@ serde = { workspace = true, optional = true }  # Serialization
 serde_json = { workspace = true, optional = true }  # JSON serialization
 uuid = { workspace = true, features = ["serde"] }  # Used for unique identifiers
 tempfile = { workspace = true, optional = true }  # For temporary files in memory_efficient
-bincode = { workspace = true, optional = true }  # For serialization in memory_efficient
+oxicode = { workspace = true, optional = true }  # For serialization in memory_efficient (SIMD-optimized)
 memmap2 = { workspace = true, optional = true }  # For memory-mapped arrays
 regex = { workspace = true, optional = true }  # For string pattern validation
 
@@ -65,15 +65,11 @@ sysinfo = { workspace = true, optional = true }  # System information gathering
 
 # Platform-specific dependencies for cross-platform validation are handled through feature gates
 
-# BLAS/LAPACK dependencies for linear algebra operations
-# Note: BLAS backend selection is platform-specific:
-# - macOS: Accelerate framework (system BLAS)
-# - Linux: System OpenBLAS (no source build)
-# - Windows: System BLAS or fallback
-ndarray-linalg = { workspace = true, optional = true, default-features = false }
-blas-src = { workspace = true, optional = true }
-# NOTE: openblas-src removed - use system libraries only (SciRS2 POLICY)
-# NOTE: intel-mkl-src removed to avoid conflicts with system BLAS
+# OxiBLAS - Pure Rust BLAS/LAPACK implementation (replaces OpenBLAS)
+oxiblas-ndarray = { workspace = true, optional = true }
+oxiblas-blas = { workspace = true, optional = true }
+oxiblas-lapack = { workspace = true, optional = true }
+# NOTE: All OpenBLAS/system BLAS dependencies removed - using pure Rust OxiBLAS
 
 # JIT compilation for Array Protocol
 cranelift-module = { workspace = true, optional = true }  # JIT compilation module
@@ -121,15 +117,7 @@ objc2-metal = { workspace = true, optional = true }  # Metal bindings for objc2
 objc2-metal-performance-shaders = { workspace = true, optional = true }  # MPS integration for Metal
 objc2-metal-performance-shaders-graph = { workspace = true, optional = true }  # MPSGraph for high-performance operations
 
-# Linux: Use system OpenBLAS ONLY (no source build via openblas-src)
-[target.'cfg(target_os = "linux")'.dependencies]
-# Linux uses system libopenblas.so - NO openblas-src dependency
-blas-src = { workspace = true, optional = true }
-
-# Windows: Use system BLAS or fallback (no source build via openblas-src)
-[target.'cfg(target_os = "windows")'.dependencies]
-# Windows uses system BLAS - NO openblas-src dependency
-blas-src = { workspace = true, optional = true }
+# NOTE: Platform-specific BLAS dependencies removed - using pure Rust OxiBLAS
 
 # CUDA support - only available on x86_64 Linux and Windows
 [target.'cfg(all(target_arch = "x86_64", any(target_os = "linux", target_os = "windows")))'.dependencies]
@@ -139,8 +127,6 @@ cudarc = { workspace = true, optional = true }  # CUDA runtime
 approx = { workspace = true }
 criterion = { workspace = true }
 tempfile = { workspace = true }
-# NOTE: ndarray-linalg is already included in [dependencies] via "array" feature
-# Adding it in dev-dependencies causes duplicate resolution and linker conflicts in doctests
 
 [features]
 default = ["array", "serialization"]  # Enable array module by default
@@ -159,8 +145,8 @@ wgpu_backend = ["gpu", "dep:wgpu", "dep:pollster"]  # WebGPU-specific GPU accele
 rocm = ["gpu"]  # ROCm-specific GPU acceleration (AMD)
 # CUDA feature is platform-conditional - only works on x86_64 Linux and Windows
 cuda = ["gpu", "dep:cudarc"]  # CUDA-specific GPU acceleration (platform-conditional)
-memory_management = ["bincode", "tempfile"]  # Advanced memory management
-memory_efficient = ["tempfile", "bincode", "memmap2", "rayon"]  # Memory-efficient operations
+memory_management = ["oxicode", "tempfile"]  # Advanced memory management (oxicode for SIMD optimization)
+memory_efficient = ["tempfile", "oxicode", "memmap2", "rayon"]  # Memory-efficient operations (oxicode for SIMD)
 memory_efficient_all_types = ["memory_efficient", "float32", "float64", "all_ints"]  # Full type support for memory-efficient operations
 float32 = []  # Support for f32 in zero-copy operations
 float64 = []  # Support for f64 in zero-copy operations
@@ -169,7 +155,7 @@ int64 = []    # Support for i64 in zero-copy operations
 uint32 = []   # Support for u32 in zero-copy operations
 uint64 = []   # Support for u64 in zero-copy operations
 all_ints = [] # Support for all integer types in zero-copy operations
-memory_compression = ["memory_efficient", "lz4", "zstd", "snap", "flate2", "bytemuck", "serde", "serde_json", "libc", "num_cpus"]  # Compressed memory-mapped arrays
+memory_compression = ["memory_efficient", "lz4", "zstd", "snap", "flate2", "bytemuck", "serde", "serde_json", "libc", "num_cpus"]  # Compressed memory-mapped arrays (SIMD-optimized)
 memory_metrics = ["memory_management", "serde", "serde_json"]  # Enhanced memory metrics tracking
 sysinfo = ["dep:sysinfo"]  # System information gathering
 serialization = ["serde", "serde_json"]  # Serialization support
@@ -184,16 +170,8 @@ types = []  # Type conversion utilities
 ufuncs = []  # Universal Functions (ufuncs) system
 testing = ["tempfile", "serde", "serde_json", "quickcheck"]  # Testing framework for production systems
 benchmarking = ["testing", "serde", "serde_json"]  # Comprehensive benchmarking system
-linalg = ["array", "ndarray-linalg"]  # Linear algebra with BLAS/LAPACK bindings
-# LAPACK backends - Platform-specific system libraries ONLY:
-# - macOS: Accelerate framework automatically used (no feature needed, no source build)
-# - Linux: System OpenBLAS via pkg-config (no source build)
-# - Windows: System BLAS (no source build)
-openblas = ["linalg", "dep:blas-src"]  # Use system OpenBLAS (Linux/Windows, via pkg-config)
-netlib = ["linalg", "dep:blas-src"]  # Use system Netlib BLAS
-# NOTE: No explicit accelerate feature - macOS automatically uses Accelerate via ndarray-linalg
-# NOTE: openblas-src removed - system libraries only (no source build)
-# NOTE: intel-mkl feature removed to avoid conflicts with system BLAS
+linalg = ["array", "oxiblas-ndarray", "oxiblas-blas", "oxiblas-lapack"]  # Linear algebra with OxiBLAS (pure Rust)
+# NOTE: OpenBLAS/Netlib/Accelerate features removed - using pure Rust OxiBLAS for all platforms
 array_protocol = []  # Array Protocol for third-party array implementations
 array_protocol_jit = ["array_protocol", "cranelift-module", "cranelift-jit", "cranelift-frontend"]  # JIT compilation for Array Protocol
 array_protocol_gpu = ["array_protocol", "gpu"]  # GPU support for Array Protocol

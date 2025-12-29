@@ -97,7 +97,7 @@ pub enum TransformError {
     /// Serialization error
     #[cfg(feature = "distributed")]
     #[error("Serialization error: {0}")]
-    SerializationError(#[from] bincode::error::EncodeError),
+    SerializationError(#[from] oxicode::Error),
 
     /// Not implemented error
     #[error("Not implemented: {0}")]

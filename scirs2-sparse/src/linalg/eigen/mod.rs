@@ -125,7 +125,7 @@ impl EigenSolverConfig {
 }
 
 /// Eigenvalue solver selection strategy
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum EigenSolverStrategy {
     /// Power iteration for single largest eigenvalue
     PowerIteration,
@@ -136,13 +136,8 @@ pub enum EigenSolverStrategy {
     /// Shift-invert mode for eigenvalues near a target
     ShiftInvert,
     /// Automatic selection based on problem characteristics
+    #[default]
     Auto,
-}
-
-impl Default for EigenSolverStrategy {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 /// Unified eigenvalue solver interface

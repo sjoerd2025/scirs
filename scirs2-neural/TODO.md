@@ -1,10 +1,10 @@
-# scirs2-neural TODO (v0.1.0-rc.4)
+# scirs2-neural TODO (v0.1.0)
 
 **scirs2-neural** provides PyTorch-style neural network building blocks for Rust, with automatic differentiation integration and production-ready training utilities. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module uses scirs2-core abstractions for ecosystem consistency.
 
 ## Build Status: PRODUCTION READY
 
-**Version**: 0.1.0-rc.4
+**Version**: 0.1.0
 **Status**: All tests passing, zero warnings
 **Unit Tests**: 111 passing (+9 ReLU, +10 Softmax SIMD integration tests)
 **Doc Tests**: All passing (some ignored for API compatibility)
@@ -37,13 +37,13 @@
 
 #### Activation Functions
 - **Basic**: ReLU, LeakyReLU, PReLU, ELU, SELU
-  - ✅ **SIMD-Accelerated**: ReLU and Leaky ReLU with 2-4x performance improvement (December 2025)
+  - ✅ **SIMD-Accelerated**: ReLU and Leaky ReLU with 2-4x performance improvement (December 29, 2025)
     - Up to 3.88x speedup for f32 operations on 10K+ element arrays
     - Automatic SIMD fast path for 1D f32/f64 arrays
     - Zero-copy integration with generic fallback
     - Fully backward compatible with zero breaking changes
 - **Smooth**: Sigmoid, Tanh, Softmax, LogSoftmax
-  - ✅ **SIMD-Accelerated**: Softmax with 1.5-2.3x performance improvement (December 2025)
+  - ✅ **SIMD-Accelerated**: Softmax with 1.5-2.3x performance improvement (December 29, 2025)
     - Up to 2.3x speedup for f32 operations on large arrays (100K+ elements)
     - Essential for classification tasks and attention mechanisms
     - Numerically stable implementation with SIMD log-sum-exp
@@ -252,7 +252,7 @@ scirs2-neural/src/
 
 ## Version History
 
-- **v0.1.0-rc.4** (Current): Production-ready with comprehensive neural network functionality
+- **v0.1.0** (Current): Production-ready with comprehensive neural network functionality
   - Added Flash Attention for memory-efficient attention computation
   - Added Mamba/State Space Models (S4, SelectiveSSM)
   - Fixed ConvNeXt implementation with all variants (Tiny to XLarge)
@@ -264,4 +264,4 @@ scirs2-neural/src/
 
 ---
 
-*Last Updated: December 2025 | Version: 0.1.0-rc.4*
+*Last Updated: December 2025 | Version: 0.1.0*

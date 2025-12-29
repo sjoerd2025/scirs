@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::manual_strip)]
 #![allow(clippy::needless_range_loop)]
 #![allow(clippy::if_same_then_else)]
@@ -35,7 +34,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-text = "0.1.0-rc.4"
+//! scirs2-text = "0.1.0"
 //! ```
 //!
 //! ```rust,no_run
@@ -51,7 +50,7 @@
 //! let matrix = vectorizer.fit_transform(&docs).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //!
 //! ## Quick Start
 //!

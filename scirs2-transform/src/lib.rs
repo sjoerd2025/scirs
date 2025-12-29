@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::all)]
 //! # SciRS2 Transform - Data Transformation and Preprocessing
 //!
@@ -31,7 +30,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-transform = "0.1.0-rc.4"
+//! scirs2-transform = "0.1.0"
 //! ```
 //!
 //! ```rust,no_run
@@ -43,7 +42,7 @@
 //! let normalized = normalize_array(&data, NormalizationMethod::ZScore, 0).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 
 #![warn(missing_docs)]
 #![allow(clippy::too_many_arguments)]

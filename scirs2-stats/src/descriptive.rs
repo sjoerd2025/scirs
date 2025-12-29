@@ -776,10 +776,7 @@ where
 /// Backward compatibility: Compute the variance without specifying workers parameter.
 ///
 /// **Deprecated**: Use `var(x, ddof, workers)` instead for better control over parallel processing.
-#[deprecated(
-    since = "0.1.0-beta.1",
-    note = "Use var(x, ddof, workers) for consistent API"
-)]
+#[deprecated(note = "Use var(x, ddof, workers) for consistent API")]
 #[allow(dead_code)]
 pub fn var_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
@@ -797,10 +794,7 @@ where
 /// Backward compatibility: Compute the standard deviation without specifying workers parameter.
 ///
 /// **Deprecated**: Use `std(x, ddof, workers)` instead for better control over parallel processing.
-#[deprecated(
-    since = "0.1.0-beta.1",
-    note = "Use std(x, ddof, workers) for consistent API"
-)]
+#[deprecated(note = "Use std(x, ddof, workers) for consistent API")]
 #[allow(dead_code)]
 pub fn std_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
@@ -818,10 +812,7 @@ where
 /// Backward compatibility: Compute the skewness without specifying workers parameter.
 ///
 /// **Deprecated**: Use `skew(x, bias, workers)` instead for better control over parallel processing.
-#[deprecated(
-    since = "0.1.0-beta.1",
-    note = "Use skew(x, bias, workers) for consistent API"
-)]
+#[deprecated(note = "Use skew(x, bias, workers) for consistent API")]
 #[allow(dead_code)]
 pub fn skew_compat<F>(x: &ArrayView1<F>, bias: bool) -> StatsResult<F>
 where
@@ -839,10 +830,7 @@ where
 /// Backward compatibility: Compute the kurtosis without specifying workers parameter.
 ///
 /// **Deprecated**: Use `kurtosis(x, fisher, bias, workers)` instead for better control over parallel processing.
-#[deprecated(
-    since = "0.1.0-beta.1",
-    note = "Use kurtosis(x, fisher, bias, workers) for consistent API"
-)]
+#[deprecated(note = "Use kurtosis(x, fisher, bias, workers) for consistent API")]
 #[allow(dead_code)]
 pub fn kurtosis_compat<F>(x: &ArrayView1<F>, fisher: bool, bias: bool) -> StatsResult<F>
 where
@@ -860,10 +848,7 @@ where
 /// Backward compatibility: Compute the moment without specifying workers parameter.
 ///
 /// **Deprecated**: Use `moment(x, moment_order, center, workers)` instead for better control over parallel processing.
-#[deprecated(
-    since = "0.1.0-beta.1",
-    note = "Use moment(x, moment_order, center, workers) for consistent API"
-)]
+#[deprecated(note = "Use moment(x, moment_order, center, workers) for consistent API")]
 #[allow(dead_code)]
 pub fn moment_compat<F>(x: &ArrayView1<F>, momentorder: usize, center: bool) -> StatsResult<F>
 where

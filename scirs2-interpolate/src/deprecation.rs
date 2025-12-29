@@ -59,7 +59,7 @@ impl Default for DeprecationConfig {
             warnings_as_errors: false,
             max_warning_count: 3,
             warning_counts: HashMap::new(),
-            current_version: "0.1.0-beta.4".to_string(),
+            current_version: "0.1.0".to_string(),
         }
     }
 }
@@ -207,7 +207,7 @@ macro_rules! experimental_feature {
 
         let info = DeprecationInfo {
             name: $name.to_string(),
-            since: "0.1.0-beta.1".to_string(),
+            since: "0.1.0".to_string(),
             remove_in: None,
             level: DeprecationLevel::Experimental,
             reason: format!("This is an experimental feature: {}", $description),
@@ -229,7 +229,7 @@ impl FeatureRegistry {
             // GPU acceleration features (experimental)
             DeprecationInfo {
                 name: "gpu_accelerated".to_string(),
-                since: "0.1.0-alpha.1".to_string(),
+                since: "0.1.0".to_string(),
                 remove_in: None,
                 level: DeprecationLevel::Experimental,
                 reason: "GPU acceleration is experimental and may change".to_string(),
@@ -241,7 +241,7 @@ impl FeatureRegistry {
             // Neural enhanced interpolation (experimental)
             DeprecationInfo {
                 name: "neural_enhanced".to_string(),
-                since: "0.1.0-alpha.3".to_string(),
+                since: "0.1.0".to_string(),
                 remove_in: None,
                 level: DeprecationLevel::Experimental,
                 reason: "Neural enhanced interpolation is experimental".to_string(),
@@ -253,7 +253,7 @@ impl FeatureRegistry {
             // Physics-informed interpolation (experimental)
             DeprecationInfo {
                 name: "physics_informed".to_string(),
-                since: "0.1.0-alpha.4".to_string(),
+                since: "0.1.0".to_string(),
                 remove_in: None,
                 level: DeprecationLevel::Experimental,
                 reason: "Physics-informed methods are experimental".to_string(),
@@ -265,7 +265,7 @@ impl FeatureRegistry {
             // Some Kriging variants with warnings
             DeprecationInfo {
                 name: "experimental_kriging_variants".to_string(),
-                since: "0.1.0-alpha.5".to_string(),
+                since: "0.1.0".to_string(),
                 remove_in: None,
                 level: DeprecationLevel::Experimental,
                 reason: "Some advanced Kriging variants show implementation warnings".to_string(),

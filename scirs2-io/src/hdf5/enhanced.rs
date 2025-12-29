@@ -727,8 +727,11 @@ mod tests {
     fn test_optimal_chunks_calculation() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_optimal_chunks_{}.h5", std::process::id()));
-        let file =
-            EnhancedHDF5File::create(test_file.to_str().unwrap(), None).expect("Operation failed");
+        let file = EnhancedHDF5File::create(
+            test_file.to_str().expect("path should be valid UTF-8"),
+            None,
+        )
+        .expect("Operation failed");
         let shape = vec![1000, 1000];
         let total_elements = 1_000_000;
 
@@ -747,8 +750,11 @@ mod tests {
     fn test_path_splitting() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_path_splitting_{}.h5", std::process::id()));
-        let file =
-            EnhancedHDF5File::create(test_file.to_str().unwrap(), None).expect("Operation failed");
+        let file = EnhancedHDF5File::create(
+            test_file.to_str().expect("path should be valid UTF-8"),
+            None,
+        )
+        .expect("Operation failed");
 
         let (grouppath, dataset_name) = file
             .split_path("/group1/group2/dataset")

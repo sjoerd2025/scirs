@@ -1,12 +1,13 @@
-//! Special case handlers for convex hull computation
+//! Special case handlers for convex hull computation (Pure Rust)
 //!
 //! This module provides specialized handling for edge cases that may not be
 //! well-handled by the general algorithms, such as very small point sets,
 //! degenerate cases, or highly regular geometries.
+//!
+//! This is a pure Rust implementation with no external C library dependencies.
 
 use crate::convex_hull::core::ConvexHull;
 use crate::error::{SpatialError, SpatialResult};
-use qhull::Qh;
 use scirs2_core::ndarray::ArrayView2;
 
 /// Handle degenerate cases for convex hull computation
@@ -88,23 +89,10 @@ fn handle_single_point(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull
         ));
     }
 
-    let vertex_indices = vec![0];
-    let simplices = vec![]; // No simplices for a single point
-
-    // Create dummy QHull instance
-    // Qhull requires at least 3 points in 2D, so create a dummy triangle
-    let dummy_points = vec![vec![0.0, 0.0], vec![1.0, 0.0], vec![0.0, 1.0]];
-
-    let qh = Qh::builder()
-        .compute(false)
-        .build_from_iter(dummy_points)
-        .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
-
     Ok(ConvexHull {
         points: points.to_owned(),
-        qh,
-        vertex_indices,
-        simplices,
+        vertex_indices: vec![0],
+        simplices: vec![], // No simplices for a single point
         equations: None,
     })
 }
@@ -127,23 +115,10 @@ fn handle_two_points(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> 
         ));
     }
 
-    let vertex_indices = vec![0, 1];
-    let simplices = vec![vec![0, 1]]; // Single line segment
-
-    // Create dummy QHull instance
-    // Qhull requires at least 3 points in 2D, so create a dummy triangle
-    let dummy_points = vec![vec![0.0, 0.0], vec![1.0, 0.0], vec![0.0, 1.0]];
-
-    let qh = Qh::builder()
-        .compute(false)
-        .build_from_iter(dummy_points)
-        .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
-
     Ok(ConvexHull {
         points: points.to_owned(),
-        qh,
-        vertex_indices,
-        simplices,
+        vertex_indices: vec![0, 1],
+        simplices: vec![vec![0, 1]], // Single line segment
         equations: None,
     })
 }
@@ -181,16 +156,8 @@ fn handle_collinear_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
         vec![]
     };
 
-    // Create dummy QHull instance
-    let points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
-    let qh = Qh::builder()
-        .compute(false)
-        .build_from_iter(points_vec)
-        .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
-
     Ok(ConvexHull {
         points: points.to_owned(),
-        qh,
         vertex_indices,
         simplices,
         equations: None,
@@ -208,20 +175,10 @@ fn handle_collinear_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Convex
 /// * Result containing a degenerate ConvexHull (single point)
 fn handle_identical_points(points: &ArrayView2<'_, f64>) -> SpatialResult<ConvexHull> {
     // All points are the same, so the hull is just one point
-    let vertex_indices = vec![0];
-    let simplices = vec![];
-
-    let points_vec: Vec<Vec<f64>> = vec![points.row(0).to_vec()];
-    let qh = Qh::builder()
-        .compute(false)
-        .build_from_iter(points_vec)
-        .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
-
     Ok(ConvexHull {
         points: points.to_owned(),
-        qh,
-        vertex_indices,
-        simplices,
+        vertex_indices: vec![0],
+        simplices: vec![],
         equations: None,
     })
 }

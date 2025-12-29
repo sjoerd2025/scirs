@@ -496,13 +496,13 @@ where
 
         // Reshape to [batch, seq_len, num_heads, head_dim]
         let q_4d = q_proj
-            .into_shape((batch_size, seq_len, num_heads, head_dim))
+            .into_shape_with_order((batch_size, seq_len, num_heads, head_dim))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape Q: {}", e)))?;
         let k_4d = k_proj
-            .into_shape((batch_size, seq_len, num_heads, head_dim))
+            .into_shape_with_order((batch_size, seq_len, num_heads, head_dim))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape K: {}", e)))?;
         let v_4d = v_proj
-            .into_shape((batch_size, seq_len, num_heads, head_dim))
+            .into_shape_with_order((batch_size, seq_len, num_heads, head_dim))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape V: {}", e)))?;
 
         // Process each batch and head with Flash Attention
@@ -514,7 +514,7 @@ where
                 let q_head: Array2<F> = q_4d
                     .slice(s![b, .., h, ..])
                     .to_owned()
-                    .into_shape((seq_len, head_dim))
+                    .into_shape_with_order((seq_len, head_dim))
                     .map_err(|e| {
                         NeuralError::InferenceError(format!("Failed to get Q head: {}", e))
                     })?;
@@ -522,7 +522,7 @@ where
                 let k_head: Array2<F> = k_4d
                     .slice(s![b, .., h, ..])
                     .to_owned()
-                    .into_shape((seq_len, head_dim))
+                    .into_shape_with_order((seq_len, head_dim))
                     .map_err(|e| {
                         NeuralError::InferenceError(format!("Failed to get K head: {}", e))
                     })?;
@@ -530,7 +530,7 @@ where
                 let v_head: Array2<F> = v_4d
                     .slice(s![b, .., h, ..])
                     .to_owned()
-                    .into_shape((seq_len, head_dim))
+                    .into_shape_with_order((seq_len, head_dim))
                     .map_err(|e| {
                         NeuralError::InferenceError(format!("Failed to get V head: {}", e))
                     })?;
@@ -549,12 +549,12 @@ where
 
         // Reshape to [batch, seq_len, d_model]
         let output_3d = output_4d
-            .into_shape((batch_size, seq_len, d_model))
+            .into_shape_with_order((batch_size, seq_len, d_model))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape output: {}", e)))?;
 
         // Apply output projection
         let output_2d = output_3d
-            .into_shape((batch_size * seq_len, d_model))
+            .into_shape_with_order((batch_size * seq_len, d_model))
             .map_err(|e| {
                 NeuralError::InferenceError(format!("Failed to reshape for output proj: {}", e))
             })?;
@@ -563,7 +563,7 @@ where
 
         // Reshape back to [batch, seq_len, d_model]
         let result = final_output
-            .into_shape((batch_size, seq_len, d_model))
+            .into_shape_with_order((batch_size, seq_len, d_model))
             .map_err(|e| {
                 NeuralError::InferenceError(format!("Failed to reshape final output: {}", e))
             })?;
@@ -637,17 +637,17 @@ pub fn flash_attention_compute<F: Float + Debug + ScalarOperand>(
         // Convert to 2D for processing
         let q_2d: Array2<F> = q_batch
             .to_owned()
-            .into_shape((seq_len_q, head_dim))
+            .into_shape_with_order((seq_len_q, head_dim))
             .map_err(|_| NeuralError::InferenceError("Failed to reshape Q".to_string()))?;
 
         let k_2d: Array2<F> = k_batch
             .to_owned()
-            .into_shape((seq_len_kv, head_dim))
+            .into_shape_with_order((seq_len_kv, head_dim))
             .map_err(|_| NeuralError::InferenceError("Failed to reshape K".to_string()))?;
 
         let v_2d: Array2<F> = v_batch
             .to_owned()
-            .into_shape((seq_len_kv, head_dim))
+            .into_shape_with_order((seq_len_kv, head_dim))
             .map_err(|_| NeuralError::InferenceError("Failed to reshape V".to_string()))?;
 
         // Compute tiled attention
@@ -895,17 +895,17 @@ mod tests {
         let q_2d = query
             .slice(s![0, .., ..])
             .to_owned()
-            .into_shape((4, 8))
+            .into_shape_with_order((4, 8))
             .expect("Operation failed");
         let k_2d = key
             .slice(s![0, .., ..])
             .to_owned()
-            .into_shape((4, 8))
+            .into_shape_with_order((4, 8))
             .expect("Operation failed");
         let v_2d = value
             .slice(s![0, .., ..])
             .to_owned()
-            .into_shape((4, 8))
+            .into_shape_with_order((4, 8))
             .expect("Operation failed");
 
         let scale = 1.0 / (8.0_f64).sqrt();

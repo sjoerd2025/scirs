@@ -353,7 +353,7 @@ fn validate_uneven_sampling(
 
     while t.len() < n_nominal && current_time < 10.0 {
         // Random time intervals with large variations
-        let interval = rng.gen_range(0.001..0.5); // Very uneven: 1ms to 500ms
+        let interval = rng.random_range(0.001..0.5); // Very uneven: 1ms to 500ms
         current_time += interval;
         t.push(current_time);
     }

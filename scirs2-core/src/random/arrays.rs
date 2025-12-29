@@ -118,10 +118,10 @@ pub fn random_sparse_array<D: Dimension>(
     rng: &mut Random<impl Rng>,
 ) -> Array<f64, D> {
     Array::random_using_bulk(shape, rng, |rng| {
-        if rng.gen_range(0.0..1.0) < sparsity {
+        if rng.random_range(0.0..1.0) < sparsity {
             0.0
         } else {
-            rng.gen_range(-1.0..1.0)
+            rng.random_range(-1.0..1.0)
         }
     })
 }
@@ -182,7 +182,7 @@ mod tests {
 
         // Test random_using_bulk method
         let array =
-            Array::<i32, _>::random_using_bulk(shape, &mut rng, |rng| rng.gen_range(1..100));
+            Array::<i32, _>::random_using_bulk(shape, &mut rng, |rng| rng.random_range(1..100));
         assert_eq!(array.shape(), &[3, 4]);
         assert!(array.iter().all(|&x| (1..100).contains(&x)));
     }

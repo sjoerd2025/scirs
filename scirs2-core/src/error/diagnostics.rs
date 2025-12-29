@@ -114,10 +114,8 @@ impl EnvironmentInfo {
         #[cfg(feature = "gpu")]
         features.push("gpu".to_string());
 
-        #[cfg(feature = "openblas")]
-        features.push("openblas".to_string());
-
-        // Note: intel-mkl feature removed to avoid conflicts with openblas
+        #[cfg(feature = "linalg")]
+        features.push("linalg (OxiBLAS)".to_string());
 
         #[cfg(feature = "profiling")]
         features.push("profiling".to_string());

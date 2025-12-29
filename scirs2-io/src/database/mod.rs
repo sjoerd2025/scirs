@@ -23,9 +23,6 @@ pub mod postgres;
 #[cfg(feature = "mysql")]
 pub mod mysql;
 
-#[cfg(feature = "duckdb")]
-pub mod duckdb;
-
 // Connection pooling
 pub mod pool;
 
@@ -53,8 +50,6 @@ pub enum DatabaseType {
     Redis,
     /// Cassandra (Wide column)
     Cassandra,
-    /// DuckDB (Analytical)
-    DuckDB,
 }
 
 /// Database connection configuration
@@ -159,7 +154,6 @@ impl DatabaseType {
             Self::InfluxDB => "influxdb",
             Self::Redis => "redis",
             Self::Cassandra => "cassandra",
-            Self::DuckDB => "duckdb",
         }
     }
 }
@@ -503,13 +497,6 @@ impl DatabaseConnector {
             #[cfg(not(feature = "mysql"))]
             DatabaseType::MySQL => Err(IoError::UnsupportedFormat(
                 "MySQL support not enabled. Enable 'mysql' feature.".to_string(),
-            )),
-
-            #[cfg(feature = "duckdb")]
-            DatabaseType::DuckDB => Ok(Box::new(duckdb::DuckDBConnection::new(config)?)),
-            #[cfg(not(feature = "duckdb"))]
-            DatabaseType::DuckDB => Err(IoError::UnsupportedFormat(
-                "DuckDB support not enabled. Enable 'duckdb' feature.".to_string(),
             )),
 
             _ => Err(IoError::UnsupportedFormat(format!(

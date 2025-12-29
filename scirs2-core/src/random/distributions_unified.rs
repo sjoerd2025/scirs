@@ -551,7 +551,7 @@ mod tests {
     #[test]
     fn test_distribution_trait() {
         let dist = UnifiedNormal::new(0.0, 1.0).expect("Operation failed");
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Test that Distribution trait works
         let sample: f64 = rng.sample(&dist);

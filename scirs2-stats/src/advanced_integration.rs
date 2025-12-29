@@ -495,18 +495,15 @@ impl DimensionalityAnalysisWorkflow {
 
         let cov = centered.t().dot(&centered) / (data.nrows() - 1) as f64;
 
-        // Compute eigenvalues
-        use scirs2_core::ndarray::ndarray_linalg::Eigh;
-        let eigenvalues = cov
-            .eigh(scirs2_core::ndarray::ndarray_linalg::UPLO::Upper)
+        // Compute eigenvalues using scirs2_linalg
+        let (eigenvalues_unsorted, _eigenvectors) = scirs2_linalg::eigh_f64_lapack(&cov.view())
             .map_err(|e| {
                 StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e))
-            })?
-            .0;
+            })?;
 
         // Sort eigenvalues in descending order
-        let mut sorted_eigenvalues = eigenvalues.to_vec();
-        sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed"));
+        let mut sorted_eigenvalues: Vec<f64> = eigenvalues_unsorted.to_vec();
+        sorted_eigenvalues.sort_by(|a: &f64, b: &f64| b.partial_cmp(a).expect("Operation failed"));
         let eigenvalues = Array1::from_vec(sorted_eigenvalues);
 
         // Cumulative variance

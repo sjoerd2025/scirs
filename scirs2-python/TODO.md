@@ -1,6 +1,6 @@
 # SciRS2-Python TODO (For v0.2.0 or later)
 
-## Status: NOT READY FOR v0.1.0-rc.4
+## Status: NOT READY FOR v0.1.0
 
 This crate contains the foundational work for unified Python bindings but has critical blockers preventing immediate release. It will be included in a future version (v0.2.0 or v0.3.0).
 
@@ -245,16 +245,16 @@ maturin publish
 
 ---
 
-## Current State (v0.1.0-rc.4)
+## Current State (v0.1.0)
 
-✅ **Phase 0 Complete** (2025-11-19):
+✅ **Phase 0 Complete** (2025-12):
 - Cargo.toml, pyproject.toml, README.md
 - lib.rs with submodule framework
 - **scirs2-core/src/python/version_conversions.rs** - ndarray16 ↔ ndarray17 conversions (8 tests passing)
 - **scirs2-series/src/python_api.rs** - ARIMA, differencing, STL, Box-Cox wrappers (4 tests passing)
 - **scirs2-cluster/src/python_api.rs** - K-means, metrics, preprocessing wrappers (3 tests passing)
 
-✅ **Phase 1 Complete** (2025-11-19):
+✅ **Phase 1 Complete** (2025-12):
 - **scirs2-python/src/series.rs** (385 lines) - Uses python_api wrappers, zero warnings
 - **scirs2-python/src/cluster.rs** (302 lines) - Uses python_api wrappers, zero warnings
 - Build succeeds with zero warnings
@@ -263,7 +263,7 @@ maturin publish
 
 ⚠️ **Important**: PyO3 links against the system Python (homebrew Python 3.13 on macOS). Users must use matching Python version.
 
-✅ **Phase 2 Complete** (2025-11-19):
+✅ **Phase 2 Complete** (2025-12):
 - **scirs2-linalg/src/python_api.rs** (360 lines) - det, inv, lu, qr, svd, cholesky, eig, solve, norms (5 tests passing)
 - **scirs2-python/src/linalg.rs** (376 lines) - Full PyO3 bindings for linalg
 - **scirs2-stats/src/python_api.rs** (240 lines) - describe, mean, std, var, percentile, correlation (4 tests passing)
@@ -298,6 +298,6 @@ maturin publish
 
 ---
 
-Last Updated: 2025-11-19
+Last Updated: 2025-12
 Status: Phase 0 Complete - Foundation work done
 Target: v0.2.0 or v0.3.0

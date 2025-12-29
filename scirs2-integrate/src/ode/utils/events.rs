@@ -241,18 +241,11 @@ impl<F: IntegrateFloat> EventHandler<F> {
                 };
 
                 if triggered {
-                    // Refine the event time if requested and dense _output is available
+                    // Refine the event time if requested and dense_output is available
                     let (event_t, event_y, event_val, dir) =
-                        if spec.precise_time && dense_output.is_some() {
+                        if let (true, Some(dense)) = (spec.precise_time, dense_output) {
                             self.refine_event_time(
-                                *t_prev,
-                                y_prev,
-                                t,
-                                y,
-                                prev_value,
-                                value,
-                                func,
-                                dense_output.expect("Operation failed"),
+                                *t_prev, y_prev, t, y, prev_value, value, func, dense,
                             )?
                         } else {
                             // Use current time as event time (less accurate)

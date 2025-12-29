@@ -341,7 +341,7 @@ impl SparseFftAutoTuner {
         // Add some randomness to simulate real-world conditions
         let mut rng = scirs2_core::random::rng();
         use scirs2_core::random::Rng;
-        let randomness = rng.gen_range(0.98..1.0);
+        let randomness = rng.random_range(0.98..1.0);
         
         Ok(accuracy * randomness)
     }
@@ -714,7 +714,7 @@ mod tests {
     }
     
     #[test]
-    #[ignore = "Ignored for alpha-4 release - GPU-dependent test"]
+    #[ignore = "Ignored - GPU-dependent test"]
     fn test_optimal_algorithm_selection() {
         // Test small signal
         let small_signal = create_sparse_signal(2048, &[(3, 1.0), (7, 0.5)]);
@@ -733,7 +733,7 @@ mod tests {
     }
     
     #[test]
-    #[ignore = "Ignored for alpha-4 release - GPU-dependent test"]
+    #[ignore = "Ignored - GPU-dependent test"]
     fn test_optimal_window_selection() {
         // Create signals with different SNRs
         
@@ -761,7 +761,7 @@ mod tests {
     }
     
     #[test]
-    #[ignore = "Ignored for alpha-4 release - GPU-dependent test"]
+    #[ignore = "Ignored release - GPU-dependent test"]
     fn test_kernel_factory_extension() {
         // Create factory
         let factory = KernelFactory::new(

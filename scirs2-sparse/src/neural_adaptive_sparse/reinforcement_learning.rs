@@ -114,7 +114,7 @@ impl RLAgent {
         let mut rng = scirs2_core::random::thread_rng();
 
         // Epsilon-greedy action selection for DQN
-        if matches!(self.algorithm, RLAlgorithm::DQN) && rng.gen::<f64>() < self.epsilon {
+        if matches!(self.algorithm, RLAlgorithm::DQN) && rng.random::<f64>() < self.epsilon {
             // Random action
             self.random_action()
         } else {
@@ -171,7 +171,7 @@ impl RLAgent {
             OptimizationStrategy::AdaptiveHybrid,
         ];
 
-        strategies[rng.gen_range(0..strategies.len())]
+        strategies[rng.random_range(0..strategies.len())]
     }
 
     /// Convert action index to optimization strategy
@@ -401,7 +401,7 @@ impl ExperienceBuffer {
         let mut batch = Vec::new();
 
         for _ in 0..batch_size.min(self.buffer.len()) {
-            let idx = rng.gen_range(0..self.buffer.len());
+            let idx = rng.random_range(0..self.buffer.len());
             if let Some(experience) = self.buffer.get(idx) {
                 batch.push(experience.clone());
             }
@@ -422,7 +422,7 @@ impl ExperienceBuffer {
 
         for _ in 0..batch_size.min(self.buffer.len()) {
             let mut weight_sum = 0.0;
-            let target = rng.gen::<f64>() * total_weight;
+            let target = rng.random::<f64>() * total_weight;
 
             for (idx, &weight) in self.priority_weights.iter().enumerate() {
                 weight_sum += weight;

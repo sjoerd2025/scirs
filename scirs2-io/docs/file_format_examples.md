@@ -1215,7 +1215,7 @@ When working with different file formats, consider these performance tips:
    - Use appropriate color modes (Grayscale vs. RGB)
 
 3. **Serialization**:
-   - Binary formats (bincode, MessagePack) are faster and more compact
+   - Binary formats (oxicode, MessagePack) are faster and more compact
    - JSON is human-readable but larger and slower
    - For scientific data, consider compression
 

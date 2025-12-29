@@ -188,7 +188,7 @@ impl NASController {
                     ) -> Result<scirs2_core::ndarray::ArrayD<f32>> {
                         let batch_size = input.shape()[0];
                         let flattened_size: usize = input.shape()[1..].iter().product();
-                        Ok(input.clone().into_shape(vec![batch_size, flattened_size])?)
+                        Ok(input.clone().into_shape_with_order(vec![batch_size, flattened_size])?)
                     fn backward(
                         _input: &scirs2_core::ndarray::ArrayD<f32>,
                         grad_output: &scirs2_core::ndarray::ArrayD<f32>,
@@ -281,7 +281,7 @@ impl NASController {
                                 newshape.push(dim as usize);
                             }
                         }
-                        Ok(input.clone().into_shape(newshape)?)
+                        Ok(input.clone().into_shape_with_order(newshape)?)
                         _input: &scirs2_core::ndarray::ArrayD<F>,
                         grad_output: &scirs2_core::ndarray::ArrayD<F>,
                     ) -> Result<scirs2_core::ndarray::ArrayD<F>> {

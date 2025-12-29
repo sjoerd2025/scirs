@@ -222,8 +222,9 @@ pub enum AnomalyType {
 }
 
 /// Anomaly severity levels
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Default)]
 pub enum AnomalySeverity {
+    #[default]
     Low,
     Medium,
     High,
@@ -959,12 +960,6 @@ pub struct PerformancePrediction {
 // ================================================================================================
 // DEFAULT IMPLEMENTATIONS
 // ================================================================================================
-
-impl Default for AnomalySeverity {
-    fn default() -> Self {
-        Self::Low
-    }
-}
 
 impl Default for RecoveryEvent {
     fn default() -> Self {

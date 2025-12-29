@@ -19,8 +19,8 @@ use std::io::{BufReader, BufWriter, Write};
 use std::path::Path;
 
 use crate::error::{IoError, Result};
-use bincode::{config, serde as bincode_serde};
-fn bincode_cfg() -> impl bincode::config::Config {
+use oxicode::{config, serde as oxicode_serde};
+fn oxicode_cfg() -> impl oxicode::config::Config {
     config::standard()
 }
 
@@ -93,11 +93,12 @@ where
 
     match format {
         SerializationFormat::Binary => {
-            // For bincode v2 we explicitly add a length prefix to make deserialization
+            // OxiCode (successor to bincode) with SIMD optimizations
+            // We explicitly add a length prefix to make deserialization
             // more robust and to avoid UnexpectedEof issues that can arise if the reader
             // attempts to stream a value without knowing total size.
-            let cfg = bincode_cfg();
-            let bytes = bincode_serde::encode_to_vec(&serializable, cfg)
+            let cfg = oxicode_cfg();
+            let bytes = oxicode_serde::encode_to_vec(&serializable, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
             let len = bytes.len() as u64;
             writer
@@ -171,32 +172,34 @@ where
                 let declared = u64::from_le_bytes(len_bytes) as usize;
                 if declared <= buf.len() - 8 {
                     let data_slice = &buf[8..8 + declared];
-                    let cfg = bincode_cfg();
-                    if let Ok((val, _consumed)) =
-                        bincode_serde::decode_from_slice::<SerializedArray<A>, _>(data_slice, cfg)
+                    let cfg = oxicode_cfg();
+                    if let Ok((val, _consumed)) = oxicode_serde::decode_owned_from_slice::<
+                        SerializedArray<A>,
+                        _,
+                    >(data_slice, cfg)
                     {
                         val
                     } else {
                         // Fallback: try legacy format (entire buffer)
-                        let cfg = bincode_cfg();
+                        let cfg = oxicode_cfg();
                         let (val, _len): (SerializedArray<A>, usize) =
-                            bincode_serde::decode_from_slice(&buf, cfg)
+                            oxicode_serde::decode_owned_from_slice(&buf, cfg)
                                 .map_err(|e| IoError::DeserializationError(e.to_string()))?;
                         val
                     }
                 } else {
                     // Declared length impossible -> legacy
-                    let cfg = bincode_cfg();
+                    let cfg = oxicode_cfg();
                     let (val, _len): (SerializedArray<A>, usize) =
-                        bincode_serde::decode_from_slice(&buf, cfg)
+                        oxicode_serde::decode_owned_from_slice(&buf, cfg)
                             .map_err(|e| IoError::DeserializationError(e.to_string()))?;
                     val
                 }
             } else {
                 // Too small to contain length prefix -> legacy
-                let cfg = bincode_cfg();
+                let cfg = oxicode_cfg();
                 let (val, _len): (SerializedArray<A>, usize) =
-                    bincode_serde::decode_from_slice(&buf, cfg)
+                    oxicode_serde::decode_owned_from_slice(&buf, cfg)
                         .map_err(|e| IoError::DeserializationError(e.to_string()))?;
                 val
             }
@@ -306,9 +309,12 @@ where
     // Serialize
     match format {
         SerializationFormat::Binary => {
-            let cfg = bincode_cfg();
-            bincode_serde::encode_into_std_write(&serialized, &mut writer, cfg)
+            let cfg = oxicode_cfg();
+            let bytes = oxicode_serde::encode_to_vec(&serialized, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
+            writer
+                .write_all(&bytes)
+                .map_err(|e| IoError::FileError(e.to_string()))?;
         }
         SerializationFormat::JSON => {
             serde_json::to_writer_pretty(&mut writer, &serialized)
@@ -366,9 +372,9 @@ where
 
     let serialized: SerializedArray<A> = match format {
         SerializationFormat::Binary => {
-            let cfg = bincode_cfg();
+            let cfg = oxicode_cfg();
             let (val, _len): (SerializedArray<A>, usize) =
-                bincode_serde::decode_from_std_read(&mut reader, cfg)
+                oxicode_serde::decode_from_std_read(&mut reader, cfg)
                     .map_err(|e| IoError::DeserializationError(e.to_string()))?;
             val
         }
@@ -434,9 +440,12 @@ where
 
     match format {
         SerializationFormat::Binary => {
-            let cfg = bincode_cfg();
-            bincode_serde::encode_into_std_write(data, &mut writer, cfg)
+            let cfg = oxicode_cfg();
+            let bytes = oxicode_serde::encode_to_vec(data, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
+            writer
+                .write_all(&bytes)
+                .map_err(|e| IoError::FileError(e.to_string()))?;
         }
         SerializationFormat::JSON => {
             serde_json::to_writer_pretty(&mut writer, data)
@@ -493,8 +502,8 @@ where
 
     match format {
         SerializationFormat::Binary => {
-            let cfg = bincode_cfg();
-            let (data, _len): (T, usize) = bincode_serde::decode_from_std_read(&mut reader, cfg)
+            let cfg = oxicode_cfg();
+            let (data, _len): (T, usize) = oxicode_serde::decode_from_std_read(&mut reader, cfg)
                 .map_err(|e| IoError::DeserializationError(e.to_string()))?;
             Ok(data)
         }
@@ -1332,9 +1341,12 @@ where
     match format {
         SerializationFormat::Binary => {
             // Write metadata
-            let cfg = bincode_cfg();
-            bincode_serde::encode_into_std_write(&metadata, &mut writer, cfg)
+            let cfg = oxicode_cfg();
+            let bytes = oxicode_serde::encode_to_vec(&metadata, cfg)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
+            writer
+                .write_all(&bytes)
+                .map_err(|e| IoError::FileError(e.to_string()))?;
 
             // Write data directly from array memory
             if let Some(slice) = array.as_slice() {
@@ -1394,9 +1406,9 @@ where
     file.read_exact(&mut metadata_buf)
         .map_err(|e| IoError::FileError(e.to_string()))?;
 
-    let cfg = bincode_cfg();
+    let cfg = oxicode_cfg();
     let (metadata, _len): (ArrayMetadata, usize) =
-        bincode_serde::decode_from_slice(&metadata_buf, cfg)
+        oxicode_serde::decode_owned_from_slice(&metadata_buf, cfg)
             .map_err(|e| IoError::DeserializationError(e.to_string()))?;
 
     // Memory-map the rest of the file (data portion)

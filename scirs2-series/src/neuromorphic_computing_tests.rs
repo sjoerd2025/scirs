@@ -1,8 +1,6 @@
 use super::*;
-
-use super::*;
 use approx::assert_abs_diff_eq;
-use scirs2_core::ScientificNumber;
+use scirs2_core::{Array1, ScientificNumber};
 
 #[test]
 fn test_neuron_models() {

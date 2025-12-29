@@ -1,18 +1,18 @@
 # scirs2-spatial Production Status
 
-**Version:** 0.1.0-rc.4 (Release Candidate 3 - SIMD Integration)
+**Version:** 0.1.0 (Stable Release - SIMD Integration)
 **Status:** PRODUCTION READY ✅ with SIMD-accelerated distance metrics
 **Test Results:** 303 tests passing (+31 SIMD integration tests)
 **Build Status:** All functionality stable with ecosystem consistency and 2x performance boost
 
 ## 🎯 Production Release Summary
 
-This document tracks the production-ready status of scirs2-spatial for the rc.4 release (0.1.0-rc.4). Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module features comprehensive platform testing and ecosystem consistency.
+This document tracks the production-ready status of scirs2-spatial for the stable release (0.1.0). Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module features comprehensive platform testing and ecosystem consistency.
 
 ## ✅ Completed Implementation
 
 ### **Core Functionality** - COMPLETE
-- ✅ **Distance Metrics** - All 20+ distance functions with SIMD acceleration (December 2025)
+- ✅ **Distance Metrics** - All 20+ distance functions with SIMD acceleration (December 29, 2025)
   - ✅ **SIMD-Accelerated**: Euclidean, Manhattan, Chebyshev with 2x f32 speedup
     - Up to 2x speedup for f32 operations on large vectors (1000+ dimensions)
     - Automatic SIMD fast path for f32/f64 arrays
@@ -58,7 +58,7 @@ This document tracks the production-ready status of scirs2-spatial for the rc.4 
   - Broadphase and narrowphase algorithms
 
 ### **Performance Optimizations** - VALIDATED
-- ✅ **SIMD Acceleration** - Full scirs2-core integration (December 2025)
+- ✅ **SIMD Acceleration** - Full scirs2-core integration (December 29, 2025)
   - ✅ **Distance Metrics**: Euclidean, Manhattan, Chebyshev (2x f32 speedup)
     - f32: ~2x faster than f64 (100 dims: 21ns vs 10ns, 1000 dims: 325ns vs 153ns)
     - f64: 1.5-2x speedup with AVX2/NEON acceleration
@@ -112,8 +112,8 @@ Cores: Multi-core utilization verified (8 cores tested)
 
 ## 🚀 Release Readiness
 
-### **Release Candidate 4 (0.1.0-rc.4)** ✅
-This is **Release Candidate 4** with all major functionality complete and zero-warning code quality:
+### **Stable Release (0.1.0)** ✅
+This is **Stable Release** with all major functionality complete and zero-warning code quality:
 
 - **Feature Complete**: All planned functionality implemented
 - **Performance Validated**: Concrete measurements confirm all claims

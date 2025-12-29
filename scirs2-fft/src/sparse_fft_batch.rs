@@ -453,7 +453,7 @@ mod tests {
         let mut rng = scirs2_core::random::rng();
         _signal
             .iter()
-            .map(|&x| x + rng.gen_range(-noise_level..noise_level))
+            .map(|&x| x + rng.random_range(-noise_level..noise_level))
             .collect()
     }
 

@@ -34,7 +34,7 @@ impl FastAlgorithm {
     }
 
     fn random_value(&mut self) -> f64 {
-        self.rng.gen_range(0.0..1.0)
+        self.rng.random_range(0.0..1.0)
     }
 }
 
@@ -74,7 +74,7 @@ impl NeuralNetwork {
         let weights = (0..total_weights)
             .map(|_| {
                 let scale = (2.0 / layer_sizes[0] as f64).sqrt();
-                rng.gen_range(-scale..scale)
+                rng.random_range(-scale..scale)
             })
             .collect();
 
@@ -116,7 +116,7 @@ impl TextSampler {
     fn weighted_sample(&mut self, words: &[(String, f64)]) -> String {
         // Simple weighted sampling without WeightedIndex
         let total_weight: f64 = words.iter().map(|(_, w)| w).sum();
-        let mut threshold = self.rng.gen_range(0.0..total_weight);
+        let mut threshold = self.rng.random_range(0.0..total_weight);
 
         for (word, weight) in words {
             threshold -= weight;

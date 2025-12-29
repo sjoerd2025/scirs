@@ -270,7 +270,7 @@ where
 
         let total_moments = (order + 1) * (order + 1);
         Array1::<T>::from_vec(moments_vec)
-            .into_shape((total_moments,))
+            .into_shape_with_order((total_moments,))
             .map_err(|_| NdimageError::ComputationError("Failed to reshape moments array".into()))
     } else {
         // For nD case, return simplified implementation
@@ -296,7 +296,7 @@ where
         }
 
         Array1::<T>::from_vec(moments_vec)
-            .into_shape((expected_size,))
+            .into_shape_with_order((expected_size,))
             .map_err(|_| NdimageError::ComputationError("Failed to reshape moments array".into()))
     }
 }
@@ -389,7 +389,7 @@ where
 
         let total_moments = (order + 1) * (order + 1);
         Array1::<T>::from_vec(central_moments_vec)
-            .into_shape((total_moments,))
+            .into_shape_with_order((total_moments,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape central moments array".into())
             })
@@ -438,7 +438,7 @@ where
         }
 
         Array1::<T>::from_vec(central_moments_vec)
-            .into_shape((expected_size,))
+            .into_shape_with_order((expected_size,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape central moments array".into())
             })
@@ -520,7 +520,7 @@ where
 
         let total_moments = (order + 1) * (order + 1);
         Array1::<T>::from_vec(normalized_moments_vec)
-            .into_shape((total_moments,))
+            .into_shape_with_order((total_moments,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape normalized moments array".into())
             })
@@ -562,7 +562,7 @@ where
         }
 
         Array1::<T>::from_vec(normalized_moments_vec)
-            .into_shape((expected_size,))
+            .into_shape_with_order((expected_size,))
             .map_err(|_| {
                 NdimageError::ComputationError("Failed to reshape normalized moments array".into())
             })

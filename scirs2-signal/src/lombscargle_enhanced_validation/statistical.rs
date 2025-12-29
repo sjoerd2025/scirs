@@ -64,7 +64,7 @@ pub fn test_enhanced_statistical_significance(
 
     // Multiple noise realizations for statistical validation
     for _ in 0..n_trials {
-        let noise_signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let noise_signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let (freqs, power) = run_lombscargle(implementation, &t, &noise_signal)?;
         let max_power = power.iter().cloned().fold(0.0, f64::max);
@@ -152,7 +152,7 @@ pub fn estimate_statistical_power(implementation: &str, times: &[f64]) -> Signal
             .iter()
             .map(|&ti| {
                 (2.0 * PI * f_signal * ti).sin()
-                    + noise_power.sqrt() * rng.gen_range(-1.0..1.0)
+                    + noise_power.sqrt() * rng.random_range(-1.0..1.0)
             })
             .collect();
 
@@ -192,7 +192,7 @@ pub fn test_significance_calibration(implementation: &str, times: &[f64]) -> Sig
 
         for _ in 0..n_trials {
             // Pure noise
-            let noise: Vec<f64> = times.iter().map(|_| rng.gen_range(-1.0..1.0)).collect();
+            let noise: Vec<f64> = times.iter().map(|_| rng.random_range(-1.0..1.0)).collect();
 
             let (_, power) = run_lombscargle(implementation, times, &noise)?;
             let max_power = power.iter().cloned().fold(0.0, f64::max);
@@ -223,11 +223,11 @@ pub fn test_enhanced_bootstrap_coverage(times: &[f64]) -> SignalResult<f64> {
 
     for _ in 0..n_tests {
         // Generate known signal with noise
-        let f_true = 5.0 + rng.gen_range(0.0..10.0);
+        let f_true = 5.0 + rng.random_range(0.0..10.0);
         let signal: Vec<f64> = times
             .iter()
             .map(|&ti| {
-                (2.0 * PI * f_true * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0)
+                (2.0 * PI * f_true * ti).sin() + 0.1 * rng.random_range(-1.0..1.0)
             })
             .collect();
 
@@ -293,7 +293,7 @@ pub fn test_cross_validation(
     let mut rng = scirs2_core::random::thread_rng();
     let signal: Vec<f64> = t
         .iter()
-        .map(|&ti| (2.0 * PI * f_true * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0))
+        .map(|&ti| (2.0 * PI * f_true * ti).sin() + 0.1 * rng.random_range(-1.0..1.0))
         .collect();
 
     // K-fold cross-validation (k=5)
@@ -403,7 +403,7 @@ pub fn perform_bootstrap_validation(
         let mut boot_signal = Vec::new();
 
         for _ in 0..n {
-            let idx = rng.gen_range(0..n);
+            let idx = rng.random_range(0..n);
             boot_t.push(t[idx]);
             boot_signal.push(signal[idx]);
         }

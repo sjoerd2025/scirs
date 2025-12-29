@@ -502,8 +502,8 @@ pub fn evolve_learning_strategies(
     // Mutation and crossover
     let mut new_population = Vec::new();
     for _ in 0..selected_strategies.len() {
-        let parent1 = &selected_strategies[rng.gen_range(0..selected_strategies.len())];
-        let parent2 = &selected_strategies[rng.gen_range(0..selected_strategies.len())];
+        let parent1 = &selected_strategies[rng.random_range(0..selected_strategies.len())];
+        let parent2 = &selected_strategies[rng.random_range(0..selected_strategies.len())];
 
         let mut offspring = crossover_strategies(parent1, parent2)?;
         mutate_strategy(&mut offspring, &strategy_evolution.mutation_params)?;
@@ -1038,7 +1038,7 @@ fn apply_selection(
                 for _ in 0..(target_size - selected.len()) {
                     let mut tournament = Vec::new();
                     for _ in 0..*tournament_size {
-                        let idx = rng.gen_range(0..population.len());
+                        let idx = rng.random_range(0..population.len());
                         tournament.push(&population[idx]);
                     }
 
@@ -1074,7 +1074,7 @@ fn crossover_strategies(
 ) -> NdimageResult<EvolutionaryStrategy> {
     let mut rng = scirs2_core::random::rng();
     let genome_size = parent1.genome.len().min(parent2.genome.len());
-    let crossover_point = rng.gen_range(1..genome_size);
+    let crossover_point = rng.random_range(1..genome_size);
 
     let mut new_genome = Array1::zeros(genome_size);
 
@@ -1103,15 +1103,17 @@ fn mutate_strategy(
     let mut rng = scirs2_core::random::rng();
 
     for gene in strategy.genome.iter_mut() {
-        if rng.gen::<f64>() < mutation_params.mutation_rate {
+        if rng.random::<f64>() < mutation_params.mutation_rate {
             let mutation = match mutation_params.mutation_distribution {
-                MutationDistribution::Gaussian { sigma } => rng.gen::<f64>() * sigma - sigma / 2.0,
-                MutationDistribution::Uniform { range } => (rng.gen::<f64>() - 0.5) * range,
+                MutationDistribution::Gaussian { sigma } => {
+                    rng.random::<f64>() * sigma - sigma / 2.0
+                }
+                MutationDistribution::Uniform { range } => (rng.random::<f64>() - 0.5) * range,
                 MutationDistribution::Adaptive => {
                     let adaptive_strength = mutation_params.mutation_strength * gene.abs();
-                    (rng.gen::<f64>() - 0.5) * adaptive_strength
+                    (rng.random::<f64>() - 0.5) * adaptive_strength
                 }
-                _ => (rng.gen::<f64>() - 0.5) * mutation_params.mutation_strength,
+                _ => (rng.random::<f64>() - 0.5) * mutation_params.mutation_strength,
             };
 
             *gene += mutation;

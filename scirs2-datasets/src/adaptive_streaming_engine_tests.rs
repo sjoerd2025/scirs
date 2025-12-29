@@ -1,6 +1,6 @@
 use super::*;
-
-use super::*;
+use scirs2_core::Array2;
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn create_test_chunk() -> StreamChunk {

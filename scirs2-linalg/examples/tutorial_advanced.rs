@@ -3,12 +3,20 @@
 //! This tutorial covers advanced features including iterative solvers,
 //! matrix functions, structured matrices, and ML operations.
 
-use scirs2_core::ndarray::{array, Array3};
+use scirs2_core::ndarray::{array, Array2, Array3, ArrayView2};
 use scirs2_linalg::attention::scaled_dot_product_attention;
 use scirs2_linalg::matrix_functions::{expm, logm, sqrtm};
 use scirs2_linalg::prelude::*;
 use scirs2_linalg::specialized::TridiagonalMatrix;
 use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix};
+
+/// Check if two matrices are approximately equal
+fn matrices_approx_equal(a: &ArrayView2<f64>, b: &ArrayView2<f64>, tol: f64) -> bool {
+    if a.shape() != b.shape() {
+        return false;
+    }
+    a.iter().zip(b.iter()).all(|(x, y)| (x - y).abs() < tol)
+}
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -32,7 +40,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(log_exp_a) => {
             println!("\nlog(exp(A)) =");
             println!("{}", log_exp_a);
-            println!("Should equal A? {}\n", a.abs_diff_eq(&log_exp_a, 1e-10));
+            println!(
+                "Should equal A? {}\n",
+                matrices_approx_equal(&a.view(), &log_exp_a.view(), 1e-10)
+            );
         }
         Err(e) => {
             println!("\nMatrix logarithm failed: {}", e);
@@ -49,7 +60,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sqrt_squared = sqrt_a.dot(&sqrt_a);
     println!("\nsqrt(A) * sqrt(A) =");
     println!("{}", sqrt_squared);
-    println!("Should equal A? {}\n", a.abs_diff_eq(&sqrt_squared, 1e-10));
+    println!(
+        "Should equal A? {}\n",
+        matrices_approx_equal(&a.view(), &sqrt_squared.view(), 1e-10)
+    );
 
     // 2. Iterative Solvers
     println!("2. Iterative Solvers");

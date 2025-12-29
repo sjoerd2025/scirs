@@ -10,8 +10,8 @@ use super::validation;
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use ::ndarray::{Array, ArrayBase, Data, Dimension, IxDyn};
 use ::serde::{Deserialize, Serialize};
-use bincode::{config, serde};
 use memmap2::{Mmap, MmapMut, MmapOptions};
+use oxicode::{config, serde as oxicode_serde};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::marker::PhantomData;
@@ -486,7 +486,7 @@ where
 
                 // Serialize header to bytes
                 let cfg = config::standard();
-                let header_bytes = serde::encode_to_vec(&header, cfg).map_err(|e| {
+                let header_bytes = oxicode_serde::encode_to_vec(&header, cfg).map_err(|e| {
                     CoreError::ValidationError(
                         ErrorContext::new(format!("Failed to serialize header: {e}"))
                             .with_location(ErrorLocation::new(file!(), line!())),
@@ -1085,7 +1085,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
 
     // Try to deserialize header
     let cfg = config::standard();
-    match serde::decode_from_slice::<MemoryMappedHeader, _>(&header_bytes, cfg) {
+    match oxicode_serde::decode_owned_from_slice::<MemoryMappedHeader, _>(&header_bytes, cfg) {
         Ok((header, _len)) => {
             let element_size_expected = std::mem::size_of::<A>();
             if header.element_size == element_size_expected {

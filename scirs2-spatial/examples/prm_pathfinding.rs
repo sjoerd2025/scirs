@@ -212,6 +212,7 @@ fn print_ascii_visualization_circle(
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
     // Draw the circle obstacle
+    #[allow(clippy::needless_range_loop)]
     for _y in 0..SIZE {
         for _x in 0..SIZE {
             let px = _x as f64 / (SIZE as f64) * 10.0;
@@ -296,6 +297,7 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
     let mut grid = vec![vec![' '; SIZE]; SIZE];
 
     // Draw obstacles
+    #[allow(clippy::needless_range_loop)]
     for y in 0..SIZE {
         for x in 0..SIZE {
             let px = x as f64 / (SIZE as f64) * 10.0;

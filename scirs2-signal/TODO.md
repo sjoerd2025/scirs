@@ -1,10 +1,10 @@
-# scirs2-signal TODO (v0.1.0-rc.4)
+# scirs2-signal TODO (v0.1.0)
 
-This module provides signal processing functionality similar to SciPy's signal module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module is part of the rc.4 release with ecosystem consistency through scirs2-core abstractions.
+This module provides signal processing functionality similar to SciPy's signal module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module is part of the stable release with ecosystem consistency through scirs2-core abstractions.
 
 ## ✅ Build Status: PRODUCTION READY
 
-**Version**: 0.1.0-rc.4
+**Version**: 0.1.0
 **Status**: All compilation issues resolved, tests passing
 **Build**: Zero errors, zero warnings
 **Tests**: 416 passing (+11 SIMD diff integration tests)
@@ -16,7 +16,7 @@ The SIMD-related compilation issues that were previously blocking have been full
 - ✅ Scalar fallbacks in place for non-SIMD platforms
 - ✅ Full API surface preserved
 - ✅ Module compiles and tests pass successfully
-- ✅ **NEW: SIMD diff operations** for derivative computation (December 2025)
+- ✅ **NEW: SIMD diff operations** for derivative computation (December 29, 2025)
   - Up to 1.83x speedup for f32 operations on large signals
   - Essential for real-time signal processing and audio analysis
   - Sub-millisecond processing for 100K sample buffers
@@ -24,7 +24,7 @@ The SIMD-related compilation issues that were previously blocking have been full
 
 ---
 
-## Production-Ready Features (v0.1.0-rc.4)
+## Production-Ready Features (v0.1.0)
 
 ### Core Signal Processing ✅
 - [x] Module structure and error handling

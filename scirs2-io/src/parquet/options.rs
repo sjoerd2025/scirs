@@ -3,11 +3,12 @@
 use serde::{Deserialize, Serialize};
 
 /// Compression codec for Parquet files
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum CompressionCodec {
     /// No compression
     Uncompressed,
     /// Snappy compression (fast, moderate compression)
+    #[default]
     Snappy,
     /// Gzip compression (slower, better compression)
     Gzip,
@@ -19,12 +20,6 @@ pub enum CompressionCodec {
     Brotli,
     /// LZ4 raw format
     Lz4Raw,
-}
-
-impl Default for CompressionCodec {
-    fn default() -> Self {
-        Self::Snappy
-    }
 }
 
 impl CompressionCodec {
@@ -43,18 +38,13 @@ impl CompressionCodec {
 }
 
 /// Parquet file version
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum ParquetVersion {
     /// Parquet version 1.0
     V1,
     /// Parquet version 2.0 (supports more encoding types)
+    #[default]
     V2,
-}
-
-impl Default for ParquetVersion {
-    fn default() -> Self {
-        Self::V2
-    }
 }
 
 impl ParquetVersion {

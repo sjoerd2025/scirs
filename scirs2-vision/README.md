@@ -8,9 +8,9 @@ Computer vision module for SciRS2, providing comprehensive functionality for ima
 
 ⚠️ **SciRS2 POLICY Migration**: This module is currently being updated to follow the [SciRS2 POLICY](../SCIRS2_POLICY.md) - migration from direct `rand::` usage to scirs2-core abstractions is in progress.
 
-## Production Status (0.1.0-rc.4)
+## Production Status (0.1.0)
 
-**✅ PRODUCTION READY** - rc.4 release with SciRS2 POLICY implementation:
+**✅ PRODUCTION READY** - stable release with SciRS2 POLICY implementation:
 - **217 unit tests** passing with zero warnings
 - **Comprehensive API** covering all major computer vision operations
 - **Working examples** demonstrating real-world usage
@@ -209,14 +209,14 @@ Add `scirs2-vision` to your dependencies in `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-vision = "0.1.0-rc.4"
+scirs2-vision = "0.1.0"
 ```
 
 To enable optimizations through the core module, add feature flags:
 
 ```toml
 [dependencies]
-scirs2-vision = { version = "0.1.0-rc.4", features = ["parallel"] }
+scirs2-vision = { version = "0.1.0", features = ["parallel"] }
 ```
 
 ## Documentation
@@ -279,7 +279,7 @@ This project is dual-licensed under:
 You can choose to use either license. See the [LICENSE](../LICENSE) file for details.
 ## Production Readiness
 
-This **0.1.0-rc.4** release represents a mature, production-ready computer vision library suitable for:
+This **0.1.0** release represents a mature, production-ready computer vision library suitable for:
 
 ### 🏭 Production Applications
 - **Scientific Computing**: Research applications requiring reliable computer vision algorithms
@@ -295,7 +295,7 @@ All implemented algorithms have been validated against reference implementations
 - **Memory Safety**: Rust's guarantees ensure memory safety without runtime overhead
 
 ### 🎯 API Stability
-The public API is considered stable for **Release Candidate 4** (rc.4), meaning:
+The public API is considered stable for **Stable Release** (stable), meaning:
 - **Production Ready**: API is stable with minimal changes expected before 1.0
 - **Consistent Interface**: Function signatures and behavior will remain consistent
 - **Backward Compatibility**: New features will be added without breaking existing code

@@ -201,7 +201,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     fn quantum_noise(&self) -> F {
         // Simplified quantum noise generation
         let mut rng = scirs2_core::random::thread_rng();
-        F::from(rng.gen_range(-1.0..1.0)).expect("Operation failed")
+        F::from(rng.random_range(-1.0..1.0)).expect("Operation failed")
     }
 
     /// Perform quantum optimization iterations

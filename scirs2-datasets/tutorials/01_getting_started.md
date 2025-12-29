@@ -18,7 +18,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-datasets = "0.1.0-beta.4"
+scirs2-datasets = "0.1.0"
 ```
 
 ## Your First Dataset

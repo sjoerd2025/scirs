@@ -327,7 +327,7 @@ where
     let n_dims = xshape.len();
 
     // Determine which axes to transform
-    let axes_to_transform = axes.map_or_else(|| (0..n_dims).collect(), |ax| ax);
+    let axes_to_transform = axes.unwrap_or_else(|| (0..n_dims).collect());
 
     // Create an initial copy of the input array as float
     let mut result = Array::from_shape_fn(IxDyn(&xshape), |idx| {
@@ -399,7 +399,7 @@ where
     let n_dims = xshape.len();
 
     // Determine which axes to transform
-    let axes_to_transform = axes.map_or_else(|| (0..n_dims).collect(), |ax| ax);
+    let axes_to_transform = axes.unwrap_or_else(|| (0..n_dims).collect());
 
     // Create an initial copy of the input array as float
     let mut result = Array::from_shape_fn(IxDyn(&xshape), |idx| {

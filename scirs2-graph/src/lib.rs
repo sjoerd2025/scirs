@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::field_reassign_with_default)]
 #![allow(clippy::needless_range_loop)]
 //! # SciRS2 Graph - Graph Algorithms and Network Analysis
@@ -31,7 +30,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-graph = "0.1.0-rc.4"
+//! scirs2-graph = "0.1.0"
 //! ```
 //!
 //! ```rust,no_run
@@ -44,7 +43,7 @@
 //! g.add_edge(0, 1, 1.0);
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //!
 //! ## API Stability and Versioning
 //!
@@ -60,7 +59,7 @@
 //! - **MINOR** (1.0.x → 1.1.x): New features, deprecations only (no breaks to stable APIs)
 //! - **PATCH** (1.0.0 → 1.0.1): Bug fixes only, no API changes
 //!
-//! ### Stable Core APIs (v0.1.0-beta.1+)
+//! ### Stable Core APIs (v0.1.0+)
 //! - Graph data structures (`Graph`, `DiGraph`, `MultiGraph`)
 //! - Basic algorithms (traversal, shortest paths, connectivity)
 //! - Graph generators and I/O operations
@@ -217,33 +216,6 @@ pub use algorithms::{
     has_hamiltonian_circuit,
     has_hamiltonian_path,
 };
-
-// Deprecated functions are commented out to eliminate warnings
-// Users should use the _result variants instead
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `dijkstra_path` instead")]
-// pub use algorithms::shortest_path;
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `louvain_communities_result` instead")]
-// pub use algorithms::louvain_communities;
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `label_propagation_result` instead")]
-// pub use algorithms::label_propagation;
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `fluid_communities_result` instead")]
-// pub use algorithms::fluid_communities;
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `hierarchical_communities_result` instead")]
-// pub use algorithms::hierarchical_communities;
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `modularity_optimization_result` instead")]
-// pub use algorithms::modularity_optimization;
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `greedy_modularity_optimization_result` instead")]
-// pub use algorithms::greedy_modularity_optimization;
-//
-// #[deprecated(since = "0.1.0-beta.1", note = "Use `parallel_louvain_communities_result` instead")]
-// pub use algorithms::parallel_louvain_communities;
 
 // Core graph types - stable for 1.0
 pub use base::{

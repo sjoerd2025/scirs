@@ -9,10 +9,11 @@
 //! A convex hull is the smallest convex set that contains all given points.
 //! This module provides:
 //!
-//! - **Multiple algorithms**: QHull (nD), Graham Scan (2D), Jarvis March (2D)
+//! - **Multiple algorithms**: Quickhull (nD), Graham Scan (2D), Jarvis March (2D)
 //! - **Geometric properties**: Volume, surface area, compactness measures
 //! - **Point queries**: Containment testing, distance calculations
 //! - **Robust handling**: Special cases, degenerate inputs, numerical precision
+//! - **Pure Rust**: All implementations are pure Rust with no C library dependencies
 //!
 //! # Quick Start
 //!
@@ -70,16 +71,16 @@
 //! # Module Organization
 //!
 //! - [`core`] - Core ConvexHull struct and basic functionality
-//! - [`algorithms`] - Algorithm implementations (QHull, Graham Scan, Jarvis March)
+//! - [`algorithms`] - Algorithm implementations (Quickhull, Graham Scan, Jarvis March)
 //! - [`geometry`] - Geometric utility functions for different dimensions
 //! - [`properties`] - Volume, surface area, and containment calculations
 //!
 //! # Algorithm Guide
 //!
-//! ## QHull (Recommended for most uses)
+//! ## Quickhull (Recommended for most uses)
 //! - **Dimensions**: 1D, 2D, 3D, nD
 //! - **Time Complexity**: O(n log n) for 2D/3D, O(n^⌊d/2⌋) for higher dimensions
-//! - **Features**: Robust, handles degenerate cases, provides facet equations
+//! - **Features**: Pure Rust, robust, handles degenerate cases, provides facet equations
 //! - **Use when**: General-purpose convex hull computation
 //!
 //! ## Graham Scan (2D only)
@@ -96,7 +97,7 @@
 //!
 //! # Performance Tips
 //!
-//! 1. **Use QHull for general cases** - it's the most robust and efficient
+//! 1. **Use Quickhull for general cases** - it's the most robust and efficient
 //! 2. **For 2D with small hulls** - consider Jarvis March for output-sensitive performance
 //! 3. **For large datasets** - consider preprocessing to remove interior points
 //! 4. **For high dimensions** - expect exponential complexity, consider approximations
@@ -119,7 +120,7 @@ pub use core::{ConvexHull, ConvexHullAlgorithm};
 
 // Re-export algorithm functions
 pub use algorithms::{
-    compute_graham_scan, compute_jarvis_march, compute_qhull, get_algorithm_complexity,
+    compute_graham_scan, compute_jarvis_march, compute_quickhull, get_algorithm_complexity,
     recommend_algorithm,
 };
 
@@ -249,10 +250,10 @@ pub mod advanced {
     > {
         let mut results = Vec::new();
 
-        // Always try QHull
+        // Always try Quickhull
         results.push((
-            ConvexHullAlgorithm::QHull,
-            ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::QHull),
+            ConvexHullAlgorithm::Quickhull,
+            ConvexHull::new_with_algorithm(points, ConvexHullAlgorithm::Quickhull),
         ));
 
         // For 2D, also try other algorithms

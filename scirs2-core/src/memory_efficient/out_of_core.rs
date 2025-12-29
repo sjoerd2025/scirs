@@ -3,7 +3,7 @@ use super::validation;
 use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use ::ndarray::{Array, ArrayBase, Data, Dimension};
 use ::serde::{Deserialize, Serialize};
-use bincode::{config, serde};
+use oxicode::{config, serde as oxicode_serde};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::marker::PhantomData;
@@ -65,7 +65,7 @@ where
         // Note: This is a simplified implementation that writes the entire array at once.
         // A real implementation would write chunks to save memory.
         let cfg = config::standard();
-        let serialized = serde::encode_to_vec(&data.to_owned(), cfg).map_err(|e| {
+        let serialized = oxicode_serde::encode_to_vec(&data.to_owned(), cfg).map_err(|e| {
             CoreError::ValidationError(
                 ErrorContext::new(format!("{e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
@@ -119,7 +119,7 @@ where
 
         let cfg = config::standard();
         let (array, _len): (Array<A, D>, usize) =
-            serde::decode_from_slice(&buffer, cfg).map_err(|e| {
+            oxicode_serde::decode_owned_from_slice(&buffer, cfg).map_err(|e| {
                 CoreError::ValidationError(
                     ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
@@ -167,8 +167,8 @@ where
         // 2. Use custom serialization to write chunks sequentially
         // 3. Keep track of chunk offsets in the file
         let cfg = config::standard();
-        let (fullarray, _len): (Array<A, D>, usize) = serde::decode_from_slice(&header_buf, cfg)
-            .map_err(|e| {
+        let (fullarray, _len): (Array<A, D>, usize) =
+            oxicode_serde::decode_owned_from_slice(&header_buf, cfg).map_err(|e| {
                 CoreError::ValidationError(
                     ErrorContext::new(format!("{e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),

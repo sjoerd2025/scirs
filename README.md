@@ -2,29 +2,56 @@
 
 [![crates.io](https://img.shields.io/crates/v/scirs2.svg)](https://crates.io/crates/scirs2)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
-![SciRS2 CI](https://github.com/cool-japan/scirs/workflows/SciRS2%20CI/badge.svg)
 
-SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in Rust, providing SciPy-compatible APIs while leveraging Rust's performance, safety, and concurrency features. The project aims to provide a complete ecosystem for scientific computing, data analysis, and machine learning in Rust.
+SciRS2 is a comprehensive scientific computing and AI/ML infrastructure in **Pure Rust**, providing SciPy-compatible APIs while leveraging Rust's performance, safety, and concurrency features. Unlike traditional scientific libraries, SciRS2 is **100% Pure Rust by default** with no C/C++/Fortran dependencies required, making installation effortless and ensuring cross-platform compatibility. The project aims to provide a complete ecosystem for scientific computing, data analysis, and machine learning in Rust.
 
-## 🚀 Release Status: v0.1.0-rc.4
+## 🎉 Release Status: v0.1.0 - Stable Release
 
-**Release Candidate 4** - Documentation & Stability Enhancements! (Final RC before 0.1.0 stable)
+**First Stable Release** - Production Ready! 🚀
 
-- ✅ **Comprehensive Documentation**: Complete revision of all major documentation files
-- ✅ **Version Synchronization**: All version references updated to rc.4
-- ✅ **Developer Experience**: Enhanced build and test documentation
-- ✅ **Quality Assurance**: 11,400+ tests passing, zero warnings
-- ✅ **Production Ready**: Final preparations for stable 0.1.0 release
-- 📅 **Release Date**: December 21, 2025
+- ✅ **Refactoring Policy Compliance**: All files meet <2000 line policy (21 files → 150+ modules)
+- ✅ **Zero Warnings Policy**: Clean build with 0 compilation errors, 0 non-doc warnings
+- ✅ **Comprehensive Testing**: 11,416 tests passing across 170 binaries (174 skipped)
+- ✅ **Code Quality**: Full clippy compliance, 1.68M lines of production-ready Rust code
+- ✅ **Production Ready**: Stable APIs, comprehensive documentation, excellent test coverage
+- 📅 **Release Date**: December 29, 2025
 
-**What's New in rc.4**:
-- Comprehensive documentation updates (README, TODO, CLAUDE.md, lib.rs)
-- Version synchronization across all workspace members
-- Enhanced development workflow documentation
-- Improved troubleshooting and dependency guidelines
-- Final quality checks before stable release
+**What's New in 0.1.0 Stable**:
+- Complete codebase refactoring to meet file size policy (<2000 lines per file)
+- 150+ module visibility and import fixes for comprehensive test coverage
+- Resolved all compilation warnings and clippy issues
+- Enhanced module organization with clear separation of concerns
+- Production-ready code quality and stability
 
 See [SCIRS2_POLICY.md](SCIRS2_POLICY.md) for architectural details and [CHANGELOG.md](CHANGELOG.md) for complete details.
+
+## 🦀 Pure Rust by Default
+
+**SciRS2 is 100% Pure Rust by default** - no C, C++, or Fortran dependencies required!
+
+Unlike traditional scientific computing libraries that rely on external system libraries (OpenBLAS, LAPACK, FFTW), SciRS2 provides a completely self-contained Pure Rust implementation:
+
+- ✅ **BLAS/LAPACK**: Pure Rust [OxiBLAS](https://github.com/cool-japan/oxiblas) implementation (no OpenBLAS/MKL/Accelerate required)
+- ✅ **FFT**: Pure Rust [RustFFT](https://github.com/ejmahler/RustFFT) implementation (FFTW is optional for 62x speedup)
+- ✅ **Random Number Generation**: Pure Rust implementations of all statistical distributions
+- ✅ **All Core Modules**: Every scientific computing module works out-of-the-box without external dependencies
+
+**Benefits**:
+- 🚀 **Easy Installation**: `cargo add scirs2` - no system library setup required
+- 🔒 **Memory Safety**: Rust's ownership system prevents memory leaks and data races
+- 🌍 **Cross-Platform**: Same code works on Linux, macOS, Windows, and WebAssembly
+- 📦 **Reproducible Builds**: No external library version conflicts
+- ⚡ **Performance**: Competitive performance with optional C library acceleration where needed
+
+**Optional Performance Enhancements** (not required for functionality):
+- `fftw` feature: Link FFTW library for 62x FFT speedup (C library)
+- `mpsgraph` feature: Apple Metal GPU acceleration (macOS only, Objective-C)
+- `cuda` feature: NVIDIA CUDA GPU acceleration
+- `arbitrary-precision` feature: GMP/MPFR for arbitrary precision arithmetic (C library)
+
+Enable with: `cargo add scirs2 --features fftw,cuda`
+
+By default, SciRS2 provides a **fully functional, Pure Rust scientific computing stack** that rivals the performance of traditional C/Fortran-based libraries while offering superior safety, portability, and ease of use.
 
 ## Features
 
@@ -56,6 +83,7 @@ See [SCIRS2_POLICY.md](SCIRS2_POLICY.md) for architectural details and [CHANGELO
 - **Time Series**: Analysis and forecasting tools
 
 ### Performance and Safety
+- **Pure Rust by Default**: 100% Rust implementation with no C/C++/Fortran dependencies (OxiBLAS for BLAS/LAPACK, RustFFT for FFT)
 - **Ultra-Optimized SIMD**: Ecosystem-wide bandwidth-saturated SIMD achieving 10-100x performance improvements
 - **Memory Management**: Efficient handling of large datasets with intelligent chunking and caching
 - **GPU Acceleration**: CUDA and hardware-agnostic backends for computation
@@ -71,6 +99,7 @@ This project now contains **over 2 million source lines of code** and runs **11,
 ## Project Goals
 
 - Create a comprehensive scientific computing and machine learning library in Rust
+- **Provide a Pure Rust implementation by default** - eliminating external C/Fortran dependencies for easier installation and better portability
 - Maintain API compatibility with SciPy where reasonable
 - Provide specialized tools for AI and machine learning development
 - Leverage Rust's performance, safety, and concurrency features
@@ -107,7 +136,7 @@ SciRS2 adopts a modular architecture with separate crates for different function
 
 # AI/ML Modules
 ├── scirs2-neural/            # Neural network building blocks
-# Note: scirs2-optim separated into independent OptiRS project from v0.1.0-beta.2
+# Note: scirs2-optim separated into independent OptiRS project
 ├── scirs2-graph/             # Graph processing algorithms
 ├── scirs2-transform/         # Data transformation utilities
 ├── scirs2-metrics/           # ML evaluation metrics
@@ -222,7 +251,7 @@ Each module has its own README with detailed documentation and is available on c
 
 ### AI/ML Modules
 - [**scirs2-neural**](scirs2-neural/README.md): Neural network building blocks [![crates.io](https://img.shields.io/crates/v/scirs2-neural.svg)](https://crates.io/crates/scirs2-neural)
-- **⚠️ scirs2-optim**: **Separated to independent [OptiRS](https://github.com/cool-japan/optirs) project from v0.1.0-beta.2**
+- **⚠️ scirs2-optim**: **Separated to independent [OptiRS](https://github.com/cool-japan/optirs) project**
 - [**scirs2-graph**](scirs2-graph/README.md): Graph processing algorithms [![crates.io](https://img.shields.io/crates/v/scirs2-graph.svg)](https://crates.io/crates/scirs2-graph)
 - [**scirs2-transform**](scirs2-transform/README.md): Data transformation utilities [![crates.io](https://img.shields.io/crates/v/scirs2-transform.svg)](https://crates.io/crates/scirs2-transform)
 - [**scirs2-metrics**](scirs2-metrics/README.md): ML evaluation metrics [![crates.io](https://img.shields.io/crates/v/scirs2-metrics.svg)](https://crates.io/crates/scirs2-metrics)
@@ -301,7 +330,7 @@ SciRS2 leverages the Rust ecosystem:
 - `image`: Image processing utilities
 - `petgraph`: Graph algorithms and data structures
 
-## What's New in v0.1.0-rc.4 (Released December 21, 2025)
+## What's New in v0.1.0 (Released December 29, 2025)
 
 ### Major Enhancements
 
@@ -315,7 +344,7 @@ Comprehensive documentation overhaul for production readiness:
 
 #### Build System & Version Management
 Streamlined version control and build processes:
-- ✅ **Version Consistency**: All references updated to 0.1.0-rc.4
+- ✅ **Version Consistency**: All references updated to 0.1.0
 - ✅ **Workspace Alignment**: Synchronized all workspace members
 - ✅ **Dependency Documentation**: Enhanced dependency management guidelines
 - ✅ **Example Updates**: All examples verified with current API
@@ -412,7 +441,7 @@ SciRS2 and all its modules are available on [crates.io](https://crates.io/crates
 ```toml
 # Add the main integration crate for all functionality
 [dependencies]
-scirs2 = "0.1.0-rc.4"
+scirs2 = "0.1.0"
 ```
 
 Or include only the specific modules you need:
@@ -420,16 +449,16 @@ Or include only the specific modules you need:
 ```toml
 [dependencies]
 # Core utilities
-scirs2-core = "0.1.0-rc.4"
+scirs2-core = "0.1.0"
 
 # Scientific computing modules
-scirs2-linalg = "0.1.0-rc.4"
-scirs2-stats = "0.1.0-rc.4"
-scirs2-optimize = "0.1.0-rc.4"
+scirs2-linalg = "0.1.0"
+scirs2-stats = "0.1.0"
+scirs2-optimize = "0.1.0"
 
 # AI/ML modules
-scirs2-neural = "0.1.0-rc.4"
-scirs2-autograd = "0.1.0-rc.4"
+scirs2-neural = "0.1.0"
+scirs2-autograd = "0.1.0"
 # Note: For ML optimization algorithms, use the independent OptiRS project
 ```
 
@@ -547,7 +576,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Platform Compatibility
 
-SciRS2 v0.1.0-rc.4 has been tested on the following platforms:
+SciRS2 v0.1.0 has been tested on the following platforms:
 
 ### ✅ Fully Supported Platforms
 
@@ -595,7 +624,7 @@ cargo install cargo-nextest
 cargo nextest run --nff --all-features
 ```
 
-## Current Status (v0.1.0-rc.4 - Released December 21, 2025)
+## Current Status (v0.1.0 - Released December 29, 2025)
 
 ### 🎉 Key Features
 
@@ -706,10 +735,10 @@ All SciRS2 modules are available on crates.io. Add the modules you need to your 
 
 ```toml
 [dependencies]
-scirs2 = "0.1.0-rc.4"  # Core library with all modules
+scirs2 = "0.1.0"  # Core library with all modules
 # Or individual modules:
-scirs2-linalg = "0.1.0-rc.4"  # Linear algebra
-scirs2-stats = "0.1.0-rc.4"   # Statistics
+scirs2-linalg = "0.1.0"  # Linear algebra
+scirs2-stats = "0.1.0"   # Statistics
 # ... and more
 ```
 
@@ -772,13 +801,13 @@ This policy ensures ecosystem consistency and enables better optimization across
 
 ## Release Notes
 
-### 🚀 v0.1.0-rc.4 (December 21, 2025) - Release Candidate 4
+### 🚀 v0.1.0 (December 29, 2025) - Stable Release
 
 This release focuses on documentation excellence, version synchronization, and final preparations for the stable 0.1.0 release:
 
 #### ✅ Major Improvements:
 - **Documentation**: Comprehensive revision of README, TODO, CLAUDE.md, and lib.rs files
-- **Version Sync**: All version references updated to 0.1.0-rc.4 across workspace
+- **Version Sync**: All version references updated to 0.1.0 across workspace
 - **Developer Experience**: Enhanced build workflows and troubleshooting guides
 - **Quality Assurance**: Final validation with 11,400+ tests passing
 
@@ -791,32 +820,18 @@ This release focuses on documentation excellence, version synchronization, and f
 - ✅ **Build System**: Zero warnings, full clippy compliance
 - ✅ **Test Suite**: 11,400+ tests passing across all modules
 - ✅ **Documentation**: All docs.rs builds successful
-- ✅ **Production Ready**: Final RC before stable 0.1.0 release
+- ✅ **Production Ready**: Stable v0.1.0 release
 
 **Migration:**
 - No breaking API changes from rc.3
 - Documentation improvements enhance developer experience
 - See [CHANGELOG.md](CHANGELOG.md) for complete details
 
-### Previous Releases
+## Known Limitations
 
-**v0.1.0-rc.1** (October 03, 2025) - Release Candidate 1:
-- Platform compatibility testing and final preparation for stable release
-- Documentation updates and release workflow improvements
-- 9,800+ tests passing across all modules
+This is the stable v0.1.0 release of SciRS2. While the core functionality is stable and well-tested, there are some known limitations:
 
-**Beta Series (v0.1.0-beta.1 through beta.4)**:
-- Established SciRS2 POLICY framework with layered abstraction architecture
-- Implemented ultra-optimized SIMD operations (10-100x performance improvements)
-- Added comprehensive GPU kernel infrastructure (CUDA, ROCm, Metal, WGPU, OpenCL)
-- Enhanced ecosystem-wide performance and stability
-- Full details available in [RELEASE_NOTES.md](RELEASE_NOTES.md)
-
-## Known Limitations (Release Candidate)
-
-This is the fourth Release Candidate (0.1.0-rc.4) of SciRS2, released December 21, 2025. While the core functionality is stable and well-tested, there are some known limitations:
-
-### Python Bindings (RESOLVED in rc.3, maintained in rc.4)
+### Python Bindings (RESOLVED, maintained in stable)
 
 **Status**: ✅ **RESOLVED** - scirs2-python provides full Python integration
 

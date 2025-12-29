@@ -1,14 +1,14 @@
 //! Basic matrix operations
 //!
-//! Uses ndarray-linalg for optimized BLAS/LAPACK operations.
+//! Uses OxiBLAS for optimized pure Rust BLAS/LAPACK operations.
 
 use crate::error::{LinalgError, LinalgResult};
 use scirs2_core::ndarray::{Array2, ArrayView2, ScalarOperand};
 use scirs2_core::numeric::{Float, NumAssign};
 use std::iter::Sum;
 
-// TEMPORARY: Unconditional import to verify BLAS/LAPACK works
-use ndarray_linalg::{Determinant, Inverse};
+// OxiBLAS LAPACK operations (via scirs2-core linalg abstraction)
+use scirs2_core::linalg::{det_ndarray, inv_ndarray};
 
 /// Compute the determinant of a square matrix.
 ///
@@ -50,14 +50,10 @@ where
     det_impl(a)
 }
 
-/// BLAS/LAPACK-accelerated determinant for f64 (PUBLIC for direct Python use)
+/// OxiBLAS-accelerated determinant for f64 (PUBLIC for direct Python use)
 ///
-/// This function is specifically optimized for f64 using LAPACK, providing
-/// 200-700x speedup over pure Rust implementation.
-/// TEMPORARY: Unconditional (always available) to verify BLAS/LAPACK works
+/// This function uses OxiBLAS pure Rust LAPACK implementation.
 pub fn det_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<f64> {
-    use ndarray_linalg::Determinant;
-
     // Validate square matrix
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -81,18 +77,28 @@ pub fn det_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<f64> {
         _ => {}
     }
 
-    // For 4x4+: Use LAPACK (200-700x faster than pure Rust LU!)
-    a.to_owned()
-        .det()
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK det failed: {:?}", e)))
+    // For 4x4+: Use OxiBLAS LAPACK
+    match det_ndarray(&a.to_owned()) {
+        Ok(det) => Ok(det),
+        Err(e) => {
+            // OxiBLAS returns an error for singular matrices - determinant is 0
+            let err_str = format!("{:?}", e);
+            if err_str.contains("Singular") {
+                Ok(0.0)
+            } else {
+                Err(LinalgError::ComputationError(format!(
+                    "OxiBLAS det failed: {:?}",
+                    e
+                )))
+            }
+        }
+    }
 }
 
-/// BLAS/LAPACK-accelerated matrix inverse for f64
+/// OxiBLAS-accelerated matrix inverse for f64
 ///
-/// Provides 200-700x speedup over pure Rust implementation using LAPACK.
+/// Uses OxiBLAS pure Rust LAPACK implementation.
 pub fn inv_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
-    use ndarray_linalg::Inverse;
-
     // Validate square matrix
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -102,13 +108,12 @@ pub fn inv_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
         )));
     }
 
-    // Use LAPACK for matrix inversion (714x faster!)
-    a.to_owned()
-        .inv()
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK inv failed: {:?}", e)))
+    // Use OxiBLAS LAPACK for matrix inversion
+    inv_ndarray(&a.to_owned())
+        .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS inv failed: {:?}", e)))
 }
 
-/// Implementation of determinant - uses BLAS/LAPACK for f64, pure Rust fallback for others
+/// Implementation of determinant - uses OxiBLAS for f32/f64, pure Rust fallback for others
 fn det_impl<F>(a: &ArrayView2<F>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -116,7 +121,7 @@ where
     use scirs2_core::numeric::NumCast;
     use std::any::TypeId;
 
-    // Fast path for f64 using LAPACK
+    // Fast path for f64 using OxiBLAS
     if TypeId::of::<F>() == TypeId::of::<f64>() {
         // SAFETY: We've verified the type is f64
         let a_f64: &ArrayView2<f64> = unsafe { std::mem::transmute(a) };
@@ -124,13 +129,11 @@ where
         return Ok(<F as NumCast>::from(result).expect("Operation failed"));
     }
 
-    // Fast path for f32 using LAPACK
+    // Fast path for f32 using OxiBLAS
     if TypeId::of::<F>() == TypeId::of::<f32>() {
         let a_f32: &ArrayView2<f32> = unsafe { std::mem::transmute(a) };
-        let result = a_f32
-            .to_owned()
-            .det()
-            .map_err(|e| LinalgError::ComputationError(format!("LAPACK det failed: {:?}", e)))?;
+        let result = det_ndarray(&a_f32.to_owned())
+            .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS det failed: {:?}", e)))?;
         return Ok(<F as NumCast>::from(result).expect("Operation failed"));
     }
 

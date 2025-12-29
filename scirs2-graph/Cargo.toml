@@ -36,7 +36,7 @@ num_cpus = { workspace = true }
 # Serialization for attributes and embeddings
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-bincode = { workspace = true }
+oxicode = { workspace = true }  # Binary serialization (SIMD-optimized)
 
 [dev-dependencies]
 tempfile = { workspace = true }

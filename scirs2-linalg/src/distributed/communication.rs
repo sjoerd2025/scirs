@@ -407,9 +407,9 @@ impl DistributedCommunicator {
     where
         T: Serialize,
     {
-        let cfg = bincode::config::standard();
-        bincode::serde::encode_to_vec(matrix, cfg).map_err(|e| {
-            LinalgError::SerializationError(format!("Failed to serialize matrix (bincode2): {}", e))
+        let cfg = oxicode::config::standard();
+        oxicode::serde::encode_to_vec(matrix, cfg).map_err(|e| {
+            LinalgError::SerializationError(format!("Failed to serialize matrix (oxicode): {}", e))
         })
     }
     
@@ -417,11 +417,11 @@ impl DistributedCommunicator {
     where
         T: for<'de> Deserialize<'de>,
     {
-        let cfg = bincode::config::standard();
-        bincode::serde::decode_from_slice(data, cfg)
+        let cfg = oxicode::config::standard();
+        oxicode::serde::decode_owned_from_slice(data, cfg)
             .map(|(m, _len)| m)
             .map_err(|e| {
-                LinalgError::SerializationError(format!("Failed to deserialize matrix (bincode2): {}", e))
+                LinalgError::SerializationError(format!("Failed to deserialize matrix (oxicode): {}", e))
             })
     }
     
@@ -480,9 +480,9 @@ impl DistributedCommunicator {
             checksum: self.calculate_checksum(&message.data),
         };
         
-        let cfg = bincode::config::standard();
-        let header_bytes = bincode::serde::encode_to_vec(&header, cfg)
-            .map_err(|e| LinalgError::SerializationError(format!("Header serialization failed (bincode2): {}", e)))?;
+        let cfg = oxicode::config::standard();
+        let header_bytes = oxicode::serde::encode_to_vec(&header, cfg)
+            .map_err(|e| LinalgError::SerializationError(format!("Header serialization failed (oxicode): {}", e)))?;
         
         // Send header size first (4 bytes)
         let headersize = header_bytes.len() as u32;
@@ -533,9 +533,9 @@ impl DistributedCommunicator {
         stream.read_exact(&mut header_bytes)
             .map_err(|e| LinalgError::CommunicationError(format!("Failed to read header: {}", e)))?;
         
-        let cfg = bincode::config::standard();
-        let (header, _len): (TcpMessageHeader, usize) = bincode::serde::decode_from_slice(&header_bytes, cfg)
-            .map_err(|e| LinalgError::SerializationError(format!("Header deserialization failed (bincode2): {}", e)))?;
+        let cfg = oxicode::config::standard();
+        let (header, _len): (TcpMessageHeader, usize) = oxicode::serde::decode_owned_from_slice(&header_bytes, cfg)
+            .map_err(|e| LinalgError::SerializationError(format!("Header deserialization failed (oxicode): {}", e)))?;
         
         // Validate header
         if header.source != source {

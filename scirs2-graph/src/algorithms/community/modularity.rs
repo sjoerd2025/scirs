@@ -104,7 +104,6 @@ where
 /// # Space Complexity
 /// O(n) for storing community assignments and modularity calculations.
 #[deprecated(
-    since = "0.1.0-beta.2",
     note = "Use `modularity_optimization_result` instead for standardized community detection API"
 )]
 #[allow(dead_code)]
@@ -146,7 +145,7 @@ where
     for _iteration in 0..max_iterations {
         // Choose a random node to move
         use scirs2_core::random::Rng;
-        let node_idx = rng.gen_range(0..n);
+        let node_idx = rng.random_range(0..n);
         let node = &nodes[node_idx];
         let current_community = current_communities[node];
 
@@ -168,7 +167,7 @@ where
             continue;
         }
 
-        let new_community = candidates[rng.gen_range(0..candidates.len())];
+        let new_community = candidates[rng.random_range(0..candidates.len())];
 
         if new_community == current_community {
             continue;
@@ -249,7 +248,6 @@ where
 /// # Space Complexity
 /// O(n) for storing community assignments and tracking modularity gains.
 #[deprecated(
-    since = "0.1.0-beta.2",
     note = "Use `greedy_modularity_optimization_result` instead for standardized community detection API"
 )]
 #[allow(dead_code)]

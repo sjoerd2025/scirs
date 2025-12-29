@@ -232,7 +232,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
 
                 let p_success = F::from(success_remaining).expect("Failed to convert to float")
                     / F::from(population_remaining).expect("Failed to convert to float");
-                if rng.gen_range(0.0..1.0) < p_success.to_f64().expect("Operation failed") {
+                if rng.random_range(0.0..1.0) < p_success.to_f64().expect("Operation failed") {
                     successes += 1;
                     success_remaining -= 1;
                 } else {

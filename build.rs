@@ -20,50 +20,10 @@ fn main() {
             println!("cargo:rustc-env=CARGO_PROFILE_DEV_DEBUG=1");
         }
     }
-    
-    // Platform-specific BLAS/LAPACK configuration
-    #[cfg(target_os = "macos")]
-    {
-        env::set_var("DEP_LAPACK_SRC", "accelerate");
-        env::set_var("LAPACK_SRC", "accelerate");
-        env::set_var("BLAS_SRC", "accelerate");
-    }
-    
-    #[cfg(target_os = "linux")]
-    {
-        env::set_var("DEP_LAPACK_SRC", "openblas");
-        env::set_var("LAPACK_SRC", "openblas");
-        env::set_var("BLAS_SRC", "openblas");
-    }
-    
-    #[cfg(target_os = "windows")]
-    {
-        env::set_var("DEP_LAPACK_SRC", "intel-mkl");
-        env::set_var("LAPACK_SRC", "intel-mkl");
-        env::set_var("BLAS_SRC", "intel-mkl");
-    }
-    
-    #[cfg(target_os = "freebsd")]
-    {
-        env::set_var("DEP_LAPACK_SRC", "openblas");
-        env::set_var("LAPACK_SRC", "openblas");
-        env::set_var("BLAS_SRC", "openblas");
-    }
-    
-    #[cfg(target_os = "netbsd")]
-    {
-        env::set_var("DEP_LAPACK_SRC", "netlib");
-        env::set_var("LAPACK_SRC", "netlib");
-        env::set_var("BLAS_SRC", "netlib");
-    }
-    
-    #[cfg(target_os = "openbsd")]
-    {
-        env::set_var("DEP_LAPACK_SRC", "openblas");
-        env::set_var("LAPACK_SRC", "openblas");
-        env::set_var("BLAS_SRC", "openblas");
-    }
-    
+
+    // NOTE: BLAS/LAPACK configuration removed - now using pure Rust OxiBLAS
+    // All linear algebra operations are handled by OxiBLAS (no system dependencies)
+
     // Only rebuild if build.rs changes
     println!("cargo:rerun-if-changed=build.rs");
 }

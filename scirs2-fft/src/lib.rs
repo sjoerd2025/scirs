@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::empty_line_after_doc_comments)]
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(clippy::redundant_closure)]
@@ -42,7 +41,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-fft = "0.1.0-rc.4"
+//! scirs2-fft = "0.1.0"
 //! ```
 //!
 //!
@@ -158,8 +157,8 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.1.0-rc.4
-//! - **Release Date**: December 21, 2025
+//! - **Version**: 0.1.0
+//! - **Release Date**: December 29, 2025
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-fft](https://docs.rs/scirs2-fft)
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)

@@ -189,7 +189,7 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
         // Generate white noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.gen_range(-1.0..1.0))
+            .map(|_| rng.random_range(-1.0..1.0))
             .collect();
 
         // Compute periodogram
@@ -247,7 +247,7 @@ fn test_false_alarm_rates() -> SignalResult<f64> {
         // Generate pure noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.gen_range(-1.0..1.0))
+            .map(|_| rng.random_range(-1.0..1.0))
             .collect();
 
         // Compute periodogram

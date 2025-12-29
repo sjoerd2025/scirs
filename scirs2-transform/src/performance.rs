@@ -980,8 +980,8 @@ impl EnhancedPCA {
         for i in 0..rows {
             for j in 0..cols {
                 // Box-Muller transform to generate Gaussian from uniform
-                let u1 = rng.gen_range(0.0..1.0);
-                let u2 = rng.gen_range(0.0..1.0);
+                let u1 = rng.random_range(0.0..1.0);
+                let u2 = rng.random_range(0.0..1.0);
 
                 // Ensure u1 is not zero to avoid log(0)
                 let u1 = if u1 == 0.0 { f64::EPSILON } else { u1 };
@@ -1181,7 +1181,8 @@ impl EnhancedPCA {
         // Start with a random vector
         use scirs2_core::random::Rng;
         let mut rng = scirs2_core::random::rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(0.0..1.0) - 0.5);
+        let mut vector: Array1<f64> =
+            Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
 
         // Normalize the initial vector
         let norm = vector.dot(&vector).sqrt();

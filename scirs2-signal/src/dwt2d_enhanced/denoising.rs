@@ -534,9 +534,9 @@ mod tests {
     #[test]
     fn test_noise_estimation() {
         let mut rng = StdRng::seed_from_u64(42);
-        let detail_h = Array2::from_shape_simple_fn((10, 10), || rng.gen::<f64>() * 0.1);
-        let detail_v = Array2::from_shape_simple_fn((10, 10), || rng.gen::<f64>() * 0.1);
-        let detail_d = Array2::from_shape_simple_fn((10, 10), || rng.gen::<f64>() * 0.1);
+        let detail_h = Array2::from_shape_simple_fn((10, 10), || rng.random::<f64>() * 0.1);
+        let detail_v = Array2::from_shape_simple_fn((10, 10), || rng.random::<f64>() * 0.1);
+        let detail_d = Array2::from_shape_simple_fn((10, 10), || rng.random::<f64>() * 0.1);
 
         let sigma = estimate_noise_std_from_subbands(&detail_h, &detail_v, &detail_d)
             .expect("Operation failed");

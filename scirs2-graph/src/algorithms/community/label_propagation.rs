@@ -73,7 +73,7 @@ where
 
             // Choose randomly among ties
             use scirs2_core::random::Rng;
-            let new_label = best_labels[rng.gen_range(0..best_labels.len())];
+            let new_label = best_labels[rng.random_range(0..best_labels.len())];
 
             if labels[i] != new_label {
                 labels[i] = new_label;
@@ -104,10 +104,7 @@ where
 ///
 /// # Space Complexity
 /// O(n) for storing labels and temporary data structures.
-#[deprecated(
-    since = "0.1.0-beta.2",
-    note = "Use `label_propagation_result` instead"
-)]
+#[deprecated(note = "Use `label_propagation_result` instead")]
 #[allow(dead_code)]
 pub fn label_propagation<N, E, Ix>(
     graph: &Graph<N, E, Ix>,

@@ -1012,7 +1012,7 @@ mod tests {
     fn test_create_netcdf() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_create_netcdf_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let file = NetCDFFile::create(test_path).expect("Operation failed");
         assert_eq!(file.mode, "w");
@@ -1029,7 +1029,7 @@ mod tests {
     fn test_add_dimension() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_add_dimension_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let mut file = NetCDFFile::create(test_path).expect("Operation failed");
         file.create_dimension("time", Some(10))
@@ -1067,7 +1067,7 @@ mod tests {
     fn test_add_variable() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_add_variable_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let mut file = NetCDFFile::create(test_path).expect("Operation failed");
         file.create_dimension("time", Some(10))
@@ -1100,7 +1100,7 @@ mod tests {
     fn test_attributes() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_attributes_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let mut file = NetCDFFile::create(test_path).expect("Operation failed");
         file.create_dimension("x", Some(10))
@@ -1142,7 +1142,7 @@ mod tests {
     fn test_read_write_variable() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_read_write_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         // Test writing functionality
         let mut file = NetCDFFile::create(test_path).expect("Operation failed");
@@ -1166,7 +1166,9 @@ mod tests {
         // Instead, test reading functionality with a mock setup by creating
         // a file in write mode and then changing its mode
         let read_test_file_path = temp_dir.join(format!("test_read_{}.nc", std::process::id()));
-        let read_test_path = read_test_file_path.to_str().unwrap();
+        let read_test_path = read_test_file_path
+            .to_str()
+            .expect("path should be valid UTF-8");
 
         let mut read_test_file = NetCDFFile::create(read_test_path).expect("Operation failed");
 
@@ -1200,7 +1202,7 @@ mod tests {
     fn test_netcdf4_format_creation() {
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_netcdf4_format_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let file = NetCDFFile::create_with_format(test_path, NetCDFFormat::NetCDF4)
             .expect("Operation failed");
@@ -1216,8 +1218,8 @@ mod tests {
         let temp_dir = std::env::temp_dir();
         let classic_file = temp_dir.join(format!("test_classic_{}.nc", std::process::id()));
         let netcdf4_file = temp_dir.join(format!("test_netcdf4_{}.nc", std::process::id()));
-        let classic_path = classic_file.to_str().unwrap();
-        let netcdf4_path = netcdf4_file.to_str().unwrap();
+        let classic_path = classic_file.to_str().expect("path should be valid UTF-8");
+        let netcdf4_path = netcdf4_file.to_str().expect("path should be valid UTF-8");
 
         let classic = NetCDFFile::create_with_format(classic_path, NetCDFFormat::Classic)
             .expect("Operation failed");
@@ -1242,7 +1244,7 @@ mod tests {
 
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_netcdf4_array_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let mut file = NetCDFFile::create_with_format(test_path, NetCDFFormat::NetCDF4)
             .expect("Operation failed");
@@ -1271,7 +1273,7 @@ mod tests {
 
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_convenience_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let mut datasets = HashMap::new();
         datasets.insert(
@@ -1297,7 +1299,7 @@ mod tests {
 
         let temp_dir = std::env::temp_dir();
         let test_file = temp_dir.join(format!("test_classic_error_{}.nc", std::process::id()));
-        let test_path = test_file.to_str().unwrap();
+        let test_path = test_file.to_str().expect("path should be valid UTF-8");
 
         let mut file = NetCDFFile::create_with_format(test_path, NetCDFFormat::Classic)
             .expect("Operation failed");

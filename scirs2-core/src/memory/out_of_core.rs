@@ -799,8 +799,8 @@ where
 
     /// Deserialize chunk data from bytes
     fn deserialize_chunk_data(&self, data: &[u8], shape: &[usize]) -> CoreResult<Array<T, IxDyn>> {
-        // bincode2 serde-based decoding
-        let cfg = bincode::config::standard();
+        // OxiCode serde-based decoding with SIMD optimization
+        let cfg = oxicode::config::standard();
 
         if data.is_empty() {
             // Return default initialized array if no data
@@ -808,7 +808,7 @@ where
         }
 
         // Try to deserialize the data
-        match bincode::serde::decode_from_slice::<Vec<T>, _>(data, cfg) {
+        match oxicode::serde::decode_owned_from_slice::<Vec<T>, _>(data, cfg) {
             Ok((vec_data, _len)) => {
                 let total_elements: usize = shape.iter().product();
                 if vec_data.len() != total_elements {
@@ -832,8 +832,8 @@ where
     fn serialize_chunk_data(&self, chunk: &Array<T, IxDyn>) -> CoreResult<Vec<u8>> {
         // Convert array to vec for serialization
         let vec_data: Vec<T> = chunk.iter().cloned().collect();
-        let cfg = bincode::config::standard();
-        bincode::serde::encode_to_vec(&vec_data, cfg)
+        let cfg = oxicode::config::standard();
+        oxicode::serde::encode_to_vec(&vec_data, cfg)
             .map_err(|e| OutOfCoreError::SerializationError(e.to_string()).into())
     }
 

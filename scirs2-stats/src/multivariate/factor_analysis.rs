@@ -199,13 +199,12 @@ impl FactorAnalysis {
     fn initialize_parameters(&self, data: &Array2<f64>) -> Result<(Array2<f64>, Array1<f64>)> {
         let (n_samples, n_features) = data.dim();
 
-        // Initialize using SVD of data
-        use scirs2_core::ndarray::ndarray_linalg::SVD;
-        let (u, s, vt) = data.svd(false, true).map_err(|e| {
+        // Initialize using SVD of data (using scirs2_linalg)
+        let (_u, s, vt) = scirs2_linalg::svd(&data.view(), false, None).map_err(|e| {
             StatsError::ComputationError(format!("SVD initialization failed: {}", e))
         })?;
 
-        let v = vt.expect("Operation failed").t().to_owned();
+        let v = vt.t().to_owned();
 
         // Initial loadings from first k components
         let mut loadings = Array2::zeros((n_features, self.n_factors));
@@ -637,18 +636,15 @@ pub mod efa {
             }
         }
 
-        // Compute eigenvalues
-        use scirs2_core::ndarray::ndarray_linalg::Eigh;
-        let eigenvalues = corr
-            .eigh(scirs2_core::ndarray::ndarray_linalg::UPLO::Upper)
-            .map_err(|e| {
+        // Compute eigenvalues using scirs2_linalg
+        let (eigenvalues, _eigenvectors) =
+            scirs2_linalg::eigh_f64_lapack(&corr.view()).map_err(|e| {
                 StatsError::ComputationError(format!("Eigenvalue decomposition failed: {}", e))
-            })?
-            .0;
+            })?;
 
         // Sort in descending order
-        let mut sorted_eigenvalues = eigenvalues.to_vec();
-        sorted_eigenvalues.sort_by(|a, b| b.partial_cmp(a).expect("Operation failed"));
+        let mut sorted_eigenvalues: Vec<f64> = eigenvalues.to_vec();
+        sorted_eigenvalues.sort_by(|a: &f64, b: &f64| b.partial_cmp(a).expect("Operation failed"));
 
         Ok(Array1::from_vec(sorted_eigenvalues))
     }

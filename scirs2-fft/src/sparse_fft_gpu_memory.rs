@@ -681,7 +681,7 @@ impl Drop for BufferDescriptor {
             unsafe {
                 // Convert back to Box<[u8]> to drop properly
                 let vec_size = self.size * self.element_size;
-                let _ = Box::from_raw(std::slice::from_raw_parts_mut(ptr as *mut u8, vec_size));
+                let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr as *mut u8, vec_size));
             }
         }
 

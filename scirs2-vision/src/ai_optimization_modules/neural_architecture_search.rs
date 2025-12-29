@@ -244,17 +244,17 @@ impl NeuralArchitectureSearch {
         let mut rng = thread_rng();
 
         for i in 0..numcandidates {
-            let depth =
-                rng.gen_range(self._searchspace.depth_range.0..self._searchspace.depth_range.1 + 1);
+            let depth = rng
+                .random_range(self._searchspace.depth_range.0..self._searchspace.depth_range.1 + 1);
             let mut layers = Vec::new();
             let mut connections = Vec::new();
 
             for _ in 0..depth {
-                let idx = rng.gen_range(0..self._searchspace.layer_types.len());
+                let idx = rng.random_range(0..self._searchspace.layer_types.len());
                 let layer_type = self._searchspace.layer_types[idx].clone();
                 layers.push(layer_type);
 
-                let idx = rng.gen_range(0..self._searchspace.connections.len());
+                let idx = rng.random_range(0..self._searchspace.connections.len());
                 let connection = self._searchspace.connections[idx].clone();
                 connections.push(connection);
             }
@@ -308,9 +308,9 @@ impl NeuralArchitectureSearch {
         // Generate offspring through mutation and crossover
         while new_population.len() < populationsize {
             if ranked_archs.len() >= 2 {
-                let idx = rng.gen_range(0..ranked_archs.len());
+                let idx = rng.random_range(0..ranked_archs.len());
                 let parent1 = ranked_archs[idx].0;
-                let idx = rng.gen_range(0..ranked_archs.len());
+                let idx = rng.random_range(0..ranked_archs.len());
                 let parent2 = ranked_archs[idx].0;
 
                 let offspring = self.crossover_architectures(parent1, parent2);
@@ -381,7 +381,7 @@ impl NeuralArchitectureSearch {
     ) -> ProcessingArchitecture {
         let mut rng = thread_rng();
         let min_depth = parent1.layers.len().min(parent2.layers.len());
-        let crossover_point = rng.gen_range(1..min_depth);
+        let crossover_point = rng.random_range(1..min_depth);
 
         let mut new_layers = Vec::new();
         let mut new_connections = Vec::new();
@@ -416,9 +416,9 @@ impl NeuralArchitectureSearch {
 
         // Randomly mutate some layers
         for layer in &mut architecture.layers {
-            if rng.gen::<f64>() < 0.1 {
+            if rng.random::<f64>() < 0.1 {
                 // 10% mutation rate
-                let idx = rng.gen_range(0..self._searchspace.layer_types.len());
+                let idx = rng.random_range(0..self._searchspace.layer_types.len());
                 *layer = self._searchspace.layer_types[idx].clone();
             }
         }

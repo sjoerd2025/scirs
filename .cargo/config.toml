@@ -1,47 +1,9 @@
-# Platform-specific BLAS/LAPACK backend configuration
+# Platform-specific configuration
+# Note: OpenBLAS dependencies removed - using pure Rust OxiBLAS for BLAS/LAPACK operations
 
-# Unified OpenBLAS configuration for all platforms
-# macOS: Use system OpenBLAS via Homebrew (keg-only, requires explicit path)
-# Linux: Use system OpenBLAS via pkg-config
-# Windows: Use system OpenBLAS
-
-# IMPORTANT: Doctest Limitation
-# The [env] section below does NOT apply to `cargo test --doc`.
-# For doctests to work, you must export LIBRARY_PATH before running:
-#   export LIBRARY_PATH="/opt/homebrew/opt/openblas/lib"
-#   cargo test --doc
-#
-# Regular tests (cargo nextest run) and builds work fine without this.
-
-[target.aarch64-apple-darwin]
-rustflags = [
-    "-L", "/opt/homebrew/opt/openblas/lib",
-    "-C", "link-arg=-Wl,-rpath,/opt/homebrew/opt/openblas/lib"
-]
-
-[target.x86_64-apple-darwin]
-rustflags = [
-    "-L", "/opt/homebrew/opt/openblas/lib",
-    "-C", "link-arg=-Wl,-rpath,/opt/homebrew/opt/openblas/lib"
-]
-
-# Linux: Use system OpenBLAS/LAPACK and CUDA
+# Linux: CUDA configuration (for GPU crates)
 [target.x86_64-unknown-linux-gnu]
 rustflags = [
-    "-C", "link-arg=-lopenblas",
-    "-C", "link-arg=-llapack",
     "-L", "/usr/local/cuda/targets/x86_64-linux/lib",
     "-L", "/usr/local/cuda/lib64"
 ]
-
-# Environment variables for BLAS/LAPACK backend selection
-# Force lapack-sys and all dependent crates to use system OpenBLAS
-[env]
-LAPACK_SRC = "openblas"
-BLAS_SRC = "openblas"
-# Add OpenBLAS pkg-config directory for proper library detection
-PKG_CONFIG_PATH = "/opt/homebrew/opt/openblas/lib/pkgconfig"
-# Add OpenBLAS lib directory to linker search path (used at link time)
-LIBRARY_PATH = "/opt/homebrew/opt/openblas/lib"
-# Add to runtime library path (used at runtime)
-DYLD_FALLBACK_LIBRARY_PATH = "/opt/homebrew/opt/openblas/lib:/usr/local/lib:/usr/lib"

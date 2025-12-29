@@ -154,7 +154,7 @@ pub enum GraphError {
     /// Serialization/deserialization failed
     #[error("Serialization error for format '{format}': {details}")]
     SerializationError {
-        /// Data format (JSON, bincode, etc.)
+        /// Data format (JSON, OxiCode, etc.)
         format: String,
         /// Error details
         details: String,

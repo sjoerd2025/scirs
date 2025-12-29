@@ -5,6 +5,7 @@
 
 mod active_contours;
 mod chan_vese;
+pub mod contours;
 mod graph_cuts;
 mod thresholding;
 mod watershed;
@@ -24,3 +25,9 @@ pub use self::chan_vese::{
     chan_vese, chan_vese_multiphase, checkerboard_level_set, mask_to_level_set, ChanVeseParams,
 };
 pub use self::graph_cuts::{graph_cuts, GraphCutsParams, InteractiveGraphCuts};
+
+// Contour finding (OpenCV-like findContours)
+pub use self::contours::{
+    draw_contours, find_contours, point_in_contour, ApproximationMethod, Contour,
+    ContourHierarchy, ContourMoments, RetrievalMode,
+};

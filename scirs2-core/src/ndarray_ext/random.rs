@@ -417,7 +417,7 @@ where
 
         let values: Vec<A> = (0..size)
             .map(|_| {
-                if rng.rng.gen::<f64>() < density {
+                if rng.rng.random::<f64>() < density {
                     distribution.sample(&mut rng.rng)
                 } else {
                     A::default()

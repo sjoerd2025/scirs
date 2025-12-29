@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn distance_calculations_example() -> Result<(), Box<dyn std::error::Error>> {
     // Define major world cities
-    let cities = vec![
+    let cities = [
         ("London", (51.5074, -0.1278)),
         ("Paris", (48.8566, 2.3522)),
         ("New York", (40.7128, -74.0060)),

@@ -1,4 +1,4 @@
-//! Voronoi diagrams
+//! Voronoi diagrams (Pure Rust)
 //!
 //! This module provides implementations for Voronoi diagrams in 2D and higher dimensions.
 //! A Voronoi diagram is a partition of a space into regions around a set of points, where
@@ -6,7 +6,9 @@
 //!
 //! # Implementation
 //!
-//! This module uses the Qhull library (via qhull-rs) for computing Voronoi diagrams.
+//! This module is a pure Rust implementation that computes Voronoi diagrams from
+//! the Delaunay triangulation using the Bowyer-Watson algorithm. No external C library
+//! dependencies are required.
 //!
 //! # Examples
 //!
@@ -153,7 +155,7 @@ impl Voronoi {
 
                             for i in 0..npoints {
                                 for j in 0..ndim {
-                                    perturbedpoints[[i, j]] += rng.gen_range(-0.001..0.001);
+                                    perturbedpoints[[i, j]] += rng.random_range(-0.001..0.001);
                                 }
                             }
 

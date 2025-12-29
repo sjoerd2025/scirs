@@ -29,7 +29,7 @@
 //!     .with_format(ReportFormat::Html)
 //!     .with_title("Sample Heatmap");
 //!
-//! let histogram = plot_histogram(&data.view().into_shape(10000)?.view(), &config)?;
+//! let histogram = plot_histogram(&data.view().into_shape_with_order(10000)?.view(), &config)?;
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!

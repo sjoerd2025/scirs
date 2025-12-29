@@ -4,7 +4,8 @@
 //! retry logic, fallback strategies, and adaptive error handling for production environments.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use rand::Rng;
+
+use crate::random::Rng;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};

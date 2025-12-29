@@ -7,7 +7,7 @@ fn main() {
     println!("Testing Elliptic Filter Design");
 
     // Test different elliptic filter configurations
-    let test_cases = vec![
+    let test_cases = [
         (3, 0.5, 30.0, 0.3, "lowpass"),
         (4, 0.5, 40.0, 0.3, "lowpass"),
         (5, 1.0, 35.0, 0.25, "lowpass"),

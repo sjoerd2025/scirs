@@ -261,7 +261,7 @@ fn validate_noise_robustness(config: &EnhancedValidationConfig) -> SignalResult<
         let mut rng = scirs2_core::random::rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()
-            .map(|&s| s + noise_std * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect();
 
         // Test frequencies around the true frequency

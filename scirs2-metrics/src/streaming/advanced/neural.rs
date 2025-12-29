@@ -214,9 +214,9 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign + std::iter::Sum> MultiArm
         match &self.algorithm {
             BanditAlgorithm::EpsilonGreedy { epsilon } => {
                 let mut rng = scirs2_core::random::thread_rng();
-                if rng.gen::<f64>() < *epsilon {
+                if rng.random::<f64>() < *epsilon {
                     // Explore: random action
-                    Ok(rng.gen_range(0..self.actions.len()))
+                    Ok(rng.random_range(0..self.actions.len()))
                 } else {
                     // Exploit: best action so far
                     self.get_best_action()

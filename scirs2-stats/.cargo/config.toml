@@ -1,7 +1,1 @@
-[build]
-rustflags = [
-    "-L", "/opt/homebrew/opt/lapack/lib",
-    "-L", "/opt/homebrew/opt/openblas/lib", 
-    "-l", "lapack",
-    "-l", "blas"
-]
+# Note: OpenBLAS/LAPACK linker flags removed - using pure Rust OxiBLAS for BLAS/LAPACK operations

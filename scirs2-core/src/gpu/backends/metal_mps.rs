@@ -19,6 +19,7 @@
 
 #![cfg(all(feature = "metal", target_os = "macos"))]
 #![allow(dead_code)]
+#![allow(deprecated)] // TODO: Update objc2 msg_send_id! to msg_send! when API stabilizes
 
 use crate::gpu::GpuError;
 use std::sync::Arc;
@@ -266,10 +267,10 @@ impl MPSContext {
         unsafe {
             let _: () = msg_send![
                 &**matmul,
-                encodeToCommandBuffer:&**command_buffer
-                leftMatrix:&**left_matrix
-                rightMatrix:&**right_matrix
-                resultMatrix:&**result_matrix
+                encodeToCommandBuffer: &**command_buffer,
+                leftMatrix: &**left_matrix,
+                rightMatrix: &**right_matrix,
+                resultMatrix: &**result_matrix
             ];
         }
 

@@ -252,7 +252,7 @@ impl MultiHeadAttention {
         (0..output_dim)
             .map(|_| {
                 (0..input_dim)
-                    .map(|_| rng.gen_range(-bound..bound))
+                    .map(|_| rng.random_range(-bound..bound))
                     .collect()
             })
             .collect()
@@ -337,7 +337,7 @@ impl FeedForwardNetwork {
         (0..output_dim)
             .map(|_| {
                 (0..input_dim)
-                    .map(|_| rng.gen_range(-bound..bound))
+                    .map(|_| rng.random_range(-bound..bound))
                     .collect()
             })
             .collect()

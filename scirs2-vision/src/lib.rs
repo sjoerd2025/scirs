@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 //! # SciRS2 Computer Vision
 //!
 //! **scirs2-vision** provides comprehensive computer vision and image processing capabilities
@@ -36,7 +35,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-vision = "0.1.0-rc.4"
+//! scirs2-vision = "0.1.0"
 //! ```
 //!
 //! ### Feature Detection (Harris Corners)
@@ -263,7 +262,7 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.1.0-rc.4** (Released December 21, 2025)
+//! Current version: **0.1.0** (Released December 29, 2025)
 
 #![warn(missing_docs)]
 

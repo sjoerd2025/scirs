@@ -27,9 +27,10 @@ use crate::random::{
     ParallelRng, Random, ThreadLocalRngPool,
 };
 use ::ndarray::{Array, Array1, Array2, Array3, Ix2};
-use rand::Rng;
 use rand_distr::{Normal, Uniform};
 use std::collections::HashMap;
+
+use crate::random::Rng;
 
 /// Train/validation/test split for machine learning datasets
 pub fn train_val_test_split<T: Clone>(
@@ -473,7 +474,7 @@ pub mod ensemble {
                 pool.with_rng(|rng| {
                     (0..sample_size)
                         .map(|_| {
-                            let idx = rng.gen_range(0..data.len());
+                            let idx = rng.random_range(0..data.len());
                             data[idx].clone()
                         })
                         .collect()

@@ -3,7 +3,7 @@
 //! This module provides cutting-edge benchmarking capabilities for clustering algorithms,
 //! including statistical analysis, memory profiling, performance regression detection,
 //! and automated optimization suggestions. It represents the state-of-the-art in
-//! clustering performance analysis for the 0.1.0-beta.1 release.
+//! clustering performance analysis for the 0.1.0 release.
 //!
 //! # Features
 //!

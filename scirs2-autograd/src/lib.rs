@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::non_canonical_partial_ord_impl)]
 #![allow(clippy::module_inception)]
 #![allow(clippy::manual_div_ceil)]
@@ -25,7 +24,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-autograd = { version = "0.1.0-rc.4", features = ["blas"] }
+//! scirs2-autograd = { version = "0.1.0", features = ["blas"] }
 //! ```
 //!
 //! ### BLAS Acceleration (Recommended)
@@ -34,7 +33,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-autograd = { version = "0.1.0-rc.4", features = ["blas", "openblas"] }
+//! scirs2-autograd = { version = "0.1.0", features = ["blas", "openblas"] }
 //! ```
 //!
 //! Available BLAS implementations:
@@ -312,7 +311,7 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.1.0-rc.4** (Released December 21, 2025)
+//! Current version: **0.1.0** (Released December 29, 2025)
 
 #[allow(unused_imports)]
 // Re-export from scirs2-core for POLICY compliance

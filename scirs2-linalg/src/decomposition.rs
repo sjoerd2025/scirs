@@ -10,8 +10,10 @@ use crate::error::{LinalgError, LinalgResult};
 use crate::lapack::{cholesky as lapack_cholesky, lu_factor, qr_factor, svd as lapack_svd};
 use crate::validation::validate_decomposition;
 
-// BLAS/LAPACK optimized decompositions
-use ndarray_linalg::{Cholesky, Eig, Eigh, Factorize, QR, SVD};
+// OxiBLAS optimized decompositions (replaces ndarray-linalg)
+use scirs2_core::linalg::{
+    cholesky_ndarray, eig_ndarray, eig_symmetric, qr_ndarray, svd_ndarray, Eigenvalue,
+};
 
 // Type aliases for complex return types
 /// Result type for QZ decomposition: (Q, A_decomp, B_decomp, Z)
@@ -849,38 +851,27 @@ where
 // BLAS/LAPACK-OPTIMIZED DECOMPOSITIONS FOR F64
 // ============================================================================
 
-/// QR decomposition using BLAS/LAPACK (430x faster than pure Rust)
+/// QR decomposition using OxiBLAS (fast pure Rust implementation)
 pub fn qr_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<(Array2<f64>, Array2<f64>)> {
-    let (q, r) = a
-        .to_owned()
-        .qr()
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK QR failed: {:?}", e)))?;
-    Ok((q, r))
+    let qr_result = qr_ndarray(&a.to_owned())
+        .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS QR failed: {:?}", e)))?;
+    Ok((qr_result.q, qr_result.r))
 }
 
-/// SVD decomposition using BLAS/LAPACK (500-1000x faster than pure Rust)
+/// SVD decomposition using OxiBLAS (fast pure Rust implementation)
+#[allow(unused_variables)]
 pub fn svd_f64_lapack(
     a: &ArrayView2<f64>,
     full_matrices: bool,
 ) -> LinalgResult<(Array2<f64>, Array1<f64>, Array2<f64>)> {
-    use ndarray_linalg::SVD;
+    let svd_result = svd_ndarray(&a.to_owned())
+        .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS SVD failed: {:?}", e)))?;
 
-    let (u_opt, s, vt_opt) = a.to_owned()
-        .svd(true, true)  // Always compute U and VT
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK SVD failed: {:?}", e)))?;
-
-    let u = u_opt
-        .ok_or_else(|| LinalgError::ComputationError("SVD: U matrix not computed".to_string()))?;
-    let vt = vt_opt
-        .ok_or_else(|| LinalgError::ComputationError("SVD: VT matrix not computed".to_string()))?;
-
-    Ok((u, s, vt))
+    Ok((svd_result.u, svd_result.s, svd_result.vt))
 }
 
-/// Cholesky decomposition using BLAS/LAPACK (400-600x faster than pure Rust)
+/// Cholesky decomposition using OxiBLAS (fast pure Rust implementation)
 pub fn cholesky_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
-    use ndarray_linalg::Cholesky;
-
     // Validate square matrix
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -890,17 +881,15 @@ pub fn cholesky_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
         )));
     }
 
-    // Use LAPACK for Cholesky decomposition
-    a.to_owned()
-        .cholesky(ndarray_linalg::UPLO::Lower)
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK Cholesky failed: {:?}", e)))
+    // Use OxiBLAS for Cholesky decomposition
+    let result = cholesky_ndarray(&a.to_owned())
+        .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS Cholesky failed: {:?}", e)))?;
+    Ok(result.l)
 }
 
-/// Symmetric eigenvalue decomposition using BLAS/LAPACK (500-700x faster)
+/// Symmetric eigenvalue decomposition using OxiBLAS (fast pure Rust implementation)
 /// Returns (eigenvalues, eigenvectors) for symmetric/Hermitian matrices
 pub fn eigh_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<(Array1<f64>, Array2<f64>)> {
-    use ndarray_linalg::Eigh;
-
     // Validate square matrix
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -910,22 +899,19 @@ pub fn eigh_f64_lapack(a: &ArrayView2<f64>) -> LinalgResult<(Array1<f64>, Array2
         )));
     }
 
-    // Use LAPACK for symmetric eigenvalue decomposition
-    let (eigvals, eigvecs) = a
-        .to_owned()
-        .eigh(ndarray_linalg::UPLO::Lower)
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK eigh failed: {:?}", e)))?;
+    // Use OxiBLAS for symmetric eigenvalue decomposition
+    let result = eig_symmetric(&a.to_owned())
+        .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS eigh failed: {:?}", e)))?;
 
-    Ok((eigvals, eigvecs))
+    Ok((result.eigenvalues, result.eigenvectors))
 }
 
-/// General eigenvalue decomposition using BLAS/LAPACK (600-800x faster)
+/// General eigenvalue decomposition using OxiBLAS (fast pure Rust implementation)
 /// Returns (eigenvalues, eigenvectors) as complex arrays
 pub fn eig_f64_lapack(a: &ArrayView2<f64>) -> EigResult {
-    use ndarray_linalg::Eig;
-
     // Validate square matrix
-    if a.nrows() != a.ncols() {
+    let n = a.nrows();
+    if n != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
             "Matrix must be square for eigenvalue decomposition: got {}×{}",
             a.nrows(),
@@ -933,11 +919,32 @@ pub fn eig_f64_lapack(a: &ArrayView2<f64>) -> EigResult {
         )));
     }
 
-    // Use LAPACK for general eigenvalue decomposition
-    let (eigvals, eigvecs) = a
-        .to_owned()
-        .eig()
-        .map_err(|e| LinalgError::ComputationError(format!("LAPACK eig failed: {:?}", e)))?;
+    // Use OxiBLAS for general eigenvalue decomposition
+    let result = eig_ndarray(&a.to_owned())
+        .map_err(|e| LinalgError::ComputationError(format!("OxiBLAS eig failed: {:?}", e)))?;
+
+    // Convert Vec<Eigenvalue<f64>> to Array1<Complex<f64>>
+    let eigvals: Array1<Complex<f64>> = Array1::from_iter(
+        result
+            .eigenvalues
+            .iter()
+            .map(|e| Complex::new(e.real, e.imag)),
+    );
+
+    // Convert eigenvectors_real/imag to Array2<Complex<f64>>
+    let eigvecs_real = result
+        .eigenvectors_real
+        .unwrap_or_else(|| Array2::zeros((n, n)));
+    let eigvecs_imag = result
+        .eigenvectors_imag
+        .unwrap_or_else(|| Array2::zeros((n, n)));
+
+    let mut eigvecs: Array2<Complex<f64>> = Array2::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            eigvecs[[i, j]] = Complex::new(eigvecs_real[[i, j]], eigvecs_imag[[i, j]]);
+        }
+    }
 
     Ok((eigvals, eigvecs))
 }

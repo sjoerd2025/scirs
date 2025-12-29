@@ -137,6 +137,7 @@ fn print_ascii_visualization(path: &[[f64; 2]], planner: &VisibilityGraphPlanner
             if y >= SIZE {
                 continue;
             }
+            #[allow(clippy::needless_range_loop)]
             for x in min_x..=max_x {
                 if x >= SIZE {
                     continue;

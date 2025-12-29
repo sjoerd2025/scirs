@@ -699,7 +699,7 @@ where
 
         // Propose new weights with small random perturbations
         for weight in new_weights.iter_mut() {
-            let perturbation = rng.gen_range(-0.05..0.05);
+            let perturbation = rng.random_range(-0.05..0.05);
             *weight = (*weight + perturbation).max(0.01).min(0.99);
         }
 
@@ -708,7 +708,7 @@ where
         new_weights.mapv_inplace(|w| w / sum);
 
         // Accept/reject based on simplified likelihood
-        let accept_prob = rng.gen::<f64>();
+        let accept_prob = rng.random::<f64>();
         if accept_prob > 0.5 {
             Ok(new_weights)
         } else {

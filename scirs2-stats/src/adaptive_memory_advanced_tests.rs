@@ -1,6 +1,5 @@
 use super::*;
-
-use super::*;
+use std::time::Duration;
 
 #[test]
 fn test_adaptive_memory_manager_creation() {

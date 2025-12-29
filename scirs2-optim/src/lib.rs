@@ -1,13 +1,13 @@
 //! # ⚠️ MOVED: scirs2-optim → OptiRS
 //!
-//! This crate has been **moved to an independent project** as of **SciRS2 v0.1.0-beta.2**.
+//! This crate has been **moved to an independent project**.
 //!
 //! ## Migration
 //!
 //! **Old:**
 //! ```toml
 //! [dependencies]
-//! scirs2-optim = "0.1.0-beta.1"  # ❌ No longer available
+//! scirs2-optim = "<removed>"  # ❌ No longer available
 //! ```
 //!
 //! **New:**
@@ -35,13 +35,9 @@
 //! use optirs::prelude::*;
 //! ```
 
-#![deprecated(
-    since = "0.1.0-beta.2",
-    note = "This crate has been moved to the independent OptiRS project. Use 'optirs' crate instead. See: https://github.com/cool-japan/optirs"
-)]
+#![deprecated(note = "This crate has been moved to the independent OptiRS project. Use 'optirs' crate instead. See: https://github.com/cool-japan/optirs")]
 
 #[deprecated(
-    since = "0.1.0-beta.2",
     note = "This crate has been moved to OptiRS. Use 'optirs' crate instead."
 )]
 pub fn migration_notice() {

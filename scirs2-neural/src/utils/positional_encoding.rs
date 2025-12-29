@@ -204,8 +204,8 @@ impl<F: Float + Debug> LearnedPositionalEncoding<F> {
         let mut embeddings = Array2::zeros((max_len, d_model));
         for elem in embeddings.iter_mut() {
             // Box-Muller transform for normal distribution
-            let u1: f64 = rng.gen_range(0.0001..1.0);
-            let u2: f64 = rng.gen_range(0.0..1.0);
+            let u1: f64 = rng.random_range(0.0001..1.0);
+            let u2: f64 = rng.random_range(0.0..1.0);
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * PI * u2).cos();
             *elem = F::from(z * std).unwrap_or(F::zero());
         }
@@ -457,8 +457,8 @@ impl<F: Float + Debug> RelativePositionalEncoding<F> {
 
         let mut rel_embeddings = Array2::zeros((num_positions, d_model));
         for elem in rel_embeddings.iter_mut() {
-            let u1: f64 = rng.gen_range(0.0001..1.0);
-            let u2: f64 = rng.gen_range(0.0..1.0);
+            let u1: f64 = rng.random_range(0.0001..1.0);
+            let u2: f64 = rng.random_range(0.0..1.0);
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * PI * u2).cos();
             *elem = F::from(z * std).unwrap_or(F::zero());
         }

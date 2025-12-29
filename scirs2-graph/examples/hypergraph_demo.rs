@@ -121,6 +121,7 @@ fn main() -> Result<()> {
 
     for (i, node) in sorted_nodes.iter().enumerate() {
         print!("   {node}: ");
+        #[allow(clippy::needless_range_loop)]
         for j in 0..num_hyperedges {
             print!("{} ", incidence[i][j]);
         }

@@ -820,8 +820,8 @@ pub fn clahe(img: &DynamicImage, tile_size: u32, cliplimit: f32) -> Result<Dynam
 
             // Normalize CDF (only if tile has pixels)
             if tile_area > 0 {
-                for bin in 0..bins {
-                    cdfs[tile_y][tile_x][bin] = (cdfs[tile_y][tile_x][bin] * 255) / tile_area;
+                for cdf_val in cdfs[tile_y][tile_x].iter_mut().take(bins) {
+                    *cdf_val = (*cdf_val * 255) / tile_area;
                 }
             }
         }

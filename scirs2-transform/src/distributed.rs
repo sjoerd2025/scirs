@@ -306,9 +306,9 @@ impl DistributedCoordinator {
         }
 
         // Serialize task for transmission with compression
-        let cfg = bincode::config::standard();
-        let task_data = bincode::serde::encode_to_vec(task, cfg).map_err(|e| {
-            TransformError::DistributedError(format!("Failed to serialize task (bincode2): {}", e))
+        let cfg = oxicode::config::standard();
+        let task_data = oxicode::serde::encode_to_vec(task, cfg).map_err(|e| {
+            TransformError::DistributedError(format!("Failed to serialize task (oxicode): {}", e))
         })?;
 
         // Compress task data for network efficiency
@@ -328,11 +328,11 @@ impl DistributedCoordinator {
                 parameters: _,
                 data_partition,
             } => {
-                let cfg = bincode::config::standard();
+                let cfg = oxicode::config::standard();
                 let serialized_data =
-                    bincode::serde::encode_to_vec(data_partition, cfg).map_err(|e| {
+                    oxicode::serde::encode_to_vec(data_partition, cfg).map_err(|e| {
                         TransformError::DistributedError(format!(
-                            "Failed to serialize fit data (bincode2): {}",
+                            "Failed to serialize fit data (oxicode): {}",
                             e
                         ))
                     })?;
@@ -343,11 +343,11 @@ impl DistributedCoordinator {
                 transformer_state,
                 data_partition,
             } => {
-                let cfg = bincode::config::standard();
+                let cfg = oxicode::config::standard();
                 let serialized_data =
-                    bincode::serde::encode_to_vec(data_partition, cfg).map_err(|e| {
+                    oxicode::serde::encode_to_vec(data_partition, cfg).map_err(|e| {
                         TransformError::DistributedError(format!(
-                            "Failed to serialize transform data (bincode2): {}",
+                            "Failed to serialize transform data (oxicode): {}",
                             e
                         ))
                     })?;
@@ -417,11 +417,11 @@ impl DistributedCoordinator {
     /// Execute fit task locally or remotely
     async fn execute_fit_task(data: &[u8]) -> Result<Vec<u8>> {
         // Deserialize input data
-        let cfg = bincode::config::standard();
-        let (input_data, _len): (Vec<f64>, usize) = bincode::serde::decode_from_slice(data, cfg)
-            .map_err(|e| {
+        let cfg = oxicode::config::standard();
+        let (input_data, _len): (Vec<f64>, usize) =
+            oxicode::serde::decode_owned_from_slice(data, cfg).map_err(|e| {
                 TransformError::DistributedError(format!(
-                    "Failed to deserialize fit data (bincode2): {}",
+                    "Failed to deserialize fit data (oxicode): {}",
                     e
                 ))
             })?;
@@ -433,10 +433,10 @@ impl DistributedCoordinator {
 
         let fit_params = vec![mean, variance.sqrt()]; // mean and std
 
-        let cfg = bincode::config::standard();
-        bincode::serde::encode_to_vec(&fit_params, cfg).map_err(|e| {
+        let cfg = oxicode::config::standard();
+        oxicode::serde::encode_to_vec(&fit_params, cfg).map_err(|e| {
             TransformError::DistributedError(format!(
-                "Failed to serialize fit results (bincode2): {}",
+                "Failed to serialize fit results (oxicode): {}",
                 e
             ))
         })
@@ -445,19 +445,19 @@ impl DistributedCoordinator {
     /// Execute transform task locally or remotely  
     async fn execute_transform_task(data: &[u8], params: &[u8]) -> Result<Vec<u8>> {
         // Deserialize input data and parameters
-        let cfg = bincode::config::standard();
-        let (input_data, _len): (Vec<f64>, usize) = bincode::serde::decode_from_slice(data, cfg)
-            .map_err(|e| {
+        let cfg = oxicode::config::standard();
+        let (input_data, _len): (Vec<f64>, usize) =
+            oxicode::serde::decode_owned_from_slice(data, cfg).map_err(|e| {
                 TransformError::DistributedError(format!(
-                    "Failed to deserialize transform data (bincode2): {}",
+                    "Failed to deserialize transform data (oxicode): {}",
                     e
                 ))
             })?;
 
-        let (fit_params, _len): (Vec<f64>, usize) = bincode::serde::decode_from_slice(params, cfg)
-            .map_err(|e| {
+        let (fit_params, _len): (Vec<f64>, usize) =
+            oxicode::serde::decode_owned_from_slice(params, cfg).map_err(|e| {
                 TransformError::DistributedError(format!(
-                    "Failed to deserialize transform params (bincode2): {}",
+                    "Failed to deserialize transform params (oxicode): {}",
                     e
                 ))
             })?;
@@ -474,9 +474,9 @@ impl DistributedCoordinator {
         // Apply standardization transformation
         let transformed_data: Vec<f64> = input_data.iter().map(|x| (x - mean) / std).collect();
 
-        bincode::serde::encode_to_vec(&transformed_data, cfg).map_err(|e| {
+        oxicode::serde::encode_to_vec(&transformed_data, cfg).map_err(|e| {
             TransformError::DistributedError(format!(
-                "Failed to serialize transform results (bincode2): {}",
+                "Failed to serialize transform results (oxicode): {}",
                 e
             ))
         })
@@ -488,11 +488,11 @@ impl DistributedCoordinator {
 
         // Deserialize and combine all partial _results
         for result_data in _partialresults {
-            let cfg = bincode::config::standard();
+            let cfg = oxicode::config::standard();
             let (partial_data, _len): (Vec<f64>, usize) =
-                bincode::serde::decode_from_slice(result_data, cfg).map_err(|e| {
+                oxicode::serde::decode_owned_from_slice(result_data, cfg).map_err(|e| {
                     TransformError::DistributedError(format!(
-                        "Failed to deserialize partial result (bincode2): {}",
+                        "Failed to deserialize partial result (oxicode): {}",
                         e
                     ))
                 })?;
@@ -512,10 +512,10 @@ impl DistributedCoordinator {
 
         let aggregated_result = vec![mean, min_val, max_val, all_data.len() as f64];
 
-        let cfg = bincode::config::standard();
-        bincode::serde::encode_to_vec(&aggregated_result, cfg).map_err(|e| {
+        let cfg = oxicode::config::standard();
+        oxicode::serde::encode_to_vec(&aggregated_result, cfg).map_err(|e| {
             TransformError::DistributedError(format!(
-                "Failed to serialize aggregated _results (bincode2): {}",
+                "Failed to serialize aggregated _results (oxicode): {}",
                 e
             ))
         })
@@ -685,12 +685,12 @@ impl DistributedPCA {
         self.coordinator.submit_task(aggregate_task).await?;
         let final_result = self.coordinator.get_result(&aggregate_task_id).await?;
 
-        // Deserialize final components (bincode2)
-        let cfg = bincode::config::standard();
+        // Deserialize final components (oxicode)
+        let cfg = oxicode::config::standard();
         let (components, _len): (Vec<f64>, usize) =
-            bincode::serde::decode_from_slice(&final_result.result, cfg).map_err(|e| {
+            oxicode::serde::decode_owned_from_slice(&final_result.result, cfg).map_err(|e| {
                 TransformError::ComputationError(format!(
-                    "Failed to deserialize components (bincode2): {}",
+                    "Failed to deserialize components (oxicode): {}",
                     e
                 ))
             })?;
@@ -719,8 +719,8 @@ impl DistributedPCA {
         // Submit transform tasks
         for (i, partition) in partitions.iter().enumerate() {
             let task_id = format!("pca_transform_{}", i);
-            let cfg = bincode::config::standard();
-            let transformer_state = bincode::serde::encode_to_vec(
+            let cfg = oxicode::config::standard();
+            let transformer_state = oxicode::serde::encode_to_vec(
                 self.components.as_ref().expect("Operation failed"),
                 cfg,
             )
@@ -740,9 +740,10 @@ impl DistributedPCA {
         let mut all_results = Vec::new();
         for task_id in task_ids {
             let result = self.coordinator.get_result(&task_id).await?;
-            let cfg = bincode::config::standard();
+            let cfg = oxicode::config::standard();
             let (transformed_partition, _len): (Vec<f64>, usize) =
-                bincode::serde::decode_from_slice(&result.result, cfg).expect("Operation failed");
+                oxicode::serde::decode_owned_from_slice(&result.result, cfg)
+                    .expect("Operation failed");
             all_results.extend(transformed_partition);
         }
 
@@ -1516,13 +1517,13 @@ impl EnhancedDistributedCoordinator {
         Ok(NodeHealth {
             node_id: _nodeinfo.id.clone(),
             status: NodeStatus::Healthy,
-            cpu_utilization: rng.gen_range(0.1..0.9),
-            memory_utilization: rng.gen_range(0.2..0.8),
-            network_latency_ms: rng.gen_range(1.0..50.0),
-            error_rate: rng.gen_range(0.0..0.05),
+            cpu_utilization: rng.random_range(0.1..0.9),
+            memory_utilization: rng.random_range(0.2..0.8),
+            network_latency_ms: rng.random_range(1.0..50.0),
+            error_rate: rng.random_range(0.0..0.05),
             last_check_timestamp: current_timestamp(),
             consecutive_failures: 0,
-            task_completion_rate: rng.gen_range(10.0..100.0),
+            task_completion_rate: rng.random_range(10.0..100.0),
         })
     }
 

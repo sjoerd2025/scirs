@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(unreachable_code)]
 #![allow(unused_mut)]
 #![allow(missing_docs)]
@@ -50,7 +49,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-spatial = "0.1.0-rc.4"
+//! scirs2-spatial = "0.1.0"
 //! ```
 //!
 //! ```rust
@@ -66,7 +65,7 @@
 //! let d = distance::euclidean(&[1.0, 2.0], &[4.0, 6.0]);
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //
 // ## Features
 //

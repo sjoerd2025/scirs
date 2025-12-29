@@ -66,7 +66,7 @@ pub mod spatial;
 fn scirs2(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Package metadata
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
-    m.add("__author__", "KitaSan <info@kitasan.io>")?;
+    m.add("__author__", "COOLJAPAN OU (Team KitaSan) <contact@cooljapan.tech>")?;
 
     // Register classes and functions directly in main module
     #[cfg(feature = "cluster")]

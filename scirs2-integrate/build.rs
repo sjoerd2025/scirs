@@ -1,11 +1,6 @@
 #[allow(dead_code)]
 fn main() {
-    // Link with BLAS libraries for ndarray operations
-    if cfg!(target_os = "linux") {
-        println!("cargo:rustc-link-lib=openblas");
-    } else if cfg!(target_os = "macos") {
-        println!("cargo:rustc-link-lib=framework=Accelerate");
-    } else if cfg!(target_os = "windows") {
-        println!("cargo:rustc-link-lib=blas");
-    }
+    // NOTE: Pure Rust implementation using OxiBLAS
+    // All system BLAS/LAPACK dependencies have been removed
+    // Linear algebra operations now use Pure Rust OxiBLAS (via scirs2-core/linalg feature)
 }

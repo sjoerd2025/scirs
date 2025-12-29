@@ -205,7 +205,7 @@ where
 /// let x: f64 = rng.random();
 /// ```
 pub fn rng() -> rand::rngs::ThreadRng {
-    rand::thread_rng()
+    rand::rng()
 }
 
 // Comprehensive re-export of ALL rand_distr distributions for SciRS2 ecosystem compatibility
@@ -316,7 +316,7 @@ pub mod legacy {
 
     /// Generate a random usize value in the given range
     pub fn usize(range: std::ops::Range<usize>) -> usize {
-        rand::thread_rng().gen_range(range)
+        rand::rng().random_range(range)
     }
 }
 
@@ -347,7 +347,7 @@ pub mod convenience {
     /// Generate a random boolean
     pub fn boolean() -> bool {
         let mut rng = thread_rng();
-        rng.gen_bool(0.5)
+        rng.random_bool(0.5)
     }
 
     /// Generate a random array with uniform distribution
@@ -633,9 +633,7 @@ pub struct Random<R: rand::Rng + ?Sized = rand::rngs::ThreadRng> {
 
 impl Default for Random<rand::rngs::ThreadRng> {
     fn default() -> Self {
-        Self {
-            rng: rand::thread_rng(),
-        }
+        Self { rng: rand::rng() }
     }
 }
 
@@ -657,8 +655,8 @@ impl<R: rand::Rng> Random<R> {
         distribution.sample(&mut self.rng)
     }
 
-    /// Generate a random value within the given range (inclusive min, exclusive max)
-    pub fn random_range<T: rand_distr::uniform::SampleUniform + PartialOrd + Copy>(
+    /// Generate a random value between two bounds (inclusive min, exclusive max)
+    pub fn random_range_bounds<T: rand_distr::uniform::SampleUniform + PartialOrd + Copy>(
         &mut self,
         min: T,
         max: T,
@@ -667,13 +665,21 @@ impl<R: rand::Rng> Random<R> {
     }
 
     /// Generate a random value within the given range (using range syntax)
-    #[allow(deprecated)]
     pub fn gen_range<T, RNG>(&mut self, range: RNG) -> T
     where
         T: rand_distr::uniform::SampleUniform,
         RNG: rand_distr::uniform::SampleRange<T>,
     {
-        self.rng.gen_range(range)
+        rand::Rng::random_range(&mut self.rng, range)
+    }
+
+    /// Generate a random value within the given range (rand-compatible range syntax)
+    pub fn random_range<T, RNG>(&mut self, range: RNG) -> T
+    where
+        T: rand_distr::uniform::SampleUniform,
+        RNG: rand_distr::uniform::SampleRange<T>,
+    {
+        rand::Rng::random_range(&mut self.rng, range)
     }
 
     /// Generate a random f64 value between 0.0 and 1.0
@@ -683,7 +689,7 @@ impl<R: rand::Rng> Random<R> {
 
     /// Generate a random f64 value using the underlying RNG (convenience method)
     pub fn random_f64_raw(&mut self) -> f64 {
-        self.rng.random()
+        rand::Rng::random(&mut self.rng)
     }
 
     /// Generate a random boolean value

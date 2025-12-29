@@ -10,13 +10,15 @@ keywords = ["fft", "fourier", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 
 [features]
-default = ["helper", "window", "parallel", "fftw"]
+# NOTE: Pure Rust by default - FFTW is optional for 62x speedup (C library)
+# Enable with: cargo build --features fftw
+default = ["helper", "window", "parallel"]
 helper = []
 window = []
 minimal = []
 parallel = []
 simd = [] # SIMD acceleration support
-fftw = ["dep:fftw", "dep:fftw-sys"] # Use FFTW for 62x speedup
+fftw = ["dep:fftw", "dep:fftw-sys"] # OPTIONAL: Use FFTW for 62x speedup (C library, not Pure Rust)
 serde = [] # Serialization support
 cuda = [] # Optional CUDA support for GPU acceleration (dependencies disabled)
 hip = [] # Optional ROCm/HIP support for AMD GPU acceleration

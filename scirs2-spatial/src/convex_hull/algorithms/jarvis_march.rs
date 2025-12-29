@@ -1,15 +1,16 @@
-//! Jarvis march (Gift Wrapping) algorithm implementation for 2D convex hull computation
+//! Jarvis march (Gift Wrapping) algorithm implementation for 2D convex hull computation (Pure Rust)
 //!
 //! The Jarvis march algorithm, also known as the Gift Wrapping algorithm, computes
 //! the convex hull by starting from the leftmost point and "wrapping" around the
 //! point set by repeatedly finding the most counterclockwise point.
+//!
+//! This is a pure Rust implementation with no external C library dependencies.
 
 use crate::convex_hull::core::ConvexHull;
 use crate::convex_hull::geometry::calculations_2d::{
     compute_2d_hull_equations, cross_product_2d, distance_squared_2d,
 };
 use crate::error::{SpatialError, SpatialResult};
-use qhull::Qh;
 use scirs2_core::ndarray::ArrayView2;
 
 /// Compute convex hull using Jarvis march (Gift Wrapping) algorithm (2D only)
@@ -113,19 +114,11 @@ pub fn compute_jarvis_march(points: &ArrayView2<'_, f64>) -> SpatialResult<Conve
         simplices.push(vec![vertex_indices[i], vertex_indices[j]]);
     }
 
-    // Create a dummy QHull instance for compatibility
-    let points_vec: Vec<Vec<f64>> = (0..npoints).map(|i| points.row(i).to_vec()).collect();
-    let qh = Qh::builder()
-        .compute(false)
-        .build_from_iter(points_vec)
-        .map_err(|e| SpatialError::ComputationError(format!("Qhull error: {e}")))?;
-
     // Compute facet equations for 2D hull
     let equations = compute_2d_hull_equations(points, &vertex_indices);
 
     Ok(ConvexHull {
         points: points.to_owned(),
-        qh,
         vertex_indices,
         simplices,
         equations: Some(equations),

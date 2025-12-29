@@ -9,19 +9,22 @@
 //! use scirs2_core::ndarray::{array, Array1};
 //! use scirs2_optimize::constrained::{minimize_constrained, Method, Constraint};
 //!
-//! // Define a simple function to minimize
+//! // Define a simple function to minimize: f(x) = (x[0] - 1)² + (x[1] - 2.5)²
+//! // Unconstrained minimum is at (1.0, 2.5), but we add a constraint.
 //! fn objective(x: &[f64]) -> f64 {
 //!     (x[0] - 1.0).powi(2) + (x[1] - 2.5).powi(2)
 //! }
 //!
 //! // Define a constraint: x[0] + x[1] <= 3
+//! // Written as g(x) >= 0, so: g(x) = 3 - x[0] - x[1]
 //! fn constraint(x: &[f64]) -> f64 {
 //!     3.0 - x[0] - x[1]  // Should be >= 0
 //! }
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! // Minimize the function starting at [0.0, 0.0]
-//! let initial_point = array![0.0, 0.0];
+//! // Minimize the function starting at [1.0, 1.0]
+//! // Note: Initial point should be feasible (satisfy constraints) for best convergence
+//! let initial_point = array![1.0, 1.0];
 //! let constraints = vec![Constraint::new(constraint, Constraint::INEQUALITY)];
 //!
 //! let result = minimize_constrained(
@@ -32,7 +35,9 @@
 //!     None
 //! )?;
 //!
-//! // The constrained minimum should be at [0.5, 2.5]
+//! // The constrained minimum is at [0.75, 2.25] with f(x) = 0.125
+//! // This is where the gradient of f is parallel to the constraint boundary,
+//! // solved via Lagrange multipliers on x[0] + x[1] = 3.
 //! # Ok(())
 //! # }
 //! ```
@@ -62,7 +67,10 @@ pub use interior_point::{
     InteriorPointResult,
 };
 pub use slsqp::minimize_slsqp;
-pub use trust_constr::minimize_trust_constr;
+pub use trust_constr::{
+    minimize_trust_constr, minimize_trust_constr_with_derivatives, GradientFn, HessianFn,
+    HessianUpdate,
+};
 
 #[cfg(test)]
 mod tests;

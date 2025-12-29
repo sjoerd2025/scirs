@@ -7,6 +7,24 @@ use ::ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, Num, NumCast};
 use std::fmt::Debug;
 
+/// Convert a constant f64 value to a generic float type
+///
+/// # Arguments
+///
+/// * `value` - The f64 value to convert
+///
+/// # Returns
+///
+/// * The value converted to type `F`
+///
+/// # Panics
+///
+/// Panics if the conversion fails
+#[inline]
+pub fn const_f64<F: Float + NumCast>(value: f64) -> F {
+    F::from(value).expect("Failed to convert constant to target float type")
+}
+
 /// Checks if two floating-point values are approximately equal
 ///
 /// # Arguments

@@ -4,13 +4,13 @@
 [[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)]](../LICENSE)
 [![Documentation](https://img.shields.io/docsrs/scirs2-sparse)](https://docs.rs/scirs2-sparse)
 
-**Production-ready sparse matrix library for Rust** - rc.4 release (0.1.0-rc.4) with SciRS2 POLICY implementation.
+**Production-ready sparse matrix library for Rust** - stable release (0.1.0) with SciRS2 POLICY implementation.
 
 SciRS2 Sparse provides comprehensive sparse matrix functionality with feature parity to SciPy's sparse module. Following the [SciRS2 POLICY](../SCIRS2_POLICY.md), this module is designed for high-performance scientific computing applications with memory-efficient storage, optimized algorithms, and enhanced GPU support through scirs2-core abstractions.
 
-### 🚀 rc.4 Release Status
+### 🚀 stable Release Status
 
-**Release Candidate 4** continues the production-ready sparse matrix implementation with:
+**Stable Release** continues the production-ready sparse matrix implementation with:
 - ✅ **GPU Acceleration**: Multi-backend GPU support (CUDA, OpenCL, Metal) established in beta.4
 - ✅ **Complete Graph Algorithms**: BFS, DFS, shortest paths, MST, Laplacian matrices (csgraph module)
 - ✅ **Advanced Solvers**: Full suite of iterative solvers (CG, BiCG, GMRES, QMR, etc.) with preconditioners
@@ -33,7 +33,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-scirs2-sparse = "0.1.0-rc.4"
+scirs2-sparse = "0.1.0"
 ```
 
 ### Optional Performance Features
@@ -42,7 +42,7 @@ For enhanced performance in production environments:
 
 ```toml
 [dependencies]
-scirs2-sparse = { version = "0.1.0-rc.4", features = ["parallel", "simd"] }
+scirs2-sparse = { version = "0.1.0", features = ["parallel", "simd"] }
 ```
 
 **Available Features:**
@@ -52,7 +52,7 @@ scirs2-sparse = { version = "0.1.0-rc.4", features = ["parallel", "simd"] }
 
 ### Stability Note
 
-This is **Release Candidate 4** (rc.4) before the 1.0.0 stable release. The API is stable and production-ready for all core functionality. This release includes comprehensive GPU acceleration support (from beta.4) and workspace-wide code quality improvements with zero warnings. Breaking changes will be minimal and well-documented in the migration to 1.0.0.
+This is **Stable Release** (stable) before the 1.0.0 stable release. The API is stable and production-ready for all core functionality. This release includes comprehensive GPU acceleration support (from beta.4) and workspace-wide code quality improvements with zero warnings. Breaking changes will be minimal and well-documented in the migration to 1.0.0.
 
 ## Usage
 

@@ -1,4 +1,3 @@
-#![allow(deprecated)]
 #![allow(clippy::all)]
 #![allow(unreachable_code)]
 #![allow(unused_mut)]
@@ -38,7 +37,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-cluster = "0.1.0-rc.4"
+//! scirs2-cluster = "0.1.0"
 //! ```
 //!
 //! ```rust
@@ -54,7 +53,7 @@
 //! let (centroids, labels) = kmeans(data.view(), 2, None, None, None, None).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.1.0-rc.4 (December 21, 2025)
+//! ## 🔒 Version: 0.1.0 (December 29, 2025)
 //!
 //! ## Features
 //!

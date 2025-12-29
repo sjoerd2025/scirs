@@ -431,7 +431,9 @@ where
             // Sum along a specific axis
             let result = array.sum_axis(Axis(ax));
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
+            let len = result.len();
+            let (vec, _offset) = result.into_raw_vec_and_offset();
+            Array::from_shape_vec(len, vec).expect("Operation failed")
         }
         None => {
             // Sum all elements
@@ -484,7 +486,9 @@ where
             // Product along a specific axis
             let result = array.map_axis(Axis(ax), |lane| lane.iter().product());
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
+            let len = result.len();
+            let (vec, _offset) = result.into_raw_vec_and_offset();
+            Array::from_shape_vec(len, vec).expect("Operation failed")
         }
         None => {
             // Product of all elements
@@ -632,7 +636,9 @@ where
                 lane.iter().map(|&x| (x - m).powi(2)).sum::<f64>() / n
             });
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
+            let len = result.len();
+            let (vec, _offset) = result.into_raw_vec_and_offset();
+            Array::from_shape_vec(len, vec).expect("Operation failed")
         }
         None => {
             // Variance of all elements
@@ -694,7 +700,9 @@ where
                     .unwrap_or(&f64::INFINITY)
             });
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
+            let len = result.len();
+            let (vec, _offset) = result.into_raw_vec_and_offset();
+            Array::from_shape_vec(len, vec).expect("Operation failed")
         }
         None => {
             // Min of all elements
@@ -758,7 +766,9 @@ where
                     .unwrap_or(&f64::NEG_INFINITY)
             });
             // Convert to 1D array
-            Array::from_shape_vec(result.len(), result.into_raw_vec()).expect("Operation failed")
+            let len = result.len();
+            let (vec, _offset) = result.into_raw_vec_and_offset();
+            Array::from_shape_vec(len, vec).expect("Operation failed")
         }
         None => {
             // Max of all elements

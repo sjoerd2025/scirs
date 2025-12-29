@@ -90,7 +90,7 @@ impl CrossoverOperator for UniformCrossover {
 
         if rng.random::<f64>() <= self.crossover_probability {
             for i in 0..n {
-                if rng.gen_bool(0.5) {
+                if rng.random_bool(0.5) {
                     child1[i] = parent1[i];
                     child2[i] = parent2[i];
                 } else {

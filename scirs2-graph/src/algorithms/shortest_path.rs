@@ -101,7 +101,6 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight + std::ops::Add<Output = E> + Copy
 /// that provides more detailed information about the path and search process.
 /// The current API will remain available but deprecated.
 #[deprecated(
-    since = "0.1.0-beta.2",
     note = "Use `dijkstra_path` for future compatibility. This function will return PathResult in v1.0"
 )]
 #[allow(dead_code)]
@@ -264,7 +263,6 @@ where
 /// that provides more detailed information about the path and search process.
 /// The current API will remain available but deprecated.
 #[deprecated(
-    since = "0.1.0-beta.2",
     note = "Use `dijkstra_path_digraph` for future compatibility. This function will return PathResult in v1.0"
 )]
 #[allow(dead_code)]

@@ -1,4 +1,4 @@
-#![allow(deprecated)]
+#![allow(deprecated)] // TODO: Update Python::with_gil to Python::attach when PyO3 API stabilizes
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use scirs2_core::essentials::Uniform;
@@ -120,7 +120,7 @@ fn bench_linear_1d_comparison(c: &mut Criterion) {
         #[cfg(feature = "scipy-comparison")]
         {
             group.bench_with_input(BenchmarkId::new("scipy", n_points), &n_points, |b, _| {
-                Python::with_gil(|py| {
+                pyo3::Python::with_gil(|py| {
                     let scipy_interp = py.import("scipy.interpolate").expect("Operation failed");
                     let numpy = py.import("numpy").expect("Operation failed");
 
@@ -188,7 +188,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
         // Benchmark SciPy equivalent
         #[cfg(feature = "scipy-comparison")]
         {
-            Python::with_gil(|py| {
+            pyo3::Python::with_gil(|py| {
                 let scipy_interp = py.import("scipy.interpolate").expect("Operation failed");
                 let numpy = py.import("numpy").expect("Operation failed");
 
@@ -282,13 +282,14 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
             // Benchmark SciPy equivalent
             #[cfg(feature = "scipy-comparison")]
             {
-                Python::with_gil(|py| {
+                pyo3::Python::with_gil(|py| {
                     let scipy_interp = py.import("scipy.interpolate").expect("Operation failed");
                     let numpy = py.import("numpy").expect("Operation failed");
 
                     // Convert to numpy arrays
+                    let (points_vec, _offset) = points.clone().into_raw_vec_and_offset();
                     let points_py = numpy
-                        .call_method1("array", (points.clone().into_raw_vec(),))
+                        .call_method1("array", (points_vec,))
                         .expect("Operation failed");
                     let points_py = points_py
                         .call_method1("reshape", (n_points, 2))
@@ -296,8 +297,9 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
                     let values_py = numpy
                         .call_method1("array", (values.to_vec(),))
                         .expect("Operation failed");
+                    let (queries_vec, _offset) = queries.clone().into_raw_vec_and_offset();
                     let queries_py = numpy
-                        .call_method1("array", (queries.clone().into_raw_vec(),))
+                        .call_method1("array", (queries_vec,))
                         .expect("Operation failed");
                     let queries_py = queries_py
                         .call_method1("reshape", (100, 2))

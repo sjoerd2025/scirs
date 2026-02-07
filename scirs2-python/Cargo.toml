@@ -64,7 +64,7 @@ thiserror = "2.0.16"
 image = "0.25"
 
 [features]
-default = ["cluster", "series", "linalg", "stats", "fft", "optimize", "special", "integrate", "interpolate", "signal", "spatial", "sparse", "ndimage", "graph", "metrics", "io", "datasets", "transform", "text", "vision", "autograd", "neural", "oxifft"]
+default = ["cluster", "series", "linalg", "stats", "fft", "optimize", "special", "integrate", "interpolate", "signal", "spatial", "sparse", "ndimage", "graph", "metrics", "io", "datasets", "transform", "text", "vision", "autograd", "neural", "oxifft", "random"]
 
 # Module features
 cluster = []
@@ -80,7 +80,7 @@ signal = []
 spatial = []
 sparse = []
 ndimage = []
-graph = []
+graph = ["random"]  # Graph generators require random number generation
 metrics = []
 io = []
 datasets = []
@@ -89,6 +89,9 @@ text = []
 vision = []
 autograd = []
 neural = []
+
+# Core feature propagation
+random = ["scirs2-core/random"]  # Random number generation from scirs2-core
 
 # Performance optimization features
 oxifft = ["scirs2-fft/oxifft"]  # Pure Rust high-performance FFT

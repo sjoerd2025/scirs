@@ -1,9 +1,9 @@
 //! Adaptive compression — automatically selects the best compression algorithm
 //! based on data characteristics profiled at runtime.
 //!
-//! All compression implementations are pure Rust with no external crate dependencies.
+//! # Algorithm families
 //!
-//! # Algorithms
+//! ## Internal pure-Rust codecs
 //!
 //! | Variant | Best for |
 //! |---------|----------|
@@ -13,11 +13,36 @@
 //! | `Lz77Lite` | General-purpose mixed data |
 //! | `DictionaryCoding` | Small alphabets / high-entropy repeated tokens |
 //! | `HuffmanCoding` | Very low-entropy data |
+//!
+//! ## OxiARC-backed codecs (COOLJAPAN policy)
+//!
+//! | Variant | Crate | Best for |
+//! |---------|-------|----------|
+//! | `OxiLz4` | `oxiarc-lz4` | Moderate-entropy data; maximise speed |
+//! | `OxiZstd` | `oxiarc-zstd` | Structured data (JSON, CSV); balance speed/ratio |
+//! | `OxiBrotli` | `oxiarc-brotli` | Low-entropy text; maximise compression ratio |
+//!
+//! ## Auto-compress / auto-decompress
+//!
+//! The `auto_compress` and `auto_decompress` functions select among the three
+//! OxiARC codecs based on Shannon entropy and prepend a 1-byte codec tag so
+//! that `auto_decompress` can round-trip correctly without out-of-band metadata.
+//!
+//! Tag byte layout:
+//! - `0x00` — passthrough (no compression)
+//! - `0x01` — OxiLz4
+//! - `0x02` — OxiZstd
+//! - `0x03` — OxiBrotli
 
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
 use crate::error::IoError;
+
+// OxiARC imports (COOLJAPAN policy: no flate2/zstd/brotli system crates)
+use oxiarc_brotli;
+use oxiarc_lz4;
+use oxiarc_zstd;
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -37,6 +62,12 @@ pub enum CompressionAlgo {
     DictionaryCoding,
     /// Huffman coding: variable-length prefix codes.
     HuffmanCoding,
+    /// LZ4 via `oxiarc-lz4` (COOLJAPAN policy). Fast, moderate compression.
+    OxiLz4,
+    /// Zstandard via `oxiarc-zstd` (COOLJAPAN policy). Balanced speed/ratio.
+    OxiZstd,
+    /// Brotli via `oxiarc-brotli` (COOLJAPAN policy). High compression for text.
+    OxiBrotli,
 }
 
 /// Statistical profile of a byte buffer used to guide algorithm selection.
@@ -665,6 +696,9 @@ pub fn compress_adaptive(data: &[u8]) -> Result<CompressionResult, IoError> {
             compress_lz77(data, 4096)
         }
         CompressionAlgo::HuffmanCoding => compress_huffman(data)?,
+        CompressionAlgo::OxiLz4 => compress_oxi_lz4(data)?,
+        CompressionAlgo::OxiZstd => compress_oxi_zstd(data)?,
+        CompressionAlgo::OxiBrotli => compress_oxi_brotli(data)?,
     };
 
     let compressed_size = compressed.len();
@@ -693,6 +727,158 @@ pub fn decompress_adaptive(result: &CompressionResult) -> Result<Vec<u8>, IoErro
             decompress_lz77(&result.compressed)
         }
         CompressionAlgo::HuffmanCoding => decompress_huffman(&result.compressed),
+        CompressionAlgo::OxiLz4 => decompress_oxi_lz4(&result.compressed),
+        CompressionAlgo::OxiZstd => decompress_oxi_zstd(&result.compressed),
+        CompressionAlgo::OxiBrotli => decompress_oxi_brotli(&result.compressed),
+    }
+}
+
+// ─── OxiARC-backed codec wrappers ─────────────────────────────────────────────
+
+/// Compress `data` using LZ4 via `oxiarc-lz4`.
+pub fn compress_oxi_lz4(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    oxiarc_lz4::compress(data)
+        .map_err(|e| IoError::CompressionError(format!("oxiarc-lz4 compress: {e}")))
+}
+
+/// Decompress LZ4-frame data via `oxiarc-lz4`.
+///
+/// Uses a generous output size bound: `max(data.len() * 256, 4 MiB)`.
+/// LZ4 frames store the original content size in the frame descriptor when
+/// it is known, but the pure-Rust decompressor still requires an upper bound.
+pub fn decompress_oxi_lz4(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    // Use a large upper bound: compressed data is rarely more than 256× smaller,
+    // and we cap at 4 GiB to avoid absurd allocations on corrupt input.
+    const MAX_CAP: usize = 4 * 1024 * 1024 * 1024; // 4 GiB absolute cap
+    const MIN_OUT: usize = 4 * 1024 * 1024; // 4 MiB floor
+    let max_out = data.len().saturating_mul(256).max(MIN_OUT).min(MAX_CAP);
+    oxiarc_lz4::decompress(data, max_out)
+        .map_err(|e| IoError::DecompressionError(format!("oxiarc-lz4 decompress: {e}")))
+}
+
+/// Compress `data` using Zstandard level 3 via `oxiarc-zstd`.
+pub fn compress_oxi_zstd(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    oxiarc_zstd::compress_with_level(data, 3)
+        .map_err(|e| IoError::CompressionError(format!("oxiarc-zstd compress: {e}")))
+}
+
+/// Decompress Zstandard-frame data via `oxiarc-zstd`.
+pub fn decompress_oxi_zstd(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    oxiarc_zstd::decompress(data)
+        .map_err(|e| IoError::DecompressionError(format!("oxiarc-zstd decompress: {e}")))
+}
+
+/// Compress `data` using Brotli quality 6 via `oxiarc-brotli`.
+pub fn compress_oxi_brotli(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    oxiarc_brotli::compress(data, 6)
+        .map_err(|e| IoError::CompressionError(format!("oxiarc-brotli compress: {e}")))
+}
+
+/// Decompress Brotli data via `oxiarc-brotli`.
+pub fn decompress_oxi_brotli(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    oxiarc_brotli::decompress(data)
+        .map_err(|e| IoError::DecompressionError(format!("oxiarc-brotli decompress: {e}")))
+}
+
+// ─── Entropy-based OxiARC codec selection ─────────────────────────────────────
+
+/// Tag byte values stored as the first byte by `auto_compress`.
+const TAG_NONE: u8 = 0x00;
+const TAG_LZ4: u8 = 0x01;
+const TAG_ZSTD: u8 = 0x02;
+const TAG_BROTLI: u8 = 0x03;
+
+/// Estimate Shannon entropy of a byte slice.
+///
+/// Returns a value in `[0.0, 8.0]` — 0.0 for all-same bytes, 8.0 for
+/// a perfectly uniform distribution over all 256 byte values.
+pub fn estimate_entropy(data: &[u8]) -> f64 {
+    if data.is_empty() {
+        return 0.0;
+    }
+    let mut counts = [0u64; 256];
+    for &b in data {
+        counts[b as usize] += 1;
+    }
+    let n = data.len() as f64;
+    let mut entropy = 0.0_f64;
+    for &c in counts.iter() {
+        if c > 0 {
+            let p = c as f64 / n;
+            entropy -= p * p.log2();
+        }
+    }
+    entropy
+}
+
+/// Choose the best OxiARC codec based on entropy and data size.
+///
+/// Returns the `CompressionAlgo` variant and an estimated compression ratio.
+///
+/// Thresholds (COOLJAPAN policy):
+/// - Size < 256 bytes → `None` (overhead not worth it)
+/// - Entropy > 7.5    → `None` (near-random / encrypted data)
+/// - Entropy > 6.0    → `OxiLz4` (fast; moderate entropy)
+/// - Entropy > 4.0    → `OxiZstd` (balanced; structured data like JSON/CSV)
+/// - Otherwise        → `OxiBrotli` (max ratio; low-entropy text / XML / HTML)
+pub fn select_oxi_algorithm(data: &[u8]) -> (CompressionAlgo, f64) {
+    let size = data.len();
+    if size < 256 {
+        return (CompressionAlgo::None, 1.0);
+    }
+    let entropy = estimate_entropy(data);
+    if entropy > 7.5 {
+        (CompressionAlgo::None, 1.0)
+    } else if entropy > 6.0 {
+        (CompressionAlgo::OxiLz4, 0.8)
+    } else if entropy > 4.0 {
+        (CompressionAlgo::OxiZstd, 0.5)
+    } else {
+        (CompressionAlgo::OxiBrotli, 0.2)
+    }
+}
+
+/// Automatically compress `data` using the best OxiARC codec.
+///
+/// The output has a 1-byte algorithm tag prepended:
+/// - `0x00` — no compression
+/// - `0x01` — LZ4 (`oxiarc-lz4`)
+/// - `0x02` — Zstd (`oxiarc-zstd`)
+/// - `0x03` — Brotli (`oxiarc-brotli`)
+///
+/// Use `auto_decompress` to reverse the operation.
+pub fn auto_compress(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    let (algo, _estimated_ratio) = select_oxi_algorithm(data);
+    let (tag, compressed) = match algo {
+        CompressionAlgo::None => (TAG_NONE, data.to_vec()),
+        CompressionAlgo::OxiLz4 => (TAG_LZ4, compress_oxi_lz4(data)?),
+        CompressionAlgo::OxiZstd => (TAG_ZSTD, compress_oxi_zstd(data)?),
+        CompressionAlgo::OxiBrotli => (TAG_BROTLI, compress_oxi_brotli(data)?),
+        _ => (TAG_NONE, data.to_vec()),
+    };
+    let mut out = Vec::with_capacity(1 + compressed.len());
+    out.push(tag);
+    out.extend_from_slice(&compressed);
+    Ok(out)
+}
+
+/// Automatically decompress data produced by `auto_compress`.
+///
+/// Reads the 1-byte algorithm tag and dispatches to the correct decompressor.
+pub fn auto_decompress(data: &[u8]) -> Result<Vec<u8>, IoError> {
+    if data.is_empty() {
+        return Ok(Vec::new());
+    }
+    let tag = data[0];
+    let payload = &data[1..];
+    match tag {
+        TAG_NONE => Ok(payload.to_vec()),
+        TAG_LZ4 => decompress_oxi_lz4(payload),
+        TAG_ZSTD => decompress_oxi_zstd(payload),
+        TAG_BROTLI => decompress_oxi_brotli(payload),
+        other => Err(IoError::DecompressionError(format!(
+            "auto_decompress: unknown algorithm tag 0x{other:02x}"
+        ))),
     }
 }
 
@@ -912,5 +1098,166 @@ mod tests {
         let profile = profile_data(&[]);
         assert_eq!(profile.n_bytes, 0);
         assert_eq!(profile.entropy, 0.0);
+    }
+
+    // ── estimate_entropy ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_entropy_all_zeros() {
+        let data = vec![0u8; 1024];
+        let e = estimate_entropy(&data);
+        assert!(e < 1e-9, "all-zero entropy should be ~0, got {e}");
+    }
+
+    #[test]
+    fn test_entropy_uniform() {
+        // All 256 byte values equally represented → entropy ≈ 8.0
+        let data: Vec<u8> = (0u8..=255).cycle().take(2048).collect();
+        let e = estimate_entropy(&data);
+        assert!(
+            (e - 8.0).abs() < 0.01,
+            "uniform entropy should be ~8.0, got {e}"
+        );
+    }
+
+    #[test]
+    fn test_entropy_empty() {
+        assert_eq!(estimate_entropy(&[]), 0.0);
+    }
+
+    // ── select_oxi_algorithm ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_select_none_high_entropy() {
+        // Near-random data: uniform distribution → entropy ≈ 8.0 → None
+        let data: Vec<u8> = (0u8..=255).cycle().take(2048).collect();
+        let (algo, _ratio) = select_oxi_algorithm(&data);
+        assert_eq!(
+            algo,
+            CompressionAlgo::None,
+            "high entropy should select None"
+        );
+    }
+
+    #[test]
+    fn test_select_none_small_data() {
+        let data = vec![42u8; 100]; // < 256 bytes
+        let (algo, _) = select_oxi_algorithm(&data);
+        assert_eq!(algo, CompressionAlgo::None, "small data should select None");
+    }
+
+    #[test]
+    fn test_select_brotli_low_entropy() {
+        // All-same bytes: entropy = 0 → OxiBrotli
+        let data = vec![b'A'; 512];
+        let (algo, _) = select_oxi_algorithm(&data);
+        assert_eq!(
+            algo,
+            CompressionAlgo::OxiBrotli,
+            "very low entropy should select OxiBrotli"
+        );
+    }
+
+    #[test]
+    fn test_select_zstd_structured_data() {
+        // JSON-like: 4 symbol alphabet repeated → entropy ~ 2 bits
+        let json = r#"{"key":"value","n":1}"#;
+        let data: Vec<u8> = json.bytes().cycle().take(1024).collect();
+        let entropy = estimate_entropy(&data);
+        // Entropy of typical repeated JSON is in [3, 5] range
+        let (algo, _) = select_oxi_algorithm(&data);
+        // Allow OxiZstd or OxiBrotli depending on actual entropy
+        assert!(
+            matches!(algo, CompressionAlgo::OxiZstd | CompressionAlgo::OxiBrotli),
+            "structured repeated data (entropy={entropy:.2}) should select Zstd or Brotli, got {algo:?}"
+        );
+    }
+
+    // ── OxiARC round-trips ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_oxi_lz4_roundtrip() {
+        let original: Vec<u8> = b"Hello LZ4! ".iter().copied().cycle().take(1024).collect();
+        let compressed = compress_oxi_lz4(&original).expect("lz4 compress");
+        let decompressed = decompress_oxi_lz4(&compressed).expect("lz4 decompress");
+        assert_eq!(decompressed, original, "LZ4 round-trip mismatch");
+    }
+
+    #[test]
+    fn test_oxi_zstd_roundtrip() {
+        let original: Vec<u8> = b"Zstd data! ".iter().copied().cycle().take(1024).collect();
+        let compressed = compress_oxi_zstd(&original).expect("zstd compress");
+        let decompressed = decompress_oxi_zstd(&compressed).expect("zstd decompress");
+        assert_eq!(decompressed, original, "Zstd round-trip mismatch");
+    }
+
+    #[test]
+    fn test_oxi_brotli_roundtrip() {
+        let original: Vec<u8> = b"Brotli text! "
+            .iter()
+            .copied()
+            .cycle()
+            .take(1024)
+            .collect();
+        let compressed = compress_oxi_brotli(&original).expect("brotli compress");
+        let decompressed = decompress_oxi_brotli(&compressed).expect("brotli decompress");
+        assert_eq!(decompressed, original, "Brotli round-trip mismatch");
+    }
+
+    // ── auto_compress / auto_decompress ───────────────────────────────────────
+
+    #[test]
+    fn test_auto_compress_round_trip_repeated() {
+        // Low-entropy repeated data — should pick OxiBrotli or OxiZstd
+        let data: Vec<u8> = b"abcabcabc".iter().copied().cycle().take(2048).collect();
+        let compressed = auto_compress(&data).expect("auto_compress failed");
+        assert!(!compressed.is_empty());
+        let decompressed = auto_decompress(&compressed).expect("auto_decompress failed");
+        assert_eq!(decompressed, data, "auto round-trip mismatch");
+    }
+
+    #[test]
+    fn test_auto_compress_empty() {
+        let result = auto_compress(&[]).expect("auto_compress empty");
+        // Empty input: tag byte 0x00 + empty payload
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0], TAG_NONE);
+        let decompressed = auto_decompress(&result).expect("auto_decompress empty");
+        assert!(decompressed.is_empty());
+    }
+
+    #[test]
+    fn test_auto_decompress_empty_input() {
+        let result = auto_decompress(&[]).expect("auto_decompress of empty slice");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_auto_compress_high_entropy_passthrough() {
+        // Uniform data → None tag → payload = data verbatim
+        let data: Vec<u8> = (0u8..=255).cycle().take(2048).collect();
+        let compressed = auto_compress(&data).expect("auto_compress high entropy");
+        // Tag should be TAG_NONE
+        assert_eq!(
+            compressed[0], TAG_NONE,
+            "high-entropy data should use passthrough tag"
+        );
+        let decompressed = auto_decompress(&compressed).expect("auto_decompress");
+        assert_eq!(decompressed, data);
+    }
+
+    #[test]
+    fn test_adaptive_compression_json() {
+        // Simulates a repeated JSON payload; expect meaningful compression.
+        let json = r#"{"id":1,"name":"Alice","score":42.0,"active":true}"#;
+        let data: Vec<u8> = json.bytes().cycle().take(8192).collect();
+        let original_size = data.len();
+        let compressed = auto_compress(&data).expect("auto_compress json");
+        let ratio = compressed.len() as f64 / original_size as f64;
+        // We allow ratio ≥ 1.0 for degenerate cases; just verify round-trip.
+        let decompressed = auto_decompress(&compressed).expect("auto_decompress json");
+        assert_eq!(decompressed, data, "JSON round-trip mismatch");
+        // Optional: log ratio (not a hard assertion since codecs vary)
+        let _ = ratio;
     }
 }

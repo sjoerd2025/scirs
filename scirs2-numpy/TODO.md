@@ -60,13 +60,14 @@
 ## v0.4.0 Roadmap
 
 ### Full numpy API Compatibility
-- [ ] `numpy.array_protocol` (`__array__` / `__array_interface__`) support
-- [ ] Structured dtype support (record arrays with named fields)
-- [ ] Masked array support (`numpy.ma`)
+- [x] `numpy.array_protocol` (`__array__` / `__array_interface__`) support
+- [x] Structured dtype support (record arrays with named fields)
+- [x] Masked array support (`numpy.ma`)
 - [ ] Array subclass support (e.g., accepting `pandas.Series`)
 
 ### DLPack Support
-- [ ] `__dlpack__` and `__dlpack_device__` protocol for zero-copy GPU/CPU tensor exchange
+- [x] `__dlpack__` and `__dlpack_device__` protocol for zero-copy GPU/CPU tensor exchange
+- [x] DLPack interoperability: `validate_dlpack_tensor`, `dlpack_from_slice`, `dlpack_to_vec_f64`
 - [ ] PyTorch tensor interop via DLPack
 - [ ] JAX array interop via DLPack
 - [ ] Enable GPU tensors (CUDA) to be passed without CPU roundtrip
@@ -77,8 +78,8 @@
 - [ ] Profile allocation patterns for large array round-trips
 
 ### Type System
-- [ ] `PyUntypedArray` for accepting arrays without known element type at compile time
-- [ ] Runtime dtype inspection: `array.dtype_name()`, `array.itemsize()`
+- [x] `PyUntypedArray` for accepting arrays without known element type at compile time
+- [x] Runtime dtype inspection: `array.dtype_name()`, `array.itemsize()`
 - [ ] Extended integer types: `i128`, `u128` where NumPy supports them
 
 ### Documentation and Tests

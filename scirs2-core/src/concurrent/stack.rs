@@ -19,6 +19,7 @@
 //! pointer is published to any other thread.
 
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
+use std::sync::Mutex;
 
 // ---------------------------------------------------------------------------
 // Versioned pointer encoding
@@ -84,6 +85,12 @@ pub struct LockFreeStack<T> {
     /// Packed (version:16, ptr:48).  0 means null / empty.
     head: AtomicU64,
     len: AtomicUsize,
+    /// Deferred-free list.  Nodes popped by `pop()` have their values moved
+    /// out, but the backing memory is kept alive so that concurrent readers in
+    /// other threads that still reference the node (before their CAS fails and
+    /// they retry) do not dereference freed memory.  All deferred nodes are
+    /// deallocated in `Drop`.
+    retired: Mutex<Vec<*mut u8>>,
 }
 
 unsafe impl<T: Send> Send for LockFreeStack<T> {}
@@ -96,6 +103,7 @@ impl<T> LockFreeStack<T> {
             _phantom: std::marker::PhantomData,
             head: AtomicU64::new(0),
             len: AtomicUsize::new(0),
+            retired: Mutex::new(Vec::new()),
         }
     }
 
@@ -154,9 +162,14 @@ impl<T> LockFreeStack<T> {
             ) {
                 Ok(_) => {
                     self.len.fetch_sub(1, Ordering::Relaxed);
-                    // Reclaim the node.
-                    let boxed = unsafe { Box::from_raw(node_ptr) };
-                    return Some(boxed.value);
+                    // Move the value out of the node.
+                    let value = unsafe { std::ptr::read(&(*node_ptr).value) };
+                    // Defer deallocation: other threads may still be reading
+                    // this node's `next` field in their pop() retry loop.
+                    if let Ok(mut retired) = self.retired.lock() {
+                        retired.push(node_ptr as *mut u8);
+                    }
+                    return Some(value);
                 }
                 Err(_) => {
                     // Retry.
@@ -185,7 +198,17 @@ impl<T> Default for LockFreeStack<T> {
 
 impl<T> Drop for LockFreeStack<T> {
     fn drop(&mut self) {
+        // Drain remaining elements (drops their values).
         while self.pop().is_some() {}
+        // Deallocate all retired nodes whose values were already moved out.
+        if let Ok(retired) = self.retired.lock() {
+            let layout = std::alloc::Layout::new::<Node<T>>();
+            for ptr in retired.iter() {
+                unsafe {
+                    std::alloc::dealloc(*ptr, layout);
+                }
+            }
+        }
     }
 }
 

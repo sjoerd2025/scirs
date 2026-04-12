@@ -39,7 +39,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-sparse = "0.4.1"
+//! scirs2-sparse = "0.4.2"
 //! ```
 //!
 //! ```rust
@@ -52,7 +52,7 @@
 //! let sparse = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).expect("Operation failed");
 //! ```
 //!
-//! ## 🔒 Version: 0.4.1 (March 27, 2026)
+//! ## 🔒 Version: 0.4.2 (March 27, 2026)
 //!
 //! ## Matrix vs. Array API
 //!
@@ -348,6 +348,7 @@ pub use tensor_sparse::{khatri_rao_product, CPDecomposition, SparseTensor, Tucke
 pub mod gpu;
 pub mod gpu_kernel_execution;
 pub mod gpu_ops;
+pub mod gpu_preconditioner;
 pub mod gpu_spmv_implementation;
 pub use gpu_kernel_execution::{
     calculate_adaptive_workgroup_size, execute_spmv_kernel, execute_symmetric_spmv_kernel,

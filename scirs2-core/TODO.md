@@ -82,33 +82,33 @@
 ## v0.4.0 — Planned
 
 ### GPU Memory Pooling Enhancements
-- [ ] Unified memory (CPU+GPU shared pages) allocator
-- [ ] Async GPU buffer transfer pipeline
-- [ ] Per-stream allocation for CUDA streams
-- [ ] Memory defragmentation for long-running workloads
+- [x] Unified memory (CPU+GPU shared pages) allocator — implemented in v0.4.2 (`gpu/memory_management/unified_memory.rs`, `UnifiedAllocator`/`UnifiedBuffer`/`SyncState`)
+- [x] Async GPU buffer transfer pipeline — implemented in v0.4.2 (`gpu/async_transfer.rs`)
+- [x] Per-stream allocation for CUDA streams — implemented in v0.4.2 (`gpu/stream_allocator.rs`, `StreamAllocator`/`StreamId`)
+- [x] Memory defragmentation for long-running workloads — implemented in v0.4.2 (`memory/defrag.rs`, `DefragPlanner`/`OnlineDefragmenter`/`DefragStats`)
 
 ### NUMA-Aware Allocation
-- [ ] NUMA-local allocator backed by `libnuma` (feature-gated)
-- [ ] Automatic NUMA-aware placement for parallel work items
-- [ ] Cross-NUMA bandwidth measurement and routing
+- [x] NUMA-local allocator backed by `libnuma` (feature-gated) — implemented in v0.4.2 (`memory/numa_allocator.rs` `discover_libnuma`, gated by `libnuma` feature)
+- [x] Automatic NUMA-aware placement for parallel work items — implemented in v0.4.2 (`memory/numa_bandwidth.rs` `optimal_placement_node`)
+- [x] Cross-NUMA bandwidth measurement and routing — implemented in v0.4.2 (`memory/numa_bandwidth.rs`, `NumaBandwidthMatrix`/`probe_bandwidth_matrix`/`measure_copy_bandwidth`)
 
 ### WebGPU Backend Preparation
-- [ ] `wgpu`-based GPU buffer abstraction
+- [x] `wgpu`-based GPU buffer abstraction — implemented in `gpu/backends/wgpu.rs`
 - [ ] Compute shader dispatch via WebGPU
-- [ ] Browser-compatible feature flag (`target_arch = "wasm32"`)
+- [x] Browser-compatible feature flag (`target_arch = "wasm32"`) — WASM backend in `gpu/backends/wasm.rs`
 
 ### Distributed Computing Enhancements
-- [ ] Gossip protocol for peer discovery
-- [ ] Fault-tolerant parameter server (leader election)
-- [ ] Gradient compression (top-k sparsification, quantization)
+- [x] Gossip protocol for peer discovery — implemented in `distributed/param_server/gossip.rs`
+- [x] Fault-tolerant parameter server (leader election) — implemented in `distributed/param_server/fault_tolerance.rs`
+- [x] Gradient compression (top-k sparsification, quantization) — Implemented in v0.4.0 (`distributed/compression.rs` top-k sparsification; `distributed/parameter_server.rs` error-feedback compressor)
 
 ### Profiling Improvements
-- [ ] perf-event integration for Linux hardware counters
-- [ ] Tracy profiler integration (feature-gated)
-- [ ] Flame graph export from profiling data
+- [x] perf-event integration for Linux hardware counters — implemented in `profiling/hardware_counters.rs`
+- [x] Tracy profiler integration (feature-gated) — implemented in v0.4.2 (`profiling/tracy.rs`, gated by `tracy` feature)
+- [x] Flame graph export from profiling data — implemented in `profiling/flame_graph_svg.rs`
 
 ### Additional Data Structures
-- [ ] Persistent vector (RRB-tree)
+- [x] Persistent vector (RRB-tree) — implemented in v0.4.2 (`data_structures/rrb_tree.rs`)
 - [x] Concurrent skip list — Implemented in v0.4.0
 - [x] Compressed trie for string keys — Implemented in v0.4.0
 - [x] Bloom filter and counting Bloom filter — Implemented in v0.4.0 (includes count-min sketch, HyperLogLog)
@@ -134,3 +134,21 @@ All items listed under v0.4.0 Planned were implemented during Waves 1-39 and are
 - NUMA allocator falls back silently when `libnuma` is absent; add explicit warning log
 - `no_std` support is declared but not regularly tested; add CI job without `std` feature
 - Lock-free structures use Rust `std::sync::atomic`; `loom` model checking not yet integrated
+
+## v0.4.2 Additions
+
+- [x] Metal GPU backend: `.expect()` calls replaced with proper error propagation (no-unwrap policy enforced)
+- [x] Metal GPU batch dispatch: `begin_batch` / `end_batch` / `try_batch_dispatch` for grouped kernel submission
+- [x] Metal GPU async dispatch: `dispatch_no_wait` + `gpu_sync` for non-blocking GPU work
+- [x] Tracy profiler integration (feature-gated) — `profiling/tracy.rs`, enable with `tracy` cargo feature
+- [x] NUMA-local allocator libnuma feature gate — `memory/numa_allocator.rs` `discover_libnuma`, enable with `libnuma` cargo feature
+- [x] wgpu-based GPU buffer abstraction — `gpu/backends/wgpu.rs`
+- [x] Browser-compatible feature flag (`target_arch = "wasm32"`) — WASM backend in `gpu/backends/wasm.rs`
+- [x] Async GPU buffer transfer pipeline — `gpu/async_transfer.rs`
+- [x] Unified memory allocator (CPU+GPU shared pages) — `gpu/memory_management/unified_memory.rs` (`UnifiedAllocator`, `UnifiedBuffer`, `SyncState`)
+- [x] Persistent vector (RRB-tree) — `data_structures/rrb_tree.rs`
+- [x] Tracy profiler integration (feature-gated) in `profiling/tracy.rs`
+- [x] NUMA-local allocator `libnuma` feature gate added
+- [x] Per-stream GPU memory allocator (Wave 43) — `gpu/stream_allocator.rs` (`StreamAllocator`, `StreamId`); 9 tests
+- [x] Memory defragmentation for long-running workloads (Wave 43) — `memory/defrag.rs` (`DefragPlanner`, `OnlineDefragmenter`, `DefragStats`, `FreeBlock`); 8 tests
+- [x] Cross-NUMA bandwidth measurement and routing (Wave 43) — `memory/numa_bandwidth.rs` (`NumaBandwidthMatrix`, `BandwidthMeasurement`, `probe_bandwidth_matrix`, `measure_copy_bandwidth`, `optimal_placement_node`); 11 tests

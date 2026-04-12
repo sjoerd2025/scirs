@@ -8,12 +8,8 @@ pub struct TestDatasets;
 impl TestDatasets {
     /// Small XOR dataset for quick testing
     pub fn xor_dataset() -> (Array2<f64>, Array1<f64>) {
-        let x = Array2::from_shape_vec((4, 2), vec![
-            0.0, 0.0,
-            0.0, 1.0,
-            1.0, 0.0,
-            1.0, 1.0,
-        ]).expect("Failed to create XOR input");
+        let x = Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])
+            .expect("Failed to create XOR input");
 
         let y = Array1::from_vec(vec![0.0, 1.0, 1.0, 0.0]);
 
@@ -26,12 +22,10 @@ impl TestDatasets {
             .map(|i| i as f64 / n_samples as f64)
             .collect();
 
-        let y: Vec<f64> = x.iter()
-            .map(|&xi| 2.0 * xi + 1.0)
-            .collect();
+        let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
-        let x_2d = Array2::from_shape_vec((n_samples, 1), x)
-            .expect("Failed to create linear input");
+        let x_2d =
+            Array2::from_shape_vec((n_samples, 1), x).expect("Failed to create linear input");
         let y_1d = Array1::from_vec(y);
 
         (x_2d, y_1d)
@@ -58,7 +52,7 @@ impl TestDatasets {
         let n_nonzero = ((rows * cols) as f64 * density) as usize;
 
         for k in 0..n_nonzero {
-            let i = (k * 7) % rows;  // Deterministic "random"
+            let i = (k * 7) % rows; // Deterministic "random"
             let j = (k * 11) % cols;
             let val = (k as f64 + 1.0) / n_nonzero as f64;
             triplets.push((i, j, val));
@@ -124,7 +118,7 @@ mod tests {
     #[test]
     fn test_sparse_matrix() {
         let triplets = TestDatasets::sparse_test_matrix(100, 100, 0.1);
-        assert!(triplets.len() > 0);
+        assert!(!triplets.is_empty());
         assert!(triplets.len() <= 1000); // ~10% of 10000
     }
 

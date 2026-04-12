@@ -83,12 +83,12 @@
 ### Streaming Large Datasets
 - [ ] Async streaming API for datasets that do not fit in WASM memory
 - [x] Lazy FFT for streaming audio/sensor data — Implemented in v0.4.0 (`streaming_fft/` module)
-- [ ] Incremental PCA on streaming data
+- [x] Incremental PCA on streaming data — Implemented in v0.4.0 (`incremental_pca.rs` module)
 
 ### Expanded Signal Processing
-- [ ] Wavelet transform (DWT, CWT) in WASM
-- [ ] Short-Time Fourier Transform (STFT) with overlap-add reconstruction
-- [ ] Mel-frequency cepstral coefficients (MFCC)
+- [x] Wavelet transform (DWT, CWT) in WASM — Implemented in v0.4.0 (`wavelets.rs` module)
+- [x] Short-Time Fourier Transform (STFT) with overlap-add reconstruction — Implemented in v0.4.0 (`signal_enhanced.rs` `wasm_stft`; overlap-add via `signal_enhanced.rs` convolution path)
+- [x] Mel-frequency cepstral coefficients (MFCC) — Implemented in v0.4.0 (`mfcc.rs` module)
 
 ### Usability Improvements
 - [ ] Automatic memory management with `FinalizationRegistry`

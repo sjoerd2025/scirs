@@ -488,8 +488,8 @@ impl InteractiveClusteringApp {
 
 #[cfg(feature = "egui")]
 impl eframe::App for InteractiveClusteringApp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        egui::SidePanel::left("controls").show(ctx, |ui| {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        egui::Panel::left("controls").show_inside(ui, |ui| {
             ui.heading("Clustering Visualization");
             ui.separator();
 
@@ -537,7 +537,7 @@ impl eframe::App for InteractiveClusteringApp {
             }
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             if let Some(plot) = self.scatter_plot_2d.clone() {
                 self.draw_scatterplot(ui, &plot);
             } else {

@@ -139,7 +139,9 @@ impl PyKMeans {
 
         let binding = x.readonly();
         let data = binding.as_array();
-        let centers = self.cluster_centers_.as_ref().expect("Operation failed");
+        let centers = self.cluster_centers_.as_ref().ok_or_else(|| {
+            pyo3::exceptions::PyRuntimeError::new_err("Model not fitted: call fit() first")
+        })?;
 
         let n_samples = data.nrows();
         let mut labels = Vec::with_capacity(n_samples);

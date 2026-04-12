@@ -11,6 +11,7 @@
 //! - [`ShardedDataset`] — the complete collection of shards over a dataset.
 
 use crate::error::{DatasetsError, Result};
+use scirs2_core::ndarray::{Array1, Array2};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LCG helpers (avoids pulling in the `rand` crate)
@@ -114,6 +115,97 @@ pub struct DataShard {
 }
 
 impl DataShard {
+    /// Build a new [`DataShard`] for `shard_id` out of `total_shards` over `n_samples` samples.
+    ///
+    /// When `config.shuffle` is `true` and a seed is provided the global index permutation is
+    /// deterministically computed from that seed, ensuring every shard call with the same
+    /// `(total_shards, n_samples, config)` triple produces consistent, non-overlapping index
+    /// sets.
+    pub fn new(
+        shard_id: usize,
+        total_shards: usize,
+        n_samples: usize,
+        config: &ShardConfig,
+    ) -> Self {
+        let all_shards = shard_by_index(
+            n_samples,
+            total_shards,
+            config.shuffle,
+            config.seed.unwrap_or(0),
+        );
+        // If shard_id is out of range, return an empty shard.
+        match all_shards.into_iter().find(|s| s.shard_id == shard_id) {
+            Some(s) => Self {
+                shard_id: s.shard_id,
+                n_shards: s.n_shards,
+                indices: s.indices,
+                is_train: s.is_train,
+            },
+            None => Self {
+                shard_id,
+                n_shards: total_shards,
+                indices: Vec::new(),
+                is_train: true,
+            },
+        }
+    }
+
+    /// Apply this shard's indices to a 2-D feature matrix.
+    ///
+    /// Returns a new `Array2<T>` containing only the rows selected by this shard,
+    /// in the order given by [`Self::indices`].
+    ///
+    /// # Panics
+    ///
+    /// Does not panic; indices that exceed the data row count are silently skipped.
+    pub fn apply_2d<T: Clone + Default>(&self, data: &Array2<T>) -> Array2<T> {
+        let n_cols = data.ncols();
+        let valid_indices: Vec<usize> = self
+            .indices
+            .iter()
+            .copied()
+            .filter(|&i| i < data.nrows())
+            .collect();
+        let n_rows = valid_indices.len();
+        if n_rows == 0 || n_cols == 0 {
+            return Array2::default((0, n_cols));
+        }
+        let mut flat = Vec::with_capacity(n_rows * n_cols);
+        for &row_idx in &valid_indices {
+            flat.extend_from_slice(data.row(row_idx).as_slice().unwrap_or(&[]));
+        }
+        // If the row wasn't contiguous, fall back to element-wise copy
+        if flat.len() != n_rows * n_cols {
+            flat.clear();
+            for &row_idx in &valid_indices {
+                for col in 0..n_cols {
+                    flat.push(data[[row_idx, col]].clone());
+                }
+            }
+        }
+        Array2::from_shape_vec((n_rows, n_cols), flat)
+            .unwrap_or_else(|_| Array2::default((0, n_cols)))
+    }
+
+    /// Apply this shard's indices to a 1-D target array.
+    ///
+    /// Returns a new `Array1<T>` containing only the elements at positions
+    /// given by [`Self::indices`], in the same order.
+    ///
+    /// # Panics
+    ///
+    /// Does not panic; indices that exceed the data length are silently skipped.
+    pub fn apply_1d<T: Clone>(&self, data: &Array1<T>) -> Array1<T> {
+        let selected: Vec<T> = self
+            .indices
+            .iter()
+            .copied()
+            .filter(|&i| i < data.len())
+            .map(|i| data[i].clone())
+            .collect();
+        Array1::from_vec(selected)
+    }
+
     /// Number of samples in this shard.
     pub fn len(&self) -> usize {
         self.indices.len()
@@ -123,6 +215,19 @@ impl DataShard {
     pub fn is_empty(&self) -> bool {
         self.indices.is_empty()
     }
+}
+
+/// Simple configuration for the [`DataShard::new`] constructor.
+///
+/// Mirrors the subset of [`ShardingConfig`] parameters relevant to splitting.
+#[derive(Debug, Clone)]
+pub struct ShardConfig {
+    /// Total number of shards to produce.
+    pub n_shards: usize,
+    /// Whether to shuffle indices before partitioning.
+    pub shuffle: bool,
+    /// Optional seed for the shuffling LCG.
+    pub seed: Option<u64>,
 }
 
 /// A sharded view over a dataset.
@@ -414,6 +519,151 @@ impl DatasetShard {
     /// Returns `true` if this shard is empty.
     pub fn is_empty(&self) -> bool {
         self.indices.is_empty()
+    }
+
+    /// Return the subset of `data` corresponding to this shard's indices.
+    ///
+    /// Only indices that are within bounds of `data` are included; out-of-bound
+    /// indices are silently skipped.
+    pub fn apply_f64(&self, data: &[Vec<f64>]) -> Vec<Vec<f64>> {
+        self.indices
+            .iter()
+            .filter(|&&i| i < data.len())
+            .map(|&i| data[i].clone())
+            .collect()
+    }
+
+    /// Return the subset of `labels` corresponding to this shard's indices.
+    ///
+    /// Only indices that are within bounds of `labels` are included; out-of-bound
+    /// indices are silently skipped.
+    pub fn apply_labels(&self, labels: &[usize]) -> Vec<usize> {
+        self.indices
+            .iter()
+            .filter(|&&i| i < labels.len())
+            .map(|&i| labels[i])
+            .collect()
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ShardedLoader — consistent shuffled sharding for distributed training
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A loader that partitions a dataset into consistently shuffled shards for
+/// multi-process or multi-node distributed training.
+///
+/// Given the same `seed`, `total_samples`, and `n_shards`, every call to
+/// [`ShardedLoader::get_shard`] with the same arguments will return the same
+/// `DatasetShard`, making the assignment deterministic and reproducible across
+/// independent processes.
+///
+/// ## Example
+///
+/// ```rust
+/// use scirs2_datasets::ShardedLoader;
+///
+/// let loader = ShardedLoader::new(100, 4, 42);
+/// assert!(loader.verify_coverage());
+///
+/// let shard0 = loader.get_shard(0);
+/// let shard1 = loader.get_shard(1);
+/// // No overlap between shards.
+/// for &i in &shard0.indices {
+///     assert!(!shard1.indices.contains(&i));
+/// }
+/// ```
+#[derive(Debug, Clone)]
+pub struct ShardedLoader {
+    /// Total number of samples in the dataset.
+    pub total_samples: usize,
+    /// Number of shards to partition into.
+    pub n_shards: usize,
+    /// Seed used for the deterministic shuffle.
+    pub seed: u64,
+}
+
+impl ShardedLoader {
+    /// Create a new `ShardedLoader`.
+    ///
+    /// * `total_samples` — number of samples in the full dataset.
+    /// * `n_shards` — number of shards to divide the dataset into.
+    /// * `seed` — seed for the deterministic Fisher-Yates shuffle.
+    pub fn new(total_samples: usize, n_shards: usize, seed: u64) -> Self {
+        Self {
+            total_samples,
+            n_shards,
+            seed,
+        }
+    }
+
+    /// Compute the global shuffled permutation of all sample indices.
+    ///
+    /// Calling this function with the same `seed` always returns the same
+    /// permutation, regardless of which process calls it.
+    pub fn global_permutation(&self) -> Vec<usize> {
+        consistent_shuffle(self.total_samples, self.seed)
+    }
+
+    /// Return shard `shard_id` (0-indexed) from the consistently shuffled
+    /// partition of the dataset.
+    ///
+    /// If `shard_id >= self.n_shards` an empty shard is returned.
+    pub fn get_shard(&self, shard_id: usize) -> DatasetShard {
+        if self.n_shards == 0 || self.total_samples == 0 || shard_id >= self.n_shards {
+            return DatasetShard {
+                shard_id,
+                total_shards: self.n_shards,
+                indices: Vec::new(),
+                data: Vec::new(),
+                labels: Vec::new(),
+            };
+        }
+
+        let permuted = self.global_permutation();
+        let base = self.total_samples / self.n_shards;
+        let remainder = self.total_samples % self.n_shards;
+
+        // Determine start and end offsets for this shard.
+        let mut offset = 0usize;
+        for id in 0..shard_id {
+            let extra = if id < remainder { 1 } else { 0 };
+            offset += base + extra;
+        }
+        let extra = if shard_id < remainder { 1 } else { 0 };
+        let size = base + extra;
+
+        let indices = permuted[offset..offset + size].to_vec();
+
+        DatasetShard {
+            shard_id,
+            total_shards: self.n_shards,
+            indices,
+            data: Vec::new(),
+            labels: Vec::new(),
+        }
+    }
+
+    /// Verify that the union of all shard index sets covers every sample index
+    /// exactly once (no gaps, no duplicates).
+    ///
+    /// Returns `true` when coverage is complete and disjoint.
+    pub fn verify_coverage(&self) -> bool {
+        if self.n_shards == 0 || self.total_samples == 0 {
+            return self.total_samples == 0;
+        }
+
+        let mut seen = vec![false; self.total_samples];
+        for shard_id in 0..self.n_shards {
+            let shard = self.get_shard(shard_id);
+            for &idx in &shard.indices {
+                if idx >= self.total_samples || seen[idx] {
+                    return false;
+                }
+                seen[idx] = true;
+            }
+        }
+        seen.iter().all(|&v| v)
     }
 }
 
@@ -774,5 +1024,111 @@ mod tests {
         let (data, labels) = merge_shards(&[]);
         assert!(data.is_empty());
         assert!(labels.is_empty());
+    }
+
+    // ── ShardedLoader tests ────────────────────────────────────────────────
+
+    /// verify_coverage returns true for 100 samples divided into 4 shards.
+    #[test]
+    fn test_sharded_loader_verify_coverage() {
+        let loader = ShardedLoader::new(100, 4, 42);
+        assert!(
+            loader.verify_coverage(),
+            "all 100 samples should be covered"
+        );
+    }
+
+    /// Shard sizes should differ by at most 1 (balanced sharding).
+    #[test]
+    fn test_sharded_loader_balanced_sizes() {
+        let loader = ShardedLoader::new(101, 4, 7); // 101 not divisible by 4
+        let sizes: Vec<usize> = (0..4).map(|id| loader.get_shard(id).len()).collect();
+        let min_size = *sizes.iter().min().expect("non-empty");
+        let max_size = *sizes.iter().max().expect("non-empty");
+        assert!(
+            max_size - min_size <= 1,
+            "shard sizes differ by more than 1: {sizes:?}"
+        );
+        let total: usize = sizes.iter().sum();
+        assert_eq!(total, 101, "total should equal n_samples");
+    }
+
+    /// Shard 0 and shard 1 indices must be disjoint.
+    #[test]
+    fn test_sharded_loader_disjoint_shards() {
+        let loader = ShardedLoader::new(100, 4, 99);
+        let shard0 = loader.get_shard(0);
+        let shard1 = loader.get_shard(1);
+        for &i in &shard0.indices {
+            assert!(
+                !shard1.indices.contains(&i),
+                "index {i} appears in both shard 0 and shard 1"
+            );
+        }
+    }
+
+    /// Same seed must produce the same permutation on every call.
+    #[test]
+    fn test_sharded_loader_same_seed_same_permutation() {
+        let loader = ShardedLoader::new(100, 4, 12345);
+        let p1 = loader.global_permutation();
+        let p2 = loader.global_permutation();
+        assert_eq!(p1, p2, "same seed should give same permutation");
+
+        let loader2 = ShardedLoader::new(100, 4, 12345);
+        let p3 = loader2.global_permutation();
+        assert_eq!(p1, p3, "independent loader with same seed should match");
+    }
+
+    /// apply_f64 returns the correct number of rows.
+    #[test]
+    fn test_dataset_shard_apply_f64() {
+        let data: Vec<Vec<f64>> = (0..100).map(|i| vec![i as f64, (i * 2) as f64]).collect();
+        let loader = ShardedLoader::new(100, 4, 42);
+        let shard = loader.get_shard(0);
+        let subset = shard.apply_f64(&data);
+        assert_eq!(
+            subset.len(),
+            shard.len(),
+            "apply_f64 should return exactly shard.len() rows"
+        );
+        // Each row in subset should have 2 features.
+        for row in &subset {
+            assert_eq!(row.len(), 2, "each row should have 2 features");
+        }
+    }
+
+    /// apply_labels returns the correct number of labels.
+    #[test]
+    fn test_dataset_shard_apply_labels() {
+        let labels: Vec<usize> = (0..100).map(|i| i % 3).collect();
+        let loader = ShardedLoader::new(100, 4, 42);
+        let shard = loader.get_shard(2);
+        let subset = shard.apply_labels(&labels);
+        assert_eq!(
+            subset.len(),
+            shard.len(),
+            "apply_labels should return exactly shard.len() labels"
+        );
+    }
+
+    /// Verify coverage works for edge case: 1 shard.
+    #[test]
+    fn test_sharded_loader_single_shard_coverage() {
+        let loader = ShardedLoader::new(50, 1, 0);
+        assert!(loader.verify_coverage());
+        let shard = loader.get_shard(0);
+        assert_eq!(shard.len(), 50);
+    }
+
+    /// Out-of-range shard_id returns an empty shard.
+    #[test]
+    fn test_sharded_loader_out_of_range_shard() {
+        let loader = ShardedLoader::new(100, 4, 42);
+        let empty_shard = loader.get_shard(99);
+        assert!(
+            empty_shard.is_empty(),
+            "out-of-range shard_id should give empty shard"
+        );
     }
 }

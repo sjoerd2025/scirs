@@ -33,7 +33,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-neural = "0.4.1"
+//! scirs2-neural = "0.4.2"
 //! ```
 //!
 //! ### Building a Simple Neural Network
@@ -261,7 +261,7 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.4.1**
+//! Current version: **0.4.2**
 
 pub mod activations;
 pub mod activations_minimal;
@@ -293,8 +293,7 @@ pub mod inference;
 // LoRA and adapter layers
 pub mod lora;
 // Neural architecture search (DARTS, GDAS, SNAS)
-// NOTE: NAS module files have truncated source code; disabled until fixed
-// pub mod nas;
+pub mod nas;
 // Speculative decoding
 pub mod speculative;
 // Model tracing and static graph

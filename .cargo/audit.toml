@@ -8,7 +8,11 @@
 # List RUSTSEC IDs to ignore here with a justification comment.
 # Example:
 #   "RUSTSEC-2021-0145"  # atty: not reachable in our binary surfaces
-ignore = []
+ignore = [
+    "RUSTSEC-2024-0436", # paste - unmaintained but widely used, no replacement yet
+    "RUSTSEC-2024-0384", # instant 0.1.13 unmaintained, pulled in by hdf5 0.8.1; no upstream fix available
+    "RUSTSEC-2026-0097", # rand unsoundness with custom logger; SciRS2 does not use custom loggers with rand::rng(), not exploitable in our use case
+]
 
 [output]
 # Set to true to suppress informational output; keep false so CI logs are useful.

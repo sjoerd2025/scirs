@@ -1,12 +1,11 @@
 // Integration tests for scirs2-ndimage + scirs2-vision
 // Tests image processing pipelines, feature detection, and computer vision workflows
 
-use scirs2_core::ndarray::{Array2, Array3};
+use crate::common::*;
+use crate::fixtures::TestDatasets;
 use proptest::prelude::*;
+use scirs2_core::ndarray::{Array2, Array3};
 use scirs2_ndimage::*;
-use scirs2_vision::*;
-use crate::integration::common::*;
-use crate::integration::fixtures::TestDatasets;
 
 type TestResult<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -285,7 +284,7 @@ fn test_image_processing_memory_efficiency() -> TestResult<()> {
             // Verify intermediate results are not all kept in memory
             Ok(())
         },
-        200.0,  // 200 MB max
+        200.0, // 200 MB max
         "Multi-stage image processing pipeline",
     )?;
 
@@ -487,14 +486,11 @@ fn test_vision_pipeline_performance() -> TestResult<()> {
     for size in sizes {
         let image = TestDatasets::test_image_gradient(size);
 
-        let (_result, perf) = measure_time(
-            &format!("Vision pipeline size {}", size),
-            || {
-                // TODO: Run representative vision pipeline
-                // (filtering, feature detection, etc.)
-                Ok(())
-            },
-        )?;
+        let (_result, perf) = measure_time(&format!("Vision pipeline size {}", size), || {
+            // TODO: Run representative vision pipeline
+            // (filtering, feature detection, etc.)
+            Ok(())
+        })?;
 
         println!("  Size {}x{}: {:.3} ms", size, size, perf.duration_ms);
     }

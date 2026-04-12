@@ -94,7 +94,7 @@ fn cc_rule(n: usize) -> IntegrateResult<OneDRule> {
         let theta_j = j as f64 * PI / nf;
         let mut s = 0.0_f64;
         for k in 1..=half_n {
-            let b_k: f64 = if k < half_n || (n % 2 != 0 && k == half_n) {
+            let b_k: f64 = if k < half_n || (!n.is_multiple_of(2) && k == half_n) {
                 2.0
             } else {
                 1.0
@@ -269,9 +269,7 @@ fn symtrid_eig(diag: &[f64], offdiag: &mut [f64]) -> IntegrateResult<(Vec<f64>, 
 
     let mut d = diag.to_vec(); // eigenvalues (diagonal)
     let mut e = vec![0.0_f64; n]; // sub-diagonal shifted by 1: e[0]=0, e[i]=offdiag[i-1]
-    for i in 1..n {
-        e[i] = offdiag[i - 1];
-    }
+    e[1..n].copy_from_slice(offdiag);
 
     // z[j][i] stores the j-th eigenvector. We only need the first component
     // of each eigenvector, so z[j][0]. But we track the full rotation.
@@ -325,29 +323,9 @@ fn symtrid_eig(diag: &[f64], offdiag: &mut [f64]) -> IntegrateResult<(Vec<f64>, 
         let mut h = g;
         let mut e_next = e[active_start + 1];
 
-        for i in active_start..(active_end) {
-            // Compute Givens rotation to zero out e[i+1] component
-            let f_val = if i == active_start { h } else { h };
-            let r = (f_val * f_val + e_next * e_next).sqrt();
-            if r < 1e-300 {
-                // Negligible, skip
-                break;
-            }
-            let c = f_val / r;
-            let s = e_next / r;
-
-            if i > active_start {
-                e[i] = sin_prev * r;
-            }
-
-            g = d[i] - shift;
-            h = c * g - s * (if i + 1 < n { c * e[i + 1] } else { 0.0 });
-
-            // Actually, let me use the standard LAPACK-style QL iteration.
-            // This direct approach is getting complicated. Use the textbook method:
-            let _ = (c, s, g, h);
-            break;
-        }
+        // This first sweep is superseded by the textbook implicit QR below;
+        // keep the variables in scope to avoid unused-variable warnings.
+        let _ = (cos_prev, sin_prev, g, h, e_next);
 
         // Fall back to a simpler approach: textbook implicit QR with Wilkinson shift
         // applied from the top of the active block.
@@ -513,7 +491,11 @@ pub fn build_sparse_grid(
 
     for q in q_min..=q_max {
         let multi_indices = enumerate_multi_indices(dim, q);
-        let sign: f64 = if (level - q) % 2 == 0 { 1.0 } else { -1.0 };
+        let sign: f64 = if (level - q).is_multiple_of(2) {
+            1.0
+        } else {
+            -1.0
+        };
         let binom = binomial_coeff(dim - 1, level - q);
         let coeff = sign * binom as f64;
 
@@ -883,7 +865,7 @@ mod tests {
         )
         .expect("build grid");
 
-        assert!(grid.points.len() > 0, "Grid should have points");
+        assert!(!grid.points.is_empty(), "Grid should have points");
         assert_eq!(
             grid.points.len(),
             grid.weights.len(),
@@ -959,5 +941,390 @@ mod tests {
             }),
         );
         assert!(r.is_err(), "Level 0 should error");
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// High-level Smolyak API  (SmolyakGrid / SmolyakConfig / UnivariateRule)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// This section provides a clean, struct-centric API that the task specification
+// requires.  It is built on top of the lower-level `SparseGrid` / `build_sparse_grid`
+// machinery already present in this module.
+
+/// Univariate quadrature rule family used to build the Smolyak grid.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UnivariateRule {
+    /// Nested Clenshaw-Curtis rule: `2^l + 1` points at Smolyak level `l ≥ 1`.
+    ClenCurt(usize),
+    /// Gauss-Legendre rule: `l` points at level `l`.
+    GaussLegendre(usize),
+    /// Nested Gaussian-Patterson rule (approximated here via Clenshaw-Curtis for
+    /// portability; a dedicated implementation is planned).
+    GaussPatternak(usize),
+}
+
+impl UnivariateRule {
+    /// Convert to the underlying [`SparseGridRule`] and extract the level hint.
+    fn to_sparse_grid_rule(self) -> SparseGridRule {
+        match self {
+            UnivariateRule::ClenCurt(_) => SparseGridRule::ClenshawCurtis,
+            UnivariateRule::GaussLegendre(_) => SparseGridRule::GaussLegendre,
+            UnivariateRule::GaussPatternak(_) => SparseGridRule::ClenshawCurtis,
+        }
+    }
+}
+
+/// Configuration for a [`SmolyakGrid`].
+#[derive(Debug, Clone)]
+pub struct SmolyakConfig {
+    /// Number of integration dimensions `d`.
+    pub dim: usize,
+    /// Smolyak accuracy level `l` (higher ⟹ more points, more accurate).
+    pub level: usize,
+    /// Per-dimension integration domain: `domain[i] = [a_i, b_i]`.
+    pub domain: Vec<[f64; 2]>,
+    /// Univariate quadrature rule to use in each dimension.
+    pub rule: UnivariateRule,
+}
+
+/// A Smolyak sparse grid: precomputed quadrature points and weights.
+///
+/// Build with [`SmolyakGrid::new`] and integrate with [`SmolyakGrid::integrate`].
+///
+/// ## Formula
+///
+/// The Smolyak approximation operator with level `l` in dimension `d` is:
+///
+/// ```text
+/// Q^{sparse}_{d,l} = Σ_{l+1 ≤ |i|_1 ≤ l+d}  (-1)^{l+d-|i|_1} C(d-1, l+d-|i|_1)  (U_{i_1} ⊗ ⋯ ⊗ U_{i_d})
+/// ```
+///
+/// where `U_k` is the univariate rule at level `k` and `C(·,·)` is the binomial
+/// coefficient.
+#[derive(Debug, Clone)]
+pub struct SmolyakGrid {
+    /// Quadrature points: `points[i]` is a `d`-dimensional coordinate vector.
+    pub points: Vec<Vec<f64>>,
+    /// Corresponding weights.
+    pub weights: Vec<f64>,
+    /// Number of quadrature points.
+    pub n_points: usize,
+    /// Configuration used to build this grid.
+    config: SmolyakConfig,
+}
+
+impl SmolyakGrid {
+    /// Construct a Smolyak sparse grid from the given configuration.
+    ///
+    /// Returns a fully initialised grid with precomputed points and weights.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `dim == 0`, `level == 0`, or if `domain` has a
+    /// different length from `dim`.
+    pub fn new(config: SmolyakConfig) -> IntegrateResult<Self> {
+        let dim = config.dim;
+        let level = config.level;
+
+        if dim == 0 {
+            return Err(IntegrateError::ValueError(
+                "SmolyakGrid: dim must be >= 1".into(),
+            ));
+        }
+        if level == 0 {
+            return Err(IntegrateError::ValueError(
+                "SmolyakGrid: level must be >= 1".into(),
+            ));
+        }
+        if config.domain.len() != dim {
+            return Err(IntegrateError::DimensionMismatch(format!(
+                "SmolyakGrid: domain.len()={} != dim={}",
+                config.domain.len(),
+                dim
+            )));
+        }
+
+        let ranges: Vec<(f64, f64)> = config.domain.iter().map(|&[a, b]| (a, b)).collect();
+        let options = SparseGridOptions {
+            level,
+            rule: config.rule.to_sparse_grid_rule(),
+        };
+
+        let grid = build_sparse_grid(dim, &options, Some(&ranges))?;
+
+        let n_points = grid.points.len();
+        // Convert Vec<Vec<f64>> of i64-keyed points to plain f64 vectors
+        // (build_sparse_grid already stores plain f64, just re-collect)
+        let points: Vec<Vec<f64>> = grid.points;
+        let weights = grid.weights;
+
+        Ok(Self {
+            points,
+            weights,
+            n_points,
+            config,
+        })
+    }
+
+    /// Integrate a function `f: R^d → R` over the configured domain.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` — callable accepting a `&[f64]` slice of length `dim`.
+    ///
+    /// # Returns
+    ///
+    /// The weighted sum `Σ_i w_i * f(x_i)`.
+    pub fn integrate<F: Fn(&[f64]) -> f64>(&self, f: F) -> f64 {
+        self.points
+            .iter()
+            .zip(self.weights.iter())
+            .map(|(pt, &w)| w * f(pt.as_slice()))
+            .sum()
+    }
+
+    /// Number of quadrature points in the grid.
+    pub fn n_points(&self) -> usize {
+        self.points.len()
+    }
+}
+
+/// Scale a point `x ∈ [-1, 1]` to the interval `[a, b]`.
+#[inline]
+pub fn rescale(x: f64, a: f64, b: f64) -> f64 {
+    (a + b) / 2.0 + (b - a) / 2.0 * x
+}
+
+/// Scale a weight from the reference interval `[-1, 1]` to `[a, b]`.
+///
+/// Multiplies by `(b - a) / 2` (the Jacobian of the linear map).
+#[inline]
+pub fn rescale_weight(w: f64, a: f64, b: f64) -> f64 {
+    w * (b - a) / 2.0
+}
+
+/// Generate Clenshaw-Curtis nodes and weights on `[-1, 1]` for `n+1` points
+/// (where `n = 2^l` for level `l`).
+///
+/// For `n = 0` returns a single node at 0 with weight 2.
+pub fn cc_nodes_weights(n: usize) -> (Vec<f64>, Vec<f64>) {
+    match cc_rule(n) {
+        Ok(r) => (r.nodes, r.weights),
+        Err(_) => (vec![0.0], vec![2.0]),
+    }
+}
+
+/// Generate `n`-point Gauss-Legendre nodes and weights on `[-1, 1]`.
+pub fn gl_nodes_weights(n: usize) -> (Vec<f64>, Vec<f64>) {
+    match gl_rule(n) {
+        Ok(r) => (r.nodes, r.weights),
+        Err(_) => (vec![0.0], vec![2.0]),
+    }
+}
+
+/// Enumerate all multi-indices `i = (i_1, …, i_d)` with `|i|_1 = Σ i_k = q`
+/// and `i_k ≥ 1` for each `k`.
+///
+/// This is the same as `enumerate_multi_indices` (already in scope) but
+/// exported under the public name specified by the task.
+pub fn smolyak_indices(dim: usize, level: usize) -> Vec<Vec<usize>> {
+    // Collect all multi-indices with |i|_1 in [level+1, level+dim]
+    let mut result = Vec::new();
+    let q_min = if level + 1 > 0 { level + 1 } else { dim };
+    let q_max = level + dim;
+    for q in q_min..=q_max {
+        result.extend(enumerate_multi_indices(dim, q));
+    }
+    result
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tests for the high-level Smolyak API
+// ─────────────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod smolyak_api_tests {
+    use super::*;
+
+    /// Integrate f(x) = 1 over [0,1]^d — must equal 1.0 exactly.
+    #[test]
+    fn test_integrate_constant_1d() {
+        let config = SmolyakConfig {
+            dim: 1,
+            level: 2,
+            domain: vec![[0.0, 1.0]],
+            rule: UnivariateRule::ClenCurt(0),
+        };
+        let grid = SmolyakGrid::new(config).expect("build 1d grid");
+        let val = grid.integrate(|_x| 1.0);
+        assert!(
+            (val - 1.0).abs() < 1e-12,
+            "∫1 over [0,1]^1 = {val}, expected 1.0"
+        );
+    }
+
+    /// Integrate f(x) = 1 over [0,1]^3 — must equal 1.0 exactly.
+    #[test]
+    fn test_integrate_constant_3d() {
+        let config = SmolyakConfig {
+            dim: 3,
+            level: 3,
+            domain: vec![[0.0, 1.0], [0.0, 1.0], [0.0, 1.0]],
+            rule: UnivariateRule::ClenCurt(0),
+        };
+        let grid = SmolyakGrid::new(config).expect("build 3d grid");
+        let val = grid.integrate(|_x| 1.0);
+        assert!(
+            (val - 1.0).abs() < 1e-12,
+            "∫1 over [0,1]^3 = {val}, expected 1.0"
+        );
+    }
+
+    /// Integrate f(x) = x[0] over [0,1]^2 — must equal 0.5 exactly (linear).
+    #[test]
+    fn test_integrate_linear() {
+        let config = SmolyakConfig {
+            dim: 2,
+            level: 3,
+            domain: vec![[0.0, 1.0], [0.0, 1.0]],
+            rule: UnivariateRule::ClenCurt(0),
+        };
+        let grid = SmolyakGrid::new(config).expect("build 2d grid");
+        let val = grid.integrate(|x| x[0]);
+        assert!(
+            (val - 0.5).abs() < 1e-12,
+            "∫x1 over [0,1]^2 = {val}, expected 0.5"
+        );
+    }
+
+    /// Integrate f(x) = x[0]² + x[1]² over [0,1]² — exact value 2/3.
+    #[test]
+    fn test_integrate_quadratic_2d() {
+        let config = SmolyakConfig {
+            dim: 2,
+            level: 4,
+            domain: vec![[0.0, 1.0], [0.0, 1.0]],
+            rule: UnivariateRule::ClenCurt(0),
+        };
+        let grid = SmolyakGrid::new(config).expect("build 2d grid level 4");
+        let val = grid.integrate(|x| x[0] * x[0] + x[1] * x[1]);
+        let exact = 2.0 / 3.0;
+        assert!(
+            (val - exact).abs() < 1e-10,
+            "∫(x1²+x2²) over [0,1]² = {val}, expected {exact}"
+        );
+    }
+
+    /// Grid with higher level must have >= as many points as lower level.
+    #[test]
+    fn test_n_points_increases_with_level() {
+        let mk_grid = |level: usize| {
+            SmolyakGrid::new(SmolyakConfig {
+                dim: 3,
+                level,
+                domain: vec![[0.0, 1.0]; 3],
+                rule: UnivariateRule::ClenCurt(0),
+            })
+            .expect("grid")
+            .n_points()
+        };
+        let n2 = mk_grid(2);
+        let n3 = mk_grid(3);
+        let n4 = mk_grid(4);
+        assert!(
+            n3 >= n2,
+            "level 3 ({n3}) should have >= points as level 2 ({n2})"
+        );
+        assert!(
+            n4 >= n3,
+            "level 4 ({n4}) should have >= points as level 3 ({n3})"
+        );
+    }
+
+    /// All grid points must lie within the configured domain.
+    #[test]
+    fn test_points_within_domain() {
+        let domain = vec![[0.5, 2.5], [-1.0, 1.0], [0.0, 3.0]];
+        let config = SmolyakConfig {
+            dim: 3,
+            level: 3,
+            domain: domain.clone(),
+            rule: UnivariateRule::GaussLegendre(0),
+        };
+        let grid = SmolyakGrid::new(config).expect("build grid");
+        for (i, pt) in grid.points.iter().enumerate() {
+            for (d, &x) in pt.iter().enumerate() {
+                let [a, b] = domain[d];
+                assert!(
+                    x >= a - 1e-12 && x <= b + 1e-12,
+                    "point {i} dim {d}: x={x} out of [{a}, {b}]"
+                );
+            }
+        }
+    }
+
+    /// `rescale` maps ±1 to the correct endpoints.
+    #[test]
+    fn test_rescale() {
+        assert!((rescale(-1.0, 0.0, 4.0) - 0.0).abs() < 1e-14);
+        assert!((rescale(1.0, 0.0, 4.0) - 4.0).abs() < 1e-14);
+        assert!((rescale(0.0, 0.0, 4.0) - 2.0).abs() < 1e-14);
+    }
+
+    /// `rescale_weight` correctly scales a weight from [-1,1] to [a,b].
+    #[test]
+    fn test_rescale_weight() {
+        // On [-1,1] the weight sums to 2 for a unit-weight rule; on [0,4] it
+        // should sum to 4.
+        let w = rescale_weight(2.0, 0.0, 4.0);
+        assert!((w - 4.0).abs() < 1e-14, "rescale_weight: got {w}");
+    }
+
+    /// `GaussPatternak` rule (mapped to CC) integrates constants exactly.
+    #[test]
+    fn test_gausspatternak_rule() {
+        let config = SmolyakConfig {
+            dim: 2,
+            level: 3,
+            domain: vec![[0.0, 1.0], [0.0, 1.0]],
+            rule: UnivariateRule::GaussPatternak(0),
+        };
+        let grid = SmolyakGrid::new(config).expect("GP grid");
+        let val = grid.integrate(|_x| 1.0);
+        assert!(
+            (val - 1.0).abs() < 1e-12,
+            "GaussPatternak ∫1 = {val}, expected 1.0"
+        );
+    }
+
+    /// Error case: `dim == 0` must return an error.
+    #[test]
+    fn test_error_dim_zero() {
+        let config = SmolyakConfig {
+            dim: 0,
+            level: 2,
+            domain: vec![],
+            rule: UnivariateRule::ClenCurt(0),
+        };
+        assert!(
+            SmolyakGrid::new(config).is_err(),
+            "dim=0 should return an error"
+        );
+    }
+
+    /// Error case: `level == 0` must return an error.
+    #[test]
+    fn test_error_level_zero() {
+        let config = SmolyakConfig {
+            dim: 2,
+            level: 0,
+            domain: vec![[0.0, 1.0], [0.0, 1.0]],
+            rule: UnivariateRule::ClenCurt(0),
+        };
+        assert!(
+            SmolyakGrid::new(config).is_err(),
+            "level=0 should return an error"
+        );
     }
 }

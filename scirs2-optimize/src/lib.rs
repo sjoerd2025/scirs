@@ -43,7 +43,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-optimize = "0.4.1"
+//! scirs2-optimize = "0.4.2"
 //! ```
 //!
 //! ### Unconstrained Minimization (Rosenbrock Function)
@@ -451,6 +451,8 @@ pub mod distributed_admm;
 pub mod dro;
 // Hardware-aware NAS
 pub mod hardware_nas;
+// Neural Architecture Search (random, evolutionary, differentiable, AutoML)
+pub mod nas;
 // High-dimensional optimization (randomized SVD, stochastic coordinate)
 pub mod high_dimensional;
 // Integer programming (knapsack, CDCL, column generation, lattice, lift-project)
@@ -467,6 +469,7 @@ pub mod second_order;
 pub mod sketched;
 // Subspace embedding
 pub mod subspace_embed;
+pub mod subspace_embedding;
 
 // Common optimization result structure
 pub mod result;

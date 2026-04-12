@@ -1,8 +1,8 @@
 //! Multidimensional cubature: Monte Carlo, Quasi-Monte Carlo (Sobol),
 //! product Gauss-Legendre, Genz-Malik adaptive rule, and Romberg 1D.
 
-use crate::error::{IntegrateError, IntegrateResult};
 use super::gaussian::gauss_legendre;
+use crate::error::{IntegrateError, IntegrateResult};
 use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
@@ -308,7 +308,7 @@ where
     F: Fn(&[f64]) -> f64,
 {
     let dim = bounds.len();
-    if dim < 2 || dim > 7 {
+    if !(2..=7).contains(&dim) {
         return Err(IntegrateError::ValueError(
             "genz_malik: dim must be between 2 and 7".to_string(),
         ));
@@ -420,7 +420,13 @@ impl Default for GmRegion {
 
 impl GmRegion {
     fn new(centers: Vec<f64>, halfs: Vec<f64>, volume: f64) -> Self {
-        Self { centers, halfs, volume, integral: 0.0, error: 0.0 }
+        Self {
+            centers,
+            halfs,
+            volume,
+            integral: 0.0,
+            error: 0.0,
+        }
     }
 }
 
@@ -527,9 +533,7 @@ where
             *n_eval += 1;
         }
         // Reset point
-        for d in 0..dim {
-            point[d] = c[d];
-        }
+        point[..dim].copy_from_slice(&c[..dim]);
     }
 
     let vol = region.volume;
@@ -672,7 +676,9 @@ struct LcgRng {
 
 impl LcgRng {
     fn new(seed: u64) -> Self {
-        Self { state: seed.wrapping_add(1) }
+        Self {
+            state: seed.wrapping_add(1),
+        }
     }
 
     fn next_u64(&mut self) -> u64 {
@@ -723,7 +729,13 @@ impl SobolSeq {
             })
             .collect();
         let x = vec![0u32; dim];
-        Self { dim, v, x, scramble, count: 0 }
+        Self {
+            dim,
+            v,
+            x,
+            scramble,
+            count: 0,
+        }
     }
 
     fn next_point(&mut self) -> Vec<f64> {
@@ -755,7 +767,9 @@ fn sobol_direction_numbers(dim: usize) -> Vec<Vec<u32>> {
     // for dimensions 1..21 (dimension 0 is trivial).
     // Source: Joe & Kuo, "Constructing Sobol sequences with better
     // two-dimensional projections", SIAM J. Sci. Comput. 30(5), 2008.
-    let poly_s: [u32; 21] = [1, 1, 2, 3, 3, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7];
+    let poly_s: [u32; 21] = [
+        1, 1, 2, 3, 3, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7,
+    ];
     let m_init: [&[u32]; 21] = [
         &[1],
         &[1, 1],
@@ -806,7 +820,11 @@ fn sobol_direction_numbers(dim: usize) -> Vec<Vec<u32>> {
                 // Apply intermediate terms
                 for k in 1..s {
                     // Check bit k-1 of the polynomial representation
-                    let poly_coeff = if k < 32 { (poly_s[idx] >> (k - 1)) & 1 } else { 0 };
+                    let poly_coeff = if k < 32 {
+                        (poly_s[idx] >> (k - 1)) & 1
+                    } else {
+                        0
+                    };
                     if poly_coeff == 1 {
                         new_v ^= v[i - k];
                     }
@@ -835,19 +853,21 @@ mod tests {
     #[test]
     fn test_monte_carlo_2d_sum() {
         // ∫_0^1 ∫_0^1 (x+y) dx dy = 1.0
-        let (est, err) =
-            monte_carlo(|xy: &[f64]| xy[0] + xy[1], &[(0.0, 1.0), (0.0, 1.0)], 500_000, 12345)
-                .expect("monte_carlo should succeed");
-        assert!(
-            (est - 1.0).abs() < 0.01,
-            "est={est} std_error={err}"
-        );
+        let (est, err) = monte_carlo(
+            |xy: &[f64]| xy[0] + xy[1],
+            &[(0.0, 1.0), (0.0, 1.0)],
+            500_000,
+            12345,
+        )
+        .expect("monte_carlo should succeed");
+        assert!((est - 1.0).abs() < 0.01, "est={est} std_error={err}");
     }
 
     #[test]
     fn test_monte_carlo_1d_x_squared() {
         // ∫_0^1 x² dx = 1/3
-        let (est, _) = monte_carlo(|x: &[f64]| x[0] * x[0], &[(0.0, 1.0)], 1_000_000, 99).expect("monte_carlo should succeed");
+        let (est, _) = monte_carlo(|x: &[f64]| x[0] * x[0], &[(0.0, 1.0)], 1_000_000, 99)
+            .expect("monte_carlo should succeed");
         assert!((est - 1.0 / 3.0).abs() < 0.005, "est={est}");
     }
 
@@ -862,12 +882,9 @@ mod tests {
     #[test]
     fn test_qmc_2d_sum() {
         // ∫_0^1 ∫_0^1 (x+y) dx dy = 1.0
-        let (est, _) = quasi_monte_carlo(
-            |xy: &[f64]| xy[0] + xy[1],
-            &[(0.0, 1.0), (0.0, 1.0)],
-            4096,
-        )
-        .expect("quasi_monte_carlo should succeed");
+        let (est, _) =
+            quasi_monte_carlo(|xy: &[f64]| xy[0] + xy[1], &[(0.0, 1.0), (0.0, 1.0)], 4096)
+                .expect("quasi_monte_carlo should succeed");
         assert!((est - 1.0).abs() < 0.01, "est={est}");
     }
 
@@ -889,8 +906,8 @@ mod tests {
     #[test]
     fn test_product_gauss_xy() {
         // ∫_0^1 ∫_0^1 x*y dx dy = 1/4
-        let result =
-            product_gauss(|xy: &[f64]| xy[0] * xy[1], &[(0.0, 1.0), (0.0, 1.0)], 5).expect("product_gauss should succeed");
+        let result = product_gauss(|xy: &[f64]| xy[0] * xy[1], &[(0.0, 1.0), (0.0, 1.0)], 5)
+            .expect("product_gauss should succeed");
         assert!((result - 0.25).abs() < 1e-12, "result={result}");
     }
 
@@ -956,14 +973,7 @@ mod tests {
     #[test]
     fn test_genz_malik_invalid_dim() {
         assert!(genz_malik(|_: &[f64]| 1.0, &[(0.0, 1.0)], 1e-6, 1e-6, 1000).is_err());
-        assert!(genz_malik(
-            |_: &[f64]| 1.0,
-            &[(0.0, 1.0); 8],
-            1e-6,
-            1e-6,
-            1000
-        )
-        .is_err());
+        assert!(genz_malik(|_: &[f64]| 1.0, &[(0.0, 1.0); 8], 1e-6, 1e-6, 1000).is_err());
     }
 
     // ---- Romberg -----------------------------------------------------------
@@ -971,7 +981,8 @@ mod tests {
     #[test]
     fn test_romberg_polynomial_exact() {
         // ∫_0^1 x^5 dx = 1/6
-        let result = romberg(|x: f64| x.powi(5), 0.0, 1.0, 12, 1e-12).expect("romberg should succeed");
+        let result =
+            romberg(|x: f64| x.powi(5), 0.0, 1.0, 12, 1e-12).expect("romberg should succeed");
         assert!((result - 1.0 / 6.0).abs() < 1e-12, "result={result}");
     }
 
@@ -985,7 +996,8 @@ mod tests {
     #[test]
     fn test_romberg_exp() {
         // ∫_0^1 e^x dx = e-1
-        let result = romberg(|x: f64| x.exp(), 0.0, 1.0, 10, 1e-12).expect("romberg should succeed");
+        let result =
+            romberg(|x: f64| x.exp(), 0.0, 1.0, 10, 1e-12).expect("romberg should succeed");
         assert!(
             (result - (std::f64::consts::E - 1.0)).abs() < 1e-12,
             "result={result}"

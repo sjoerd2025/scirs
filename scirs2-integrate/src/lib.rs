@@ -50,7 +50,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-integrate = "0.4.1"
+//! scirs2-integrate = "0.4.2"
 //! ```
 
 //!
@@ -232,7 +232,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.4.1
+//! - **Version**: 0.4.2
 //! - **Release Date**: March 27, 2026
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-integrate](https://docs.rs/scirs2-integrate)
@@ -315,11 +315,15 @@ pub mod dde;
 
 // ODE module is now fully implemented in ode/
 
+pub mod gpu_lbm;
+pub mod gpu_ode_ensemble;
 pub mod qmc;
 pub mod quad;
 pub mod quad_vec;
+pub mod quadrature;
 pub mod romberg;
 pub mod scheduling;
+pub mod sde;
 pub mod sparse_grid;
 pub mod tanhsinh;
 pub mod utils;
@@ -650,6 +654,12 @@ pub use ode::methods::symplectic::{
     Yoshida4, Yoshida6, Yoshida8,
 };
 // Export enhanced event detection
+pub use gpu_lbm::{
+    BoundaryCondition as LbmBoundaryCondition, GpuLbm2D, GpuLbmDispatch, LbmConfig, LbmState,
+};
+pub use gpu_ode_ensemble::{
+    EnsembleDispatch, EnsembleMember, EnsembleResult, OdeEnsemble, OdeEnsembleConfig,
+};
 pub use ode::events::{
     CrossingDirection, DetectedEvent, EventDef, EventDetector, EventResponse, RootFindingMethod,
 };
@@ -660,6 +670,10 @@ pub use pde::implicit::{
 pub use qmc::{qmc_quad, qmc_quad_parallel, Faure, Halton, QMCQuadResult, RandomGenerator, Sobol};
 pub use quad::{quad, simpson, trapezoid};
 pub use quad_vec::{quad_vec, NormType, QuadRule, QuadVecOptions, QuadVecResult};
+pub use quadrature::sparse_grid::{SmolyakConfig, SmolyakGrid, UnivariateRule};
+pub use sde::particle_filter::{
+    particle_filter_uniform_init, ParticleFilter, ParticleFilterConfig, ResamplingStrategy,
+};
 pub use sparse_grid::{
     sparse_grid_quad, SparseGridOptions, SparseGridResult, SparseGridRuleFamily,
 };

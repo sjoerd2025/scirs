@@ -70,7 +70,7 @@
 - [x] CSR SpMV on GPU via compute shaders (OxiFFT GPU backend model) — Implemented in v0.4.0 (`gpu/spmv.rs`)
 - [x] GPU-accelerated COO/CSR construction from triplets — Implemented in v0.4.0 (`gpu/construction.rs`)
 - [x] GPU BiCGSTAB and CG solvers — Implemented in v0.4.0 (`gpu/solvers.rs`)
-- [ ] Mixed CPU/GPU preconditioning (ILU on CPU, SpMV on GPU)
+- [x] Mixed CPU/GPU preconditioning (ILU on CPU, SpMV on GPU) — Implemented in v0.4.2 (`gpu_preconditioner.rs`)
 
 ### Distributed Sparse Solvers
 - [x] Distributed CSR with row-based partitioning — Implemented in v0.4.0 (`distributed/csr.rs`, `distributed/partition.rs`)

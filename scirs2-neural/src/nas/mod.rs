@@ -17,6 +17,8 @@ pub mod progressive_search;
 pub mod search_algorithms;
 pub mod search_space;
 pub mod snas;
+use crate::error::Result;
+use crate::models::sequential::Sequential;
 pub use architecture_encoding::{ArchitectureEncoding, GraphEncoding, SequentialEncoding};
 pub use controller::{ControllerConfig, NASController};
 pub use enas::{ENASController, ENASTrainer, SuperNetwork};
@@ -31,15 +33,13 @@ pub use performance_estimation::{
     SuperNetEstimator, ZeroCostEstimator,
 };
 pub use progressive_search::{ProgressiveConfig, ProgressiveSearch};
+use scirs2_core::ndarray::prelude::*;
+use scirs2_core::ndarray::ArrayView1;
 pub use search_algorithms::{
     BayesianOptimization, DifferentiableSearch, EvolutionarySearch, RandomSearch,
     ReinforcementSearch, SearchAlgorithm,
 };
 pub use search_space::{SearchSpace, SearchSpaceConfig};
-use crate::error::Result;
-use crate::models::sequential::Sequential;
-use scirs2_core::ndarray::prelude::*;
-use scirs2_core::ndarray::ArrayView1;
 use std::sync::Arc;
 
 /// Configuration for Neural Architecture Search
@@ -187,13 +187,13 @@ impl NeuralArchitectureSearch {
                         })?;
 
                 let is_better = if self.config.minimize {
-                    current_metric < best_metric
+                    *current_metric < best_metric
                 } else {
-                    current_metric > best_metric
+                    *current_metric > best_metric
                 };
 
                 if is_better {
-                    best_metric = current_metric;
+                    best_metric = *current_metric;
                     self.best_architecture = Some(result.architecture.clone());
                     no_improvement_count = 0;
                 } else {
@@ -216,7 +216,7 @@ impl NeuralArchitectureSearch {
 
     /// Evaluate a single architecture
     fn evaluate_architecture(
-        &self,
+        &mut self,
         architecture: Arc<dyn ArchitectureEncoding>,
         train_data: &ArrayView2<f32>,
         train_labels: &ArrayView1<usize>,
@@ -294,7 +294,7 @@ impl NeuralArchitectureSearch {
         }
         if let Some(best) = &self.best_architecture {
             writeln!(file, "## Best Architecture")?;
-            writeln!(file, "{}", best.to_string())?;
+            writeln!(file, "{}", best)?;
         }
         Ok(())
     }

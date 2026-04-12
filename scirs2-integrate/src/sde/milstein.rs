@@ -149,8 +149,16 @@ where
         let em_increment = drift * dt_actual + g_curr.dot(&dw);
 
         // Milstein correction: (1/2) Σ_j [g_j(·) ∂g/∂x]·e_j * ((ΔW_j)^2 - dt)
-        let milstein_corr =
-            compute_milstein_correction(t, &x, &g_curr, &dw, dt_actual, n_state, m, &prob.g_diffusion)?;
+        let milstein_corr = compute_milstein_correction(
+            t,
+            &x,
+            &g_curr,
+            &dw,
+            dt_actual,
+            n_state,
+            m,
+            &prob.g_diffusion,
+        )?;
 
         x = x + em_increment + milstein_corr;
         t += dt_actual;
@@ -358,7 +366,11 @@ mod tests {
     use scirs2_core::ndarray::{array, Array2};
     use scirs2_core::random::prelude::seeded_rng;
 
-    fn make_gbm(mu: f64, sigma: f64, s0: f64) -> SdeProblem<
+    fn make_gbm(
+        mu: f64,
+        sigma: f64,
+        s0: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {
@@ -451,9 +463,15 @@ mod tests {
         // Override with bad t_span manually by creating a bad problem
         let x0 = array![1.0_f64];
         let bad_prob = SdeProblem::new(
-            x0, [1.0, 0.0], 1,
+            x0,
+            [1.0, 0.0],
+            1,
             |_t, x| array![0.05 * x[0]],
-            |_t, x| { let mut g = Array2::zeros((1, 1)); g[[0,0]] = 0.2 * x[0]; g },
+            |_t, x| {
+                let mut g = Array2::zeros((1, 1));
+                g[[0, 0]] = 0.2 * x[0];
+                g
+            },
         );
         let mut rng = seeded_rng(0);
         assert!(milstein(&bad_prob, 0.01, &mut rng).is_err());

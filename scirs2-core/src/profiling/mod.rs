@@ -78,11 +78,15 @@ pub mod perf_integration;
 pub mod prometheus_metrics;
 pub mod tracing_framework;
 
+// v0.4.2 Tracy profiler integration (feature-gated: enable with `tracy` feature)
+pub mod tracy;
+
 // Re-exports for backward compatibility and convenient access
 pub use entries::{MemoryEntry, TimingEntry};
 pub use memory::{profiling_memory_tracker, MemoryTracker};
 pub use profiler::Profiler;
 pub use timer::Timer;
+pub use tracy::{TracyClient, TracySpan};
 
 // Advanced profiling re-exports
 pub use advanced::{

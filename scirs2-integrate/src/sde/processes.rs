@@ -14,9 +14,9 @@
 //! | [`HestonModel`] | Coupled SDEs | Stochastic volatility |
 
 use crate::error::{IntegrateError, IntegrateResult};
-use crate::sde::{SdeProblem, SdeSolution};
 use crate::sde::euler_maruyama::euler_maruyama;
 use crate::sde::milstein::scalar_milstein;
+use crate::sde::{SdeProblem, SdeSolution};
 use scirs2_core::ndarray::{array, Array1, Array2};
 use scirs2_core::random::prelude::*;
 use scirs2_core::random::{Distribution, Normal};
@@ -50,8 +50,8 @@ impl BrownianMotion {
                 "dt must be > 0, got {dt}"
             )));
         }
-        let normal = Normal::new(0.0, dt.sqrt())
-            .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+        let normal =
+            Normal::new(0.0, dt.sqrt()).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
         let mut path = Vec::with_capacity(n_steps + 1);
         path.push(0.0);
         let mut w = 0.0;
@@ -156,7 +156,8 @@ impl GeometricBrownianMotion {
     ) -> IntegrateResult<Vec<(f64, f64)>> {
         if t_span.0 >= t_span.1 {
             return Err(IntegrateError::InvalidInput(format!(
-                "t_span must satisfy t0 < t1, got {:?}", t_span
+                "t_span must satisfy t0 < t1, got {:?}",
+                t_span
             )));
         }
         let mu = self.mu;
@@ -169,7 +170,11 @@ impl GeometricBrownianMotion {
             dt,
             rng,
         )?;
-        Ok(sol.t.into_iter().zip(sol.x.into_iter().map(|x| x[0])).collect())
+        Ok(sol
+            .t
+            .into_iter()
+            .zip(sol.x.into_iter().map(|x| x[0]))
+            .collect())
     }
 
     /// Simulate using the exact analytical formula.
@@ -185,7 +190,8 @@ impl GeometricBrownianMotion {
     ) -> IntegrateResult<Vec<(f64, f64)>> {
         if t_span.0 >= t_span.1 {
             return Err(IntegrateError::InvalidInput(format!(
-                "t_span must satisfy t0 < t1, got {:?}", t_span
+                "t_span must satisfy t0 < t1, got {:?}",
+                t_span
             )));
         }
         if n_steps == 0 {
@@ -255,7 +261,12 @@ impl OrnsteinUhlenbeck {
                 "OU sigma must be > 0, got {sigma}"
             )));
         }
-        Ok(Self { theta, mu, sigma, x0 })
+        Ok(Self {
+            theta,
+            mu,
+            sigma,
+            x0,
+        })
     }
 
     /// Simulate using Euler-Maruyama.
@@ -267,7 +278,8 @@ impl OrnsteinUhlenbeck {
     ) -> IntegrateResult<Vec<(f64, f64)>> {
         if t_span.0 >= t_span.1 {
             return Err(IntegrateError::InvalidInput(format!(
-                "t_span must satisfy t0 < t1, got {:?}", t_span
+                "t_span must satisfy t0 < t1, got {:?}",
+                t_span
             )));
         }
         let theta = self.theta;
@@ -286,7 +298,11 @@ impl OrnsteinUhlenbeck {
             },
         );
         let sol = euler_maruyama(&prob, dt, rng)?;
-        Ok(sol.t.into_iter().zip(sol.x.into_iter().map(|x| x[0])).collect())
+        Ok(sol
+            .t
+            .into_iter()
+            .zip(sol.x.into_iter().map(|x| x[0]))
+            .collect())
     }
 
     /// Simulate using the exact conditional distribution.
@@ -303,7 +319,8 @@ impl OrnsteinUhlenbeck {
     ) -> IntegrateResult<Vec<(f64, f64)>> {
         if t_span.0 >= t_span.1 {
             return Err(IntegrateError::InvalidInput(format!(
-                "t_span must satisfy t0 < t1, got {:?}", t_span
+                "t_span must satisfy t0 < t1, got {:?}",
+                t_span
             )));
         }
         if n_steps == 0 {
@@ -315,8 +332,8 @@ impl OrnsteinUhlenbeck {
         let exp_neg = (-self.theta * dt).exp();
         let var_incr = self.sigma * self.sigma * (1.0 - exp_neg * exp_neg) / (2.0 * self.theta);
         let std_incr = var_incr.sqrt();
-        let normal = Normal::new(0.0, std_incr)
-            .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+        let normal =
+            Normal::new(0.0, std_incr).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
 
         let mut path = Vec::with_capacity(n_steps + 1);
         path.push((t_span.0, self.x0));
@@ -391,7 +408,12 @@ impl CoxIngersollRoss {
                 "CIR r0 must be >= 0, got {r0}"
             )));
         }
-        Ok(Self { kappa, theta, sigma, r0 })
+        Ok(Self {
+            kappa,
+            theta,
+            sigma,
+            r0,
+        })
     }
 
     /// Whether the Feller condition `2κθ ≥ σ²` holds (guarantees positivity).
@@ -410,7 +432,8 @@ impl CoxIngersollRoss {
     ) -> IntegrateResult<Vec<(f64, f64)>> {
         if t_span.0 >= t_span.1 {
             return Err(IntegrateError::InvalidInput(format!(
-                "t_span must satisfy t0 < t1, got {:?}", t_span
+                "t_span must satisfy t0 < t1, got {:?}",
+                t_span
             )));
         }
         if dt <= 0.0 {
@@ -421,8 +444,8 @@ impl CoxIngersollRoss {
         let kappa = self.kappa;
         let theta = self.theta;
         let sigma = self.sigma;
-        let normal = Normal::new(0.0, 1.0)
-            .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+        let normal =
+            Normal::new(0.0, 1.0).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
         let sqrt_dt = dt.sqrt();
         let n_steps = ((t_span.1 - t_span.0) / dt).ceil() as usize;
 
@@ -490,26 +513,54 @@ pub struct HestonModel {
 
 impl HestonModel {
     /// Create a new Heston model with validation.
-    pub fn new(kappa: f64, theta: f64, sigma: f64, rho: f64, v0: f64, mu: f64, s0: f64) -> IntegrateResult<Self> {
+    pub fn new(
+        kappa: f64,
+        theta: f64,
+        sigma: f64,
+        rho: f64,
+        v0: f64,
+        mu: f64,
+        s0: f64,
+    ) -> IntegrateResult<Self> {
         if kappa <= 0.0 {
-            return Err(IntegrateError::InvalidInput(format!("Heston kappa must be > 0, got {kappa}")));
+            return Err(IntegrateError::InvalidInput(format!(
+                "Heston kappa must be > 0, got {kappa}"
+            )));
         }
         if theta <= 0.0 {
-            return Err(IntegrateError::InvalidInput(format!("Heston theta must be > 0, got {theta}")));
+            return Err(IntegrateError::InvalidInput(format!(
+                "Heston theta must be > 0, got {theta}"
+            )));
         }
         if sigma <= 0.0 {
-            return Err(IntegrateError::InvalidInput(format!("Heston sigma must be > 0, got {sigma}")));
+            return Err(IntegrateError::InvalidInput(format!(
+                "Heston sigma must be > 0, got {sigma}"
+            )));
         }
         if rho.abs() >= 1.0 {
-            return Err(IntegrateError::InvalidInput(format!("Heston rho must satisfy |ρ| < 1, got {rho}")));
+            return Err(IntegrateError::InvalidInput(format!(
+                "Heston rho must satisfy |ρ| < 1, got {rho}"
+            )));
         }
         if v0 < 0.0 {
-            return Err(IntegrateError::InvalidInput(format!("Heston v0 must be >= 0, got {v0}")));
+            return Err(IntegrateError::InvalidInput(format!(
+                "Heston v0 must be >= 0, got {v0}"
+            )));
         }
         if s0 <= 0.0 {
-            return Err(IntegrateError::InvalidInput(format!("Heston s0 must be > 0, got {s0}")));
+            return Err(IntegrateError::InvalidInput(format!(
+                "Heston s0 must be > 0, got {s0}"
+            )));
         }
-        Ok(Self { kappa, theta, sigma, rho, v0, mu, s0 })
+        Ok(Self {
+            kappa,
+            theta,
+            sigma,
+            rho,
+            v0,
+            mu,
+            s0,
+        })
     }
 
     /// Simulate the Heston model using Euler-Maruyama with variance truncation.
@@ -523,7 +574,8 @@ impl HestonModel {
     ) -> IntegrateResult<Vec<(f64, f64, f64)>> {
         if t_span.0 >= t_span.1 {
             return Err(IntegrateError::InvalidInput(format!(
-                "t_span must satisfy t0 < t1, got {:?}", t_span
+                "t_span must satisfy t0 < t1, got {:?}",
+                t_span
             )));
         }
         if dt <= 0.0 {
@@ -538,8 +590,8 @@ impl HestonModel {
         let rho_perp = (1.0 - rho * rho).sqrt();
         let mu = self.mu;
 
-        let normal = Normal::new(0.0, 1.0)
-            .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+        let normal =
+            Normal::new(0.0, 1.0).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
         let n_steps = ((t_span.1 - t_span.0) / dt).ceil() as usize;
 
         let mut path = Vec::with_capacity(n_steps + 1);
@@ -557,7 +609,7 @@ impl HestonModel {
             let dw1 = z1 * sqrt_step;
             let dw2 = (rho * z1 + rho_perp * z2) * sqrt_step;
             let sqrt_v = v.max(0.0).sqrt();
-            s = s * (1.0 + mu * step + sqrt_v * dw1).max(1e-12);
+            s *= (1.0 + mu * step + sqrt_v * dw1).max(1e-12);
             v = (v + kappa * (theta - v) * step + sigma * sqrt_v * dw2).max(0.0);
             t += step;
             path.push((t, s, v));
@@ -574,7 +626,8 @@ impl HestonModel {
     ) -> IntegrateResult<SdeSolution> {
         if t_span.0 >= t_span.1 {
             return Err(IntegrateError::InvalidInput(format!(
-                "t_span must satisfy t0 < t1, got {:?}", t_span
+                "t_span must satisfy t0 < t1, got {:?}",
+                t_span
             )));
         }
         let kappa = self.kappa;
@@ -630,7 +683,8 @@ mod tests {
     #[test]
     fn test_brownian_motion_starts_at_zero() {
         let mut rng = seeded_rng(1);
-        let path = BrownianMotion::sample(100, 0.01, &mut rng).expect("BrownianMotion::sample should succeed");
+        let path = BrownianMotion::sample(100, 0.01, &mut rng)
+            .expect("BrownianMotion::sample should succeed");
         assert_eq!(path.len(), 101);
         assert!((path[0]).abs() < 1e-12, "W_0 must be 0");
     }
@@ -652,7 +706,8 @@ mod tests {
         let mut sum_sq = 0.0;
         for seed in 0..n_paths as u64 {
             let mut rng = seeded_rng(seed + 1000);
-            let path = BrownianMotion::sample(n_steps, dt, &mut rng).expect("BrownianMotion::sample should succeed");
+            let path = BrownianMotion::sample(n_steps, dt, &mut rng)
+                .expect("BrownianMotion::sample should succeed");
             let w_final = path[n_steps];
             sum_sq += w_final * w_final;
         }
@@ -665,9 +720,15 @@ mod tests {
 
     #[test]
     fn test_gbm_positive() {
-        let gbm = GeometricBrownianMotion { mu: 0.05, sigma: 0.2, s0: 100.0 };
+        let gbm = GeometricBrownianMotion {
+            mu: 0.05,
+            sigma: 0.2,
+            s0: 100.0,
+        };
         let mut rng = seeded_rng(42);
-        let path = gbm.simulate((0.0, 1.0), 0.01, &mut rng).expect("gbm.simulate should succeed");
+        let path = gbm
+            .simulate((0.0, 1.0), 0.01, &mut rng)
+            .expect("gbm.simulate should succeed");
         assert!(path.iter().all(|&(_, s)| s > 0.0), "GBM must stay positive");
     }
 
@@ -684,7 +745,9 @@ mod tests {
         for seed in 0..n_paths as u64 {
             let mut rng = seeded_rng(seed + 200);
             let gbm = GeometricBrownianMotion { mu, sigma, s0 };
-            let path = gbm.simulate_exact((0.0, t1), 100, &mut rng).expect("gbm.simulate_exact should succeed");
+            let path = gbm
+                .simulate_exact((0.0, t1), 100, &mut rng)
+                .expect("gbm.simulate_exact should succeed");
             sum += path.last().map(|&(_, s)| s).unwrap_or(0.0);
         }
         let mean = sum / n_paths as f64;
@@ -703,14 +766,21 @@ mod tests {
     #[test]
     fn test_ou_mean_reversion() {
         // E[X(T)] → mu as T → ∞
-        let ou = OrnsteinUhlenbeck { theta: 2.0, mu: 1.0, sigma: 0.3, x0: 0.0 };
+        let ou = OrnsteinUhlenbeck {
+            theta: 2.0,
+            mu: 1.0,
+            sigma: 0.3,
+            x0: 0.0,
+        };
         let t1 = 5.0;
         let n_paths = 500;
         let analytic = ou.mu + (ou.x0 - ou.mu) * (-ou.theta * t1).exp();
         let mut sum = 0.0;
         for seed in 0..n_paths as u64 {
             let mut rng = seeded_rng(seed + 300);
-            let path = ou.simulate_exact((0.0, t1), 500, &mut rng).expect("ou.simulate_exact should succeed");
+            let path = ou
+                .simulate_exact((0.0, t1), 500, &mut rng)
+                .expect("ou.simulate_exact should succeed");
             sum += path.last().map(|&(_, x)| x).unwrap_or(0.0);
         }
         let mean = sum / n_paths as f64;
@@ -729,10 +799,17 @@ mod tests {
     #[test]
     fn test_cir_non_negative() {
         // Feller: 2*1.0*0.5 = 1.0 >= 0.04 = sigma^2
-        let cir = CoxIngersollRoss { kappa: 1.0, theta: 0.5, sigma: 0.2, r0: 0.1 };
+        let cir = CoxIngersollRoss {
+            kappa: 1.0,
+            theta: 0.5,
+            sigma: 0.2,
+            r0: 0.1,
+        };
         assert!(cir.feller_satisfied());
         let mut rng = seeded_rng(7);
-        let path = cir.simulate((0.0, 5.0), 0.005, &mut rng).expect("cir.simulate should succeed");
+        let path = cir
+            .simulate((0.0, 5.0), 0.005, &mut rng)
+            .expect("cir.simulate should succeed");
         assert!(
             path.iter().all(|&(_, r)| r >= 0.0),
             "CIR must stay non-negative"
@@ -757,7 +834,9 @@ mod tests {
             s0: 100.0,
         };
         let mut rng = seeded_rng(42);
-        let path = heston.simulate((0.0, 1.0), 0.005, &mut rng).expect("heston.simulate should succeed");
+        let path = heston
+            .simulate((0.0, 1.0), 0.005, &mut rng)
+            .expect("heston.simulate should succeed");
         assert!(path.iter().all(|&(_, s, v)| s > 0.0 && v >= 0.0));
     }
 
@@ -771,11 +850,18 @@ mod tests {
     #[test]
     fn test_heston_sde_variant() {
         let heston = HestonModel {
-            kappa: 2.0, theta: 0.04, sigma: 0.2, rho: -0.5,
-            v0: 0.04, mu: 0.05, s0: 50.0,
+            kappa: 2.0,
+            theta: 0.04,
+            sigma: 0.2,
+            rho: -0.5,
+            v0: 0.04,
+            mu: 0.05,
+            s0: 50.0,
         };
         let mut rng = seeded_rng(11);
-        let sol = heston.simulate_as_sde((0.0, 0.5), 0.01, &mut rng).expect("heston.simulate_as_sde should succeed");
+        let sol = heston
+            .simulate_as_sde((0.0, 0.5), 0.01, &mut rng)
+            .expect("heston.simulate_as_sde should succeed");
         assert!(!sol.is_empty());
         for xi in &sol.x {
             assert!(xi[0] > 0.0, "S must be positive");

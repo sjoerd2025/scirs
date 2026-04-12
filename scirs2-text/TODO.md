@@ -173,6 +173,17 @@
 - [ ] STS benchmark integration (semantic textual similarity)
 - [ ] Perplexity benchmarks on standard corpora (PTB, WikiText)
 
+## v0.4.2 Additions (Wave 44)
+
+### LLM-Compatible Tokenizer Features
+- [x] LLM-compatible BPE tokenizer (byte-level, special tokens, chat templates) — `tokenizers/bpe_enhanced.rs`
+- [x] `SpecialTokens` — GPT-2, LLaMA/Mistral, ChatML presets; custom token map
+- [x] `BpeVocab` (enhanced) — u32 token IDs, special-token-aware, collision-safe registration
+- [x] `ByteLevelBpe` — encode/decode with BOS/EOS injection and `skip_special_tokens`
+- [x] Chat template formatting (ChatML, LLaMA-2, Alpaca, Simple styles) — `ChatTemplate` / `ChatStyle`
+- [x] `Message` struct for multi-turn conversation representation
+- [x] Approximate token counting via `ChatTemplate::count_tokens`
+
 ## Known Issues
 
 - The `MultinomialNaiveBayes` import was previously duplicated in `text_classification.rs`; resolved in v0.3.1.

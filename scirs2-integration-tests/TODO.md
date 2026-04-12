@@ -16,12 +16,17 @@ Cross-crate integration tests for SciRS2 ecosystem.
 
 ## v0.4.0 Planned Tests
 
-- [ ] End-to-end ML pipeline (datasets -> neural -> optimize -> metrics)
-- [ ] Full signal analysis pipeline (io -> signal -> stats -> series)
-- [ ] Computer vision pipeline (io -> ndimage -> vision -> metrics)
-- [ ] Graph ML pipeline (graph -> neural -> metrics)
-- [ ] Scientific computing pipeline (integrate -> linalg -> sparse)
-- [ ] NLP pipeline (text -> neural -> metrics)
+- [x] End-to-end ML pipeline (datasets -> neural -> optimize -> metrics) — implemented in v0.4.2 (`tests/integration/ml_pipeline.rs`)
+- [x] Full signal analysis pipeline (io -> signal -> stats -> series) — implemented in v0.4.2 (`tests/integration/`)
+- [x] Computer vision pipeline (io -> ndimage -> vision -> metrics) — implemented in v0.4.2 (`tests/integration/vision_pipeline.rs`)
+- [x] Graph ML pipeline (graph -> neural -> metrics) — implemented in v0.4.2 (`tests/integration/`)
+- [x] Scientific computing pipeline (integrate -> linalg -> sparse) — implemented in v0.4.2 (`tests/integration/`)
+- [x] NLP pipeline (text -> neural -> metrics) — implemented in v0.4.2 (`tests/integration/`)
+
+## v0.4.2 Wave 44 Additions
+
+- [x] Compile-fail tests and cross-crate consistency tests — implemented in `tests/integration/numerical_crosscrate.rs` (16 tests: FFT convolution theorem, Parseval, round-trip, RFFT length, normal equations, rank-1 eigenvalue, solve known system, PCA variance ordering, SVD ordering, dense matvec, SPD eigenvalues, trace identity, circulant eigenvalues via FFT, and three error-handling tests)
+- [x] Numerical validation test suite (statistical accuracy vs known reference values) — implemented in `tests/integration/numerical_validation.rs` (40 tests: special functions gamma/erf/j0/beta, Normal/Poisson/ChiSquare distributions, linalg solve/eigh/SVD, FFT Parseval/roundtrip/linearity, signal energy/spectrum, descriptive statistics mean/median/variance)
 
 ## Running Tests
 

@@ -55,6 +55,7 @@
 //!     learning_rate: 0.05,
 //!     x_max: 100.0,
 //!     alpha: 0.75,
+//!     seed: None,
 //! };
 //!
 //! let mut trainer = GloVeTrainer::with_config(config);
@@ -444,6 +445,9 @@ pub struct GloVeTrainerConfig {
     pub x_max: f64,
     /// Exponent for the weighting function (alpha in paper, typically 0.75)
     pub alpha: f64,
+    /// Optional RNG seed for reproducible training. When `None` a random seed
+    /// is drawn from the thread-local RNG on each call to `train`.
+    pub seed: Option<u64>,
 }
 
 impl Default for GloVeTrainerConfig {
@@ -456,6 +460,7 @@ impl Default for GloVeTrainerConfig {
             learning_rate: 0.05,
             x_max: 100.0,
             alpha: 0.75,
+            seed: None,
         }
     }
 }
@@ -616,7 +621,14 @@ impl GloVeTrainer {
 
         // Step 3: Initialize parameters
         let vector_size = self.config.vector_size;
-        let mut rng = scirs2_core::random::rng();
+        // Resolve the seed: use the configured seed when present, otherwise draw
+        // a random u64 from the thread-local RNG so the rest of the training code
+        // always works with the same concrete type (Random<StdRng>).
+        let seed = self
+            .config
+            .seed
+            .unwrap_or_else(|| thread_rng().random::<u64>());
+        let mut rng = seeded_rng(seed);
 
         // Main word vectors (W) and context word vectors (W_tilde)
         let mut w_main = Array2::from_shape_fn((vocab_size, vector_size), |_| {
@@ -909,6 +921,7 @@ mod tests {
             learning_rate: 0.05,
             x_max: 10.0,
             alpha: 0.75,
+            seed: None,
         };
 
         let mut trainer = GloVeTrainer::with_config(config);
@@ -964,6 +977,8 @@ mod tests {
             learning_rate: 0.05,
             x_max: 10.0,
             alpha: 0.75,
+            // Fixed seed for reproducible, non-flaky test results.
+            seed: Some(42),
         };
 
         let mut trainer = GloVeTrainer::with_config(config);
@@ -1035,6 +1050,7 @@ mod tests {
             learning_rate: 0.05,
             x_max: 10.0,
             alpha: 0.75,
+            seed: None,
         };
 
         let mut trainer = GloVeTrainer::with_config(config);

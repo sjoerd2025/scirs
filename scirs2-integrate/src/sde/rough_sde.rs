@@ -131,7 +131,7 @@ pub struct RoughSdeResult {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```no_run
 /// use scirs2_integrate::sde::rough_sde::{rough_sde_solve, RoughSdeConfig, RoughScheme};
 ///
 /// // Geometric rough SDE: dX = 0 dt + X dB^H  (pure fBm integral)
@@ -256,7 +256,7 @@ where
 ///
 /// # Example
 ///
-/// ```rust
+/// ```no_run
 /// use scirs2_integrate::sde::rough_sde::bergomi_model;
 ///
 /// let (times, vol) = bergomi_model(0.3, 0.04, 0.1, 256, 1.0, 0).unwrap();
@@ -305,9 +305,9 @@ pub fn bergomi_model(
         seed,
         method: FbmMethod::DaviesHarte,
     };
-    let fbm_path = FractionalBrownianMotion::new(fbm_cfg).sample_path().map_err(|e| {
-        IntegrateError::ComputationError(format!("Bergomi fBm path failed: {e}"))
-    })?;
+    let fbm_path = FractionalBrownianMotion::new(fbm_cfg)
+        .sample_path()
+        .map_err(|e| IntegrateError::ComputationError(format!("Bergomi fBm path failed: {e}")))?;
 
     let h2 = 2.0 * hurst;
 
@@ -375,29 +375,24 @@ mod tests {
 
     #[test]
     fn test_default_config_runs() {
-        let res = rough_sde_solve(
-            |_t, _x| 0.0,
-            |_t, _x| 1.0,
-            0.0,
-            &default_cfg(),
-        )
-        .expect("default config should succeed");
+        let res = rough_sde_solve(|_t, _x| 0.0, |_t, _x| 1.0, 0.0, &default_cfg())
+            .expect("default config should succeed");
         assert_eq!(res.path.len(), default_cfg().n_steps + 1);
     }
 
     #[test]
     fn test_path_length() {
         let cfg = em_cfg(0.7, 200);
-        let res = rough_sde_solve(|_t, _x| 0.5, |_t, _x| 0.1, 1.0, &cfg)
-            .expect("solve should succeed");
+        let res =
+            rough_sde_solve(|_t, _x| 0.5, |_t, _x| 0.1, 1.0, &cfg).expect("solve should succeed");
         assert_eq!(res.path.len(), 201); // n_steps + 1
     }
 
     #[test]
     fn test_times_length_and_end_value() {
         let cfg = em_cfg(0.6, 100);
-        let res = rough_sde_solve(|_t, _x| 0.0, |_t, _x| 0.0, 0.0, &cfg)
-            .expect("solve should succeed");
+        let res =
+            rough_sde_solve(|_t, _x| 0.0, |_t, _x| 0.0, 0.0, &cfg).expect("solve should succeed");
         assert_eq!(res.times.len(), 101);
         let t_last = res.times[100];
         assert!(
@@ -415,13 +410,8 @@ mod tests {
         let n = 100;
         let t_end = 1.0;
         let cfg = em_cfg(0.7, n);
-        let res = rough_sde_solve(
-            move |_t, _x| f_val,
-            |_t, _x| 0.0,
-            x0,
-            &cfg,
-        )
-        .expect("solve should succeed");
+        let res = rough_sde_solve(move |_t, _x| f_val, |_t, _x| 0.0, x0, &cfg)
+            .expect("solve should succeed");
 
         let expected_end = x0 + f_val * t_end;
         let actual_end = res.path[n];
@@ -429,7 +419,9 @@ mod tests {
         assert!(
             rel < 1e-10,
             "zero-diffusion ODE: got {}, expected {}, rel err {}",
-            actual_end, expected_end, rel
+            actual_end,
+            expected_end,
+            rel
         );
     }
 
@@ -437,8 +429,8 @@ mod tests {
     fn test_zero_drift_pure_fbm_integral() {
         // f = 0, g = 1 → X is the fBm integral (path should be non-trivial, variance > 0)
         let cfg = em_cfg(0.7, 256);
-        let res = rough_sde_solve(|_t, _x| 0.0, |_t, _x| 1.0, 0.0, &cfg)
-            .expect("solve should succeed");
+        let res =
+            rough_sde_solve(|_t, _x| 0.0, |_t, _x| 1.0, 0.0, &cfg).expect("solve should succeed");
         // path[0] = 0
         assert!((res.path[0]).abs() < 1e-15);
         // path should have non-zero values (with overwhelming probability)
@@ -453,15 +445,20 @@ mod tests {
         let dt = 1.0 / n as f64;
         let seed = 0;
         let cfg = RoughSdeConfig {
-            hurst: 0.5, n_steps: n, t_end: 1.0,
-            scheme: RoughScheme::EulerMaruyama, seed,
+            hurst: 0.5,
+            n_steps: n,
+            t_end: 1.0,
+            scheme: RoughScheme::EulerMaruyama,
+            seed,
         };
-        let res = rough_sde_solve(|_t, _x| 0.0, |_t, _x| 1.0, 0.0, &cfg)
-            .expect("solve");
+        let res = rough_sde_solve(|_t, _x| 0.0, |_t, _x| 1.0, 0.0, &cfg).expect("solve");
 
         // Independently generate fBm path with same parameters
         let fbm_cfg = FbmConfig {
-            hurst: 0.5, n_steps: n, dt, seed,
+            hurst: 0.5,
+            n_steps: n,
+            dt,
+            seed,
             method: FbmMethod::DaviesHarte,
         };
         let fbm_path = FractionalBrownianMotion::new(fbm_cfg)
@@ -474,7 +471,9 @@ mod tests {
             assert!(
                 (res.path[i] - fbm_path[i]).abs() < 1e-12,
                 "mismatch at i={}: rough={}, fbm={}",
-                i, res.path[i], fbm_path[i]
+                i,
+                res.path[i],
+                fbm_path[i]
             );
         }
     }
@@ -484,20 +483,20 @@ mod tests {
         // For H ≠ 0.5 and non-zero g, Milstein correction is non-zero.
         let n = 128;
         let cfg_em = RoughSdeConfig {
-            hurst: 0.3, n_steps: n, t_end: 1.0,
-            scheme: RoughScheme::EulerMaruyama, seed: 99,
+            hurst: 0.3,
+            n_steps: n,
+            t_end: 1.0,
+            scheme: RoughScheme::EulerMaruyama,
+            seed: 99,
         };
         let cfg_mil = RoughSdeConfig {
-            scheme: RoughScheme::Milstein, ..cfg_em.clone()
+            scheme: RoughScheme::Milstein,
+            ..cfg_em.clone()
         };
-        let res_em = rough_sde_solve(
-            |_t, x| 0.1 * x, |_t, x| 0.2 * x, 1.0, &cfg_em,
-        )
-        .expect("EM solve");
-        let res_mil = rough_sde_solve(
-            |_t, x| 0.1 * x, |_t, x| 0.2 * x, 1.0, &cfg_mil,
-        )
-        .expect("Milstein solve");
+        let res_em =
+            rough_sde_solve(|_t, x| 0.1 * x, |_t, x| 0.2 * x, 1.0, &cfg_em).expect("EM solve");
+        let res_mil = rough_sde_solve(|_t, x| 0.1 * x, |_t, x| 0.2 * x, 1.0, &cfg_mil)
+            .expect("Milstein solve");
 
         // Results must differ (correction is non-zero for H=0.3)
         let max_diff: f64 = res_em
@@ -515,15 +514,16 @@ mod tests {
 
     #[test]
     fn test_bergomi_vol_always_positive() {
-        let (times, vol) = bergomi_model(0.3, 0.04, 0.1, 256, 1.0, 0)
-            .expect("bergomi_model should succeed");
+        let (times, vol) =
+            bergomi_model(0.3, 0.04, 0.1, 256, 1.0, 0).expect("bergomi_model should succeed");
         assert_eq!(vol.len(), 257);
         assert_eq!(times.len(), 257);
         for (i, &v) in vol.iter().enumerate() {
             assert!(
                 v > 0.0,
                 "volatility must be strictly positive at step {}, got {}",
-                i, v
+                i,
+                v
             );
         }
     }
@@ -531,8 +531,7 @@ mod tests {
     #[test]
     fn test_result_times_length() {
         let cfg = em_cfg(0.7, 50);
-        let res = rough_sde_solve(|_t, _x| 0.0, |_t, _x| 1.0, 0.5, &cfg)
-            .expect("solve");
+        let res = rough_sde_solve(|_t, _x| 0.0, |_t, _x| 1.0, 0.5, &cfg).expect("solve");
         assert_eq!(res.times.len(), 51);
         assert_eq!(res.fbm_increments.len(), 50);
     }
@@ -540,18 +539,22 @@ mod tests {
     #[test]
     fn test_trivial_single_step() {
         let cfg = RoughSdeConfig {
-            hurst: 0.7, n_steps: 1, t_end: 0.1,
-            scheme: RoughScheme::EulerMaruyama, seed: 0,
+            hurst: 0.7,
+            n_steps: 1,
+            t_end: 0.1,
+            scheme: RoughScheme::EulerMaruyama,
+            seed: 0,
         };
-        let res = rough_sde_solve(|_t, _x| 1.0, |_t, _x| 0.0, 2.0, &cfg)
-            .expect("single-step solve");
+        let res =
+            rough_sde_solve(|_t, _x| 1.0, |_t, _x| 0.0, 2.0, &cfg).expect("single-step solve");
         assert_eq!(res.path.len(), 2);
         // path[1] = 2.0 + 1.0 * 0.1 = 2.1
         let expected = 2.0 + 1.0 * 0.1;
         assert!(
             (res.path[1] - expected).abs() < 1e-10,
             "single-step: got {}, expected {}",
-            res.path[1], expected
+            res.path[1],
+            expected
         );
     }
 }

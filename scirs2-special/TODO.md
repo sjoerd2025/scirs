@@ -63,34 +63,34 @@
 ### GPU-Accelerated Batch Evaluation
 - [ ] CUDA/ROCm kernels for batch gamma, erf, Bessel evaluation on GPU
 - [ ] WebGPU compute shaders for browser-based WASM deployment
-- [ ] Auto-dispatch: evaluate on GPU when array size exceeds configurable threshold
-- [ ] Mixed-precision: f16 accumulation with f32 correction for throughput-critical paths
+- [x] Auto-dispatch: evaluate on GPU when array size exceeds configurable threshold — Implemented in v0.4.2 (`gpu_dispatch.rs`: `GpuDispatchConfig`, `select_dispatch`, `batch_gamma`, `batch_erf`, `batch_bessel_j0`, `batch_eval`)
+- [x] Mixed-precision: f16 accumulation with f32 correction for throughput-critical paths — Implemented in v0.4.2 (`mixed_precision.rs`: `batch_eval_gamma_f16`, `batch_eval_erf_f16`)
 
 ### Symbolic Computation Interface
 - [x] Symbolic representation of special functions as expression trees — Implemented in v0.4.0 (`symbolic/types.rs`: `Expr` enum)
 - [x] Automatic differentiation of special functions: symbolic derivative rules — Implemented in v0.4.0 (`differentiation/symbolic_rules.rs`)
 - [x] Series expansion engine: formal power series around regular and irregular points — Implemented in v0.4.0 (`symbolic/series.rs`: `PowerSeries`)
 - [x] Asymptotic expansion engine: automated derivation of leading-order terms — Implemented in v0.4.0 (`symbolic/asymptotic.rs`: `AsymptoticExpansion`)
-- [ ] Connection formula generator: transformations between solution bases
+- [x] Connection formula generator: transformations between solution bases — Implemented in v0.4.2 (`connection_formulas.rs`: Bessel J/Y/Hankel/modified, hypergeometric Gauss, Legendre P/Q, Kummer M/U)
 
 ### Extended Precision
 - [ ] Arbitrary-precision gamma, erf, Bessel via the `rug` MPFR backend (feature-gated)
-- [ ] Ball arithmetic for certified enclosure of function values
-- [ ] Validated numerics interface: output intervals guaranteed to contain the true value
+- [x] Ball arithmetic for certified enclosure of function values — Implemented in v0.4.2 (`validated.rs`: `Ball` type, interval arithmetic, ball_sin/cos/exp/ln/gamma)
+- [x] Validated numerics interface: output intervals guaranteed to contain the true value — Implemented in v0.4.2 (`validated.rs`: `validate()`, rigorous enclosure propagation)
 - [x] Double-double (quad-double) precision for 30-60 decimal digits without MPFR overhead — Implemented in v0.4.0 (`double_double/` module)
 
 ### New Function Families
 - [x] Lame functions: solutions to Lame's equation on an ellipsoidal coordinate system — Implemented in v0.4.0 (`lame/` module)
-- [ ] Spheroidal wave functions with full asymptotic transitions
+- [x] Spheroidal wave functions with full asymptotic transitions — Implemented in v0.4.2 (`spheroidal/swf.rs`: `SpheroidalKind`, `SpheroidalEigenvalue`, `spheroidal_eigenvalue_mn`, `spheroidal_ps`, `spheroidal_wronskian`)
 - [x] Nield-Kuznetsov functions for gravity wave theory — Implemented in v0.4.0 (`nield_kuznetsov/` module)
-- [ ] Mathieu-Hill functions: generalized periodic Hill's equation solutions
+- [x] Mathieu-Hill functions: generalized periodic Hill's equation solutions — Implemented in v0.4.2 (`mathieu_hill.rs`: `HillCoefficients`, `hill_stability_exponent`, `hill_periodic_solution`, `hill_characteristic_exponent`, `hill_stability_check`)
 - [x] Painleve transcendents: numerical solution with connection formulas — Implemented in v0.4.0 (`painleve/` module)
 - [x] Elliptic modular functions: j-invariant, Dedekind eta, modular lambda — Implemented in v0.4.0 (`elliptic_modular.rs`)
 
 ### Number Theory Extensions
 - [x] L-functions: Dirichlet L(s, chi) for primitive characters — Implemented in v0.4.0 (`l_functions/` module)
-- [ ] Hecke L-functions and Maass forms
-- [ ] Elliptic curve L-functions (BSD conjecture numerics)
+- [x] Hecke L-functions and Maass forms — Implemented in v0.4.2 (`hecke_l.rs`: `HeckeEigenform`, `MaassForm`, `ramanujan_tau` with Hecke multiplicativity recurrence)
+- [x] Elliptic curve L-functions (BSD conjecture numerics) — Implemented in v0.4.2 (`elliptic_l.rs`: `EllipticCurve`, exact `#E(F_p)` counting, Euler product, central value)
 - [x] Dedekind zeta functions for number fields — Implemented in v0.4.0 (`dedekind_zeta/` module)
 - [x] Selberg zeta function for hyperbolic surfaces — Implemented in v0.4.0 (`selberg_zeta/` module)
 
@@ -98,8 +98,68 @@
 - [x] Chromatic polynomial of graphs — Implemented in v0.4.0 (`chromatic/` module)
 - [x] Tutte polynomial of matroids — Implemented in v0.4.0 (`tutte/` module)
 - [x] Schur polynomials and symmetric function bases (power-sum, monomial, elementary) — Implemented in v0.4.0 (`schur/` module)
-- [ ] Clebsch-Gordan series for arbitrary Lie groups (SU(3), SO(5), etc.)
-- [ ] Hall polynomials for p-group extensions
+- [x] Clebsch-Gordan series for arbitrary Lie groups (SU(3), SO(5), etc.) — Implemented in v0.4.2 (`clebsch_gordan_lie.rs`: `DynkinLabel`, `CgDecomposition`, `cg_su2`, `cg_su3`, `cg_so5`)
+- [x] Hall polynomials for p-group extensions — Implemented in v0.4.2 (`hall_polynomials.rs`: `Partition`, `gaussian_binomial`, `hall_polynomial_value`, `HallPolynomialCache`, `partitions_of`)
+
+## v0.4.2 Additions (2026-04-11)
+
+### Wave 43 implementations
+
+- **GPU auto-dispatch** (`src/gpu_dispatch.rs`):
+  - `GpuDispatchConfig`: configures `min_gpu_size` threshold and `allow_gpu` flag
+  - `select_dispatch(n, config)`: returns `DispatchTarget::Cpu` or `DispatchTarget::Gpu`
+  - `batch_gamma`, `batch_erf`, `batch_bessel_j0`: auto-dispatched batch evaluation (CPU fallback)
+  - `batch_eval<F>`: generic batch evaluation with custom functions
+
+- **Mixed-precision f16 batch APIs** (`src/mixed_precision.rs`):
+  - `batch_eval_gamma_f16(xs: &[f32]) -> Vec<f32>`: f16-simulated Stirling gamma
+  - `batch_eval_erf_f16(xs: &[f32]) -> Vec<f32>`: f16-simulated A&S erf approximation
+
+- **Clebsch-Gordan series for Lie groups** (`src/clebsch_gordan_lie.rs`):
+  - `DynkinLabel`: highest-weight label with dimension formulae for SU(2), SU(3), SO(5)
+  - `CgDecomposition`: tensor product decomposition with `verify_dimension` and `multiplicity`
+  - `cg_su2(j1_twice, j2_twice)`: exact SU(2) CG series via Clebsch-Gordan recursion
+  - `cg_su3(p1,q1,p2,q2)`: SU(3) decomposition via greedy weight enumeration + deficit-filling
+  - `cg_so5(p1,q1,p2,q2)`: SO(5)/Sp(4) decomposition via greedy weight enumeration
+
+- **Hall polynomials for p-group extensions** (`src/hall_polynomials.rs`):
+  - `Partition`: Young diagram with `conjugate()`, `size()`, `len()`
+  - `gaussian_binomial(n, k, q)`: exact Gaussian binomial [n choose k]_q (multiply-then-divide)
+  - `hall_polynomial_value(λ, μ, ν, q)`: Hall polynomial evaluation (rank-1 and rank-2)
+  - `HallPolynomialCache`: memoized Hall polynomial evaluations
+  - `partitions_of(n, max_parts)`: partition enumeration; `partition_number(n)` via DP
+
+### Wave 42 implementations
+
+- **Hecke L-functions and Maass forms** (`src/hecke_l.rs`):
+  - `HeckeEigenform`: Fourier coefficients, Hecke eigenvalues, partial L-sum, completed L-function, central value
+  - `MaassForm`: spectral parameter, Fourier-Whittaker coefficients, partial L-sum, eigenfunction evaluation
+  - `ramanujan_tau(n)`: exact Ramanujan tau via lookup table (n<=22) and Hecke multiplicativity + prime-power recurrence (n>22)
+  - `theta_l_function_partial`: Riemann zeta as a reference L-function
+
+- **Elliptic curve L-functions** (`src/elliptic_l.rs`):
+  - `EllipticCurve`: Weierstrass form `y^2 = x^3 + ax + b`; discriminant; singular detection
+  - `point_count_mod_p(p)`: exact `#E(F_p)` using Legendre symbol / Euler criterion (i128 arithmetic, no overflow)
+  - `trace_of_frobenius(p)`: `a_p = p + 1 - #E(F_p)`
+  - `l_function_euler_product(s, n_primes)`: truncated Euler product over first n primes
+  - `central_value(n_terms)`: `L(E,1)` via multiplicative Dirichlet series
+  - Named curves module: `curve_37a1`, `curve_11a1`, `curve_27a1`
+
+- **Validated numerics / ball arithmetic** (`src/validated.rs`):
+  - `Ball` struct: midpoint + radius, all arithmetic propagates the enclosure guarantee
+  - `ball_sin`, `ball_cos`, `ball_exp`, `ball_ln`: certified elementary function enclosures
+  - `ball_gamma`: certified Gamma function enclosure via Stirling series with explicit error bound
+  - `validate(computed, ball)`: test membership in a certified interval
+
+- **Connection formula generator** (`src/connection_formulas.rs`):
+  - `ConnectionFormula`: generic connection matrix type; `apply()`, `is_valid_at()`
+  - `bessel_j_to_y_connection(nu)`: standard Bessel J/Y connection (non-integer nu)
+  - `bessel_j_to_hankel_connection()`: J/Y to Hankel H^(1)/H^(2)
+  - `bessel_j_to_modified_connection(nu)`: J to modified Bessel I via phase factors
+  - `hypergeometric_z0_to_z1_connection(a,b,c)`: Gauss 2F1 connection z=0 to z=1
+  - `legendre_pq_connection(n)`: Legendre P/Q Wronskian identity
+  - `kummer_connection(a,b)`: Kummer M/U connection formula
+  - `list_connections(family)`: catalogue all known connection names for bessel/legendre/hypergeometric/kummer/airy/parabolic
 
 ## Known Issues
 

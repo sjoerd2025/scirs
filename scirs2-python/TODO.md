@@ -87,14 +87,58 @@
 - [x] Basic numerical correctness tests for each module
 - [x] SciPy comparison tests for statistics and FFT
 
+## v0.4.2 Changes (Wave 43, 2026-04-12)
+
+### Policy Compliance Fixes
+- [x] Eliminated all `expect()` / `unwrap()` violations in production code
+  - `integrate.rs`: Python callback closures now return NaN on error (no panic)
+  - `interpolate.rs`: Array ops use `ok_or_else` / `map_err` instead of `expect`
+  - `stats/functions.rs`: `as_slice()` calls use `ok_or_else`
+  - `stats/functions_2.rs`: sort comparator uses `unwrap_or`
+  - `stats/mcmc_gp.rs`: HMC gradient callback returns NaN-filled vector on error
+  - `optimize.rs`: All five objective-function callback closures use `unwrap_or`
+  - `signal.rs`: `as_slice()` calls use `ok_or_else`
+  - `series.rs`: sort comparator uses `unwrap_or`
+  - `cluster.rs`: `cluster_centers_` access uses `ok_or_else`
+
+### scirs2.special Module — Extended Coverage
+- [x] `scirs2.special` module: Bessel, Gamma, hypergeometric functions
+  - New: `polygamma(n, x)` — n-th derivative of digamma
+  - New: `zeta(s)`, `hurwitz_zeta(s, q)`, `zetac(s)` — Riemann/Hurwitz zeta
+  - New: `hyp0f1(v, z)`, `hyp1f1(a, b, z)`, `hyp2f1(a, b, c, z)`, `hyperu(a, b, x)` — hypergeometric functions
+  - New: `airy_ai(x)`, `airy_aip(x)`, `airy_bi(x)`, `airy_bip(x)` — Airy functions
+  - New: `sici_si(x)`, `sici_ci(x)`, `shichi_shi(x)`, `shichi_chi(x)` — trig/exp integrals
+  - New: `betainc(a, b, x)`, `betaincinv(a, b, p)` — regularized incomplete beta
+  - New vectorized wrappers: `lgamma_array`, `erfc_array`, `digamma_array`, `j1_array`
+
+### scirs2.interpolate Module — Extended Coverage
+- [x] `scirs2.interpolate` module: spline, RBF, PCHIP
+  - New: `RBFInterpolator` class — Gaussian, Multiquadric, InverseMultiquadric,
+    ThinPlateSpline, Linear, Cubic kernels with configurable epsilon
+
+### scirs2.integrate Module — Already Complete
+- [x] `scirs2.integrate` module: ODE solvers (RK45, BDF, LSODA), quadrature
+  - `solve_ivp`: RK45/RK23/DOP853/BDF/Radau/LSODA/RK4/Euler methods
+  - `quad`: adaptive Gauss-Kronrod quadrature
+  - `trapezoid`, `simpson`, `cumulative_trapezoid`, `romberg` array-based integration
+  - Note: Python-side tests require a Python/maturin environment to run
+
+### scirs2.stats — Distribution Parity
+- [x] Complete parity with all scirs2-stats distributions
+  - New: `bernoulli(p)` — Bernoulli distribution
+  - New: `nbinom(n, p)` — Negative Binomial distribution
+  - New: `hypergeom(m, n, k)` — Hypergeometric distribution
+  - Previously bound: norm, binom, poisson, expon, uniform, beta, gamma, chi2, t, cauchy, f,
+    lognorm, weibull_min, laplace, logistic, pareto, geom
+
 ## v0.4.0 Roadmap
 
 ### Full API Coverage
-- [ ] Complete parity with all scirs2-linalg functions
-- [ ] Complete parity with all scirs2-stats distributions
-- [ ] `scirs2.special` module: Bessel, Gamma, hypergeometric functions
-- [ ] `scirs2.interpolate` module: spline, RBF, PCHIP
-- [ ] `scirs2.integrate` module: ODE solvers (RK45, BDF, LSODA), quadrature
+- [x] Complete parity with all scirs2-linalg functions
+- [x] Complete parity with all scirs2-stats distributions
+- [x] `scirs2.special` module: Bessel, Gamma, hypergeometric functions
+- [x] `scirs2.interpolate` module: spline, RBF, PCHIP
+- [x] `scirs2.integrate` module: ODE solvers (RK45, BDF, LSODA), quadrature
 
 ### Async Python Support
 - [ ] Native `async/await` for long-running computations

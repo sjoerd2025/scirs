@@ -183,9 +183,7 @@ impl SnasSearch {
                 edge_logits
                     .iter()
                     .enumerate()
-                    .max_by(|(_, a), (_, b)| {
-                        a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
-                    })
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .map(|(idx, _)| idx)
                     .unwrap_or(0)
             })
@@ -247,10 +245,7 @@ fn softmax_f64(logits: &[f64]) -> Vec<f64> {
     if logits.is_empty() {
         return Vec::new();
     }
-    let max_val = logits
-        .iter()
-        .copied()
-        .fold(f64::NEG_INFINITY, f64::max);
+    let max_val = logits.iter().copied().fold(f64::NEG_INFINITY, f64::max);
     let exps: Vec<f64> = logits.iter().map(|&x| (x - max_val).exp()).collect();
     let sum: f64 = exps.iter().sum();
     if sum <= 0.0 {
@@ -297,7 +292,10 @@ mod tests {
             .gumbel_softmax_sample(&logits, 0.01, &mut rng)
             .unwrap();
         // At very low temperature, the distribution should be very peaked on op 3
-        assert!(weights[3] > 0.9, "Low temperature should peak on the dominant logit");
+        assert!(
+            weights[3] > 0.9,
+            "Low temperature should peak on the dominant logit"
+        );
     }
 
     #[test]
@@ -306,10 +304,7 @@ mod tests {
         let search = SnasSearch::new(config);
         // All zeros in alpha -> softmax gives uniform distribution -> KL ~ 0
         let kl = search.kl_divergence_from_uniform(0).unwrap();
-        assert!(
-            kl < 1e-10,
-            "KL from uniform alpha should be ~0, got {kl}"
-        );
+        assert!(kl < 1e-10, "KL from uniform alpha should be ~0, got {kl}");
     }
 
     #[test]
@@ -323,7 +318,10 @@ mod tests {
         // Make edge 0 strongly prefer op 0
         search.alpha[0] = vec![20.0, -10.0, -10.0, -10.0];
         let kl = search.kl_divergence_from_uniform(0).unwrap();
-        assert!(kl > 0.1, "Peaked distribution should have positive KL divergence, got {kl}");
+        assert!(
+            kl > 0.1,
+            "Peaked distribution should have positive KL divergence, got {kl}"
+        );
     }
 
     #[test]
@@ -331,7 +329,10 @@ mod tests {
         let config = SnasConfig::default();
         let search = SnasSearch::new(config);
         let result = search.kl_divergence_from_uniform(999);
-        assert!(result.is_err(), "Out-of-bounds edge index should return an error");
+        assert!(
+            result.is_err(),
+            "Out-of-bounds edge index should return an error"
+        );
     }
 
     #[test]
@@ -386,7 +387,10 @@ mod tests {
     #[test]
     fn test_snas_elbo_gradient_shape_mismatch_error() {
         let result = SnasSearch::elbo_gradient(&[1.0, 2.0], &[1.0, 2.0, 3.0], 0.01);
-        assert!(result.is_err(), "Mismatched gradient shapes should return an error");
+        assert!(
+            result.is_err(),
+            "Mismatched gradient shapes should return an error"
+        );
     }
 
     #[test]

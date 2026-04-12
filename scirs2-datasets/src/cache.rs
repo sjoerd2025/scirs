@@ -42,7 +42,11 @@ pub fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
         hasher.update(&buffer[..bytes_read]);
     }
 
-    Ok(format!("{:x}", hasher.finalize()))
+    Ok(hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect())
 }
 
 /// Registry entry for dataset files

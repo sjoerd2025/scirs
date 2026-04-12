@@ -261,7 +261,7 @@ impl LogFileManager {
         }
 
         let result = hasher.finalize();
-        Ok(format!("{:x}", result))
+        Ok(result.iter().map(|b| format!("{:02x}", b)).collect())
     }
 
     /// Calculate a fallback hash for an audit event (crypto feature recommended).

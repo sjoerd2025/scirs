@@ -10,6 +10,8 @@ mod bayesian;
 #[allow(dead_code)]
 mod clustering;
 #[allow(dead_code)]
+mod cmaes;
+#[allow(dead_code)]
 mod differential_evolution;
 #[allow(dead_code)]
 mod dual_annealing;
@@ -32,6 +34,7 @@ pub use clustering::{
     generate_diverse_start_points, multi_start_with_clustering, ClusterCentroid,
     ClusteringAlgorithm, ClusteringOptions, ClusteringResult, LocalMinimum, StartPointStrategy,
 };
+pub use cmaes::{minimize_cmaes, CmaEs, CmaEsConfig, CmaEsResult};
 pub use differential_evolution::{differential_evolution, DifferentialEvolutionOptions};
 pub use dual_annealing::{dual_annealing, DualAnnealingOptions};
 pub use multi_start::{multi_start, MultiStartOptions, StartingPointStrategy};

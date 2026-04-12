@@ -48,8 +48,8 @@ fn minimize_scalar_py(
             let result = fun_clone
                 .bind(py)
                 .call1((x,))
-                .expect("Failed to call objective function");
-            result.extract().expect("Failed to extract result")
+                .unwrap_or_else(|_| py.None().into_bound(py));
+            result.extract::<f64>().unwrap_or(f64::NAN)
         })
     };
 
@@ -111,8 +111,8 @@ fn brentq_py(
             let result = fun_clone
                 .bind(py)
                 .call1((x,))
-                .expect("Failed to call objective function");
-            result.extract().expect("Failed to extract result")
+                .unwrap_or_else(|_| py.None().into_bound(py));
+            result.extract::<f64>().unwrap_or(f64::NAN)
         })
     };
 
@@ -312,8 +312,8 @@ fn minimize_py(
             let result = fun_clone
                 .bind(py)
                 .call1((x_vec,))
-                .expect("Failed to call objective function");
-            result.extract().expect("Failed to extract result")
+                .unwrap_or_else(|_| py.None().into_bound(py));
+            result.extract::<f64>().unwrap_or(f64::NAN)
         })
     };
 
@@ -368,8 +368,8 @@ fn differential_evolution_py(
             let result = fun_clone
                 .bind(py)
                 .call1((x_vec,))
-                .expect("Failed to call objective function");
-            result.extract().expect("Failed to extract result")
+                .unwrap_or_else(|_| py.None().into_bound(py));
+            result.extract::<f64>().unwrap_or(f64::NAN)
         })
     };
 
@@ -487,12 +487,14 @@ fn curve_fit_py(
                 let mut args = vec![xdata_ref[i]];
                 args.extend_from_slice(params);
 
+                let tuple = pyo3::types::PyTuple::new(py, &args)
+                    .unwrap_or_else(|_| pyo3::types::PyTuple::empty(py));
                 let f_val: f64 = f_clone
                     .bind(py)
-                    .call1(pyo3::types::PyTuple::new(py, &args).expect("Operation failed"))
-                    .expect("Failed to call model function")
+                    .call1(tuple)
+                    .unwrap_or_else(|_| py.None().into_bound(py))
                     .extract()
-                    .expect("Failed to extract model result");
+                    .unwrap_or(f64::NAN);
 
                 residuals.push(ydata_ref[i] - f_val);
             }

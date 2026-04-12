@@ -59,7 +59,9 @@ pub mod curriculum;
 pub mod federated;
 pub mod hparam_tuner;
 pub mod lr_finder;
+pub mod pipeline_parallel;
 pub mod profiler;
+pub mod tensor_parallel;
 
 // Re-export core modules
 pub use backprop_efficient::*;

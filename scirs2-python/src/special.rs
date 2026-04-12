@@ -7,6 +7,7 @@ use scirs2_core::python::numpy_compat::{scirs_to_numpy_array1, Array1};
 use scirs2_numpy::{PyArray1, PyReadonlyArray1};
 
 // Import special functions from scirs2-special
+use scirs2_special::gamma::polygamma;
 use scirs2_special::{bessel, erf as erf_mod, gamma as gamma_fn};
 
 // =============================================================================
@@ -201,6 +202,145 @@ fn ellipeinc_py(phi: f64, m: f64) -> PyResult<f64> {
 }
 
 // =============================================================================
+// Polygamma Function
+// =============================================================================
+
+/// Polygamma function: the n-th derivative of the digamma function
+#[pyfunction]
+fn polygamma_py(n: u32, x: f64) -> PyResult<f64> {
+    Ok(polygamma(n, x))
+}
+
+// =============================================================================
+// Zeta Functions
+// =============================================================================
+
+/// Riemann zeta function
+#[pyfunction]
+fn zeta_py(s: f64) -> PyResult<f64> {
+    scirs2_special::zeta(s).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Hurwitz zeta function
+#[pyfunction]
+fn hurwitz_zeta_py(s: f64, q: f64) -> PyResult<f64> {
+    scirs2_special::hurwitz_zeta(s, q)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Riemann zeta minus 1: zeta(s) - 1
+#[pyfunction]
+fn zetac_py(s: f64) -> PyResult<f64> {
+    scirs2_special::zetac(s).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+// =============================================================================
+// Hypergeometric Functions
+// =============================================================================
+
+/// Confluent hypergeometric function 0F1
+#[pyfunction]
+fn hyp0f1_py(v: f64, z: f64) -> PyResult<f64> {
+    scirs2_special::hyp0f1(v, z)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Confluent hypergeometric function 1F1 (Kummer's function)
+#[pyfunction]
+fn hyp1f1_py(a: f64, b: f64, z: f64) -> PyResult<f64> {
+    scirs2_special::hyp1f1(a, b, z)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Gauss hypergeometric function 2F1
+#[pyfunction]
+fn hyp2f1_py(a: f64, b: f64, c: f64, z: f64) -> PyResult<f64> {
+    scirs2_special::hyp2f1(a, b, c, z)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Tricomi's confluent hypergeometric function U(a, b, x)
+#[pyfunction]
+fn hyperu_py(a: f64, b: f64, x: f64) -> PyResult<f64> {
+    scirs2_special::hyperu(a, b, x)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+// =============================================================================
+// Airy Functions
+// =============================================================================
+
+/// Airy function Ai(x)
+#[pyfunction]
+fn airy_ai_py(x: f64) -> PyResult<f64> {
+    Ok(scirs2_special::ai(x))
+}
+
+/// Derivative of Airy function Ai'(x)
+#[pyfunction]
+fn airy_aip_py(x: f64) -> PyResult<f64> {
+    Ok(scirs2_special::aip(x))
+}
+
+/// Airy function Bi(x)
+#[pyfunction]
+fn airy_bi_py(x: f64) -> PyResult<f64> {
+    Ok(scirs2_special::bi(x))
+}
+
+/// Derivative of Airy function Bi'(x)
+#[pyfunction]
+fn airy_bip_py(x: f64) -> PyResult<f64> {
+    Ok(scirs2_special::bip(x))
+}
+
+// =============================================================================
+// Trigonometric and Exponential Integrals
+// =============================================================================
+
+/// Sine integral Si(x)
+#[pyfunction]
+fn sici_si_py(x: f64) -> PyResult<f64> {
+    scirs2_special::si(x).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Cosine integral Ci(x)
+#[pyfunction]
+fn sici_ci_py(x: f64) -> PyResult<f64> {
+    scirs2_special::ci(x).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Hyperbolic sine integral Shi(x)
+#[pyfunction]
+fn shichi_shi_py(x: f64) -> PyResult<f64> {
+    scirs2_special::shi(x).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Hyperbolic cosine integral Chi(x)
+#[pyfunction]
+fn shichi_chi_py(x: f64) -> PyResult<f64> {
+    scirs2_special::chi(x).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+// =============================================================================
+// Incomplete Beta Function
+// =============================================================================
+
+/// Regularized incomplete beta function I_x(a, b)
+#[pyfunction]
+fn betainc_py(a: f64, b: f64, x: f64) -> PyResult<f64> {
+    scirs2_special::gamma::betainc_regularized(a, b, x)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+/// Inverse of regularized incomplete beta function
+#[pyfunction]
+fn betaincinv_py(a: f64, b: f64, p: f64) -> PyResult<f64> {
+    scirs2_special::gamma::betaincinv(a, b, p)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))
+}
+
+// =============================================================================
 // Vectorized versions (for arrays)
 // =============================================================================
 
@@ -225,6 +365,44 @@ fn erf_array_py(py: Python, x: PyReadonlyArray1<f64>) -> PyResult<Py<PyArray1<f6
 fn j0_array_py(py: Python, x: PyReadonlyArray1<f64>) -> PyResult<Py<PyArray1<f64>>> {
     let input = x.as_array();
     let output: Vec<f64> = input.iter().map(|&v| bessel::j0(v)).collect();
+    scirs_to_numpy_array1(Array1::from_vec(output), py)
+}
+
+/// Vectorized lgamma function
+#[pyfunction]
+fn lgamma_array_py(py: Python, x: PyReadonlyArray1<f64>) -> PyResult<Py<PyArray1<f64>>> {
+    let input = x.as_array();
+    let output: Vec<f64> = input
+        .iter()
+        .map(|&v| scirs2_special::gamma::gammaln(v))
+        .collect();
+    scirs_to_numpy_array1(Array1::from_vec(output), py)
+}
+
+/// Vectorized erfc function
+#[pyfunction]
+fn erfc_array_py(py: Python, x: PyReadonlyArray1<f64>) -> PyResult<Py<PyArray1<f64>>> {
+    let input = x.as_array();
+    let output: Vec<f64> = input.iter().map(|&v| erf_mod::erfc(v)).collect();
+    scirs_to_numpy_array1(Array1::from_vec(output), py)
+}
+
+/// Vectorized digamma function
+#[pyfunction]
+fn digamma_array_py(py: Python, x: PyReadonlyArray1<f64>) -> PyResult<Py<PyArray1<f64>>> {
+    let input = x.as_array();
+    let output: Vec<f64> = input
+        .iter()
+        .map(|&v| scirs2_special::gamma::digamma(v))
+        .collect();
+    scirs_to_numpy_array1(Array1::from_vec(output), py)
+}
+
+/// Vectorized J1 Bessel function
+#[pyfunction]
+fn j1_array_py(py: Python, x: PyReadonlyArray1<f64>) -> PyResult<Py<PyArray1<f64>>> {
+    let input = x.as_array();
+    let output: Vec<f64> = input.iter().map(|&v| bessel::j1(v)).collect();
     scirs_to_numpy_array1(Array1::from_vec(output), py)
 }
 
@@ -268,10 +446,44 @@ pub fn register_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(ellipkinc_py, m)?)?;
     m.add_function(wrap_pyfunction!(ellipeinc_py, m)?)?;
 
+    // Polygamma
+    m.add_function(wrap_pyfunction!(polygamma_py, m)?)?;
+
+    // Zeta functions
+    m.add_function(wrap_pyfunction!(zeta_py, m)?)?;
+    m.add_function(wrap_pyfunction!(hurwitz_zeta_py, m)?)?;
+    m.add_function(wrap_pyfunction!(zetac_py, m)?)?;
+
+    // Hypergeometric functions
+    m.add_function(wrap_pyfunction!(hyp0f1_py, m)?)?;
+    m.add_function(wrap_pyfunction!(hyp1f1_py, m)?)?;
+    m.add_function(wrap_pyfunction!(hyp2f1_py, m)?)?;
+    m.add_function(wrap_pyfunction!(hyperu_py, m)?)?;
+
+    // Airy functions
+    m.add_function(wrap_pyfunction!(airy_ai_py, m)?)?;
+    m.add_function(wrap_pyfunction!(airy_aip_py, m)?)?;
+    m.add_function(wrap_pyfunction!(airy_bi_py, m)?)?;
+    m.add_function(wrap_pyfunction!(airy_bip_py, m)?)?;
+
+    // Trig/exponential integrals
+    m.add_function(wrap_pyfunction!(sici_si_py, m)?)?;
+    m.add_function(wrap_pyfunction!(sici_ci_py, m)?)?;
+    m.add_function(wrap_pyfunction!(shichi_shi_py, m)?)?;
+    m.add_function(wrap_pyfunction!(shichi_chi_py, m)?)?;
+
+    // Incomplete beta
+    m.add_function(wrap_pyfunction!(betainc_py, m)?)?;
+    m.add_function(wrap_pyfunction!(betaincinv_py, m)?)?;
+
     // Vectorized versions
     m.add_function(wrap_pyfunction!(gamma_array_py, m)?)?;
+    m.add_function(wrap_pyfunction!(lgamma_array_py, m)?)?;
     m.add_function(wrap_pyfunction!(erf_array_py, m)?)?;
+    m.add_function(wrap_pyfunction!(erfc_array_py, m)?)?;
+    m.add_function(wrap_pyfunction!(digamma_array_py, m)?)?;
     m.add_function(wrap_pyfunction!(j0_array_py, m)?)?;
+    m.add_function(wrap_pyfunction!(j1_array_py, m)?)?;
 
     Ok(())
 }

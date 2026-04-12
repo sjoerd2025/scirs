@@ -3,6 +3,25 @@
 //! **SciRS2** is a comprehensive scientific computing and AI/ML infrastructure for Rust,
 //! providing SciPy-compatible APIs with Rust's performance, safety, and concurrency features.
 //!
+//! # Feature Flags
+//!
+//! | Feature | Description | Default |
+//! |---------|-------------|---------|
+//! | `default` | Core scientific computing modules (`standard`) | ✓ |
+//! | `full` | All modules including optional | ✗ |
+//! | `standard` | linalg, stats, optimize, integrate, interpolate, fft, special, signal, sparse, spatial, cluster, transform, metrics | ✓ |
+//! | `ai` | neural + autograd | ✗ |
+//! | `experimental` | ndimage, neural, series, text, io, datasets, graph, vision, autograd | ✗ |
+//! | `cuda` | CUDA GPU acceleration (future) | ✗ |
+//! | `rocm` | ROCm GPU acceleration (future) | ✗ |
+//! | `distributed` | Cluster/distributed computing via scirs2-core | ✗ |
+//! | `jit` | JIT compilation and functional transforms (requires `autograd`) | ✗ |
+//! | `mobile` | Mobile GPU backends: iOS Metal + Android NNAPI (future) | ✗ |
+//! | `nn` | Neural network namespace `scirs2::nn` (requires `neural`) | ✗ |
+//! | `symbolic` | Symbolic math integration (future) | ✗ |
+//! | `benchmarks` | Benchmark helpers from scirs2-datasets | ✗ |
+//! | `oxifft` | High-performance pure-Rust FFT via OxiFFT | ✗ |
+//!
 //! ## 🎯 Key Features
 //!
 //! - **SciPy-Compatible APIs**: Familiar function signatures for easy migration from Python
@@ -69,14 +88,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.4.1", features = ["linalg", "stats"] }
+//! scirs2 = { version = "0.4.2", features = ["linalg", "stats"] }
 //! ```
 //!
 //! Or install all features:
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2 = { version = "0.4.1", features = ["full"] }
+//! scirs2 = { version = "0.4.2", features = ["full"] }
 //! ```
 //!
 //! ### Linear Algebra Example
@@ -233,7 +252,7 @@
 //! - **Deprecation Policy**: 2-release deprecation cycle
 //! - **Production Features**: Enterprise-grade error handling and diagnostics
 //!
-//! Current version: **0.4.1**
+//! Current version: **0.4.2**
 //!
 //! ## 🤝 Ecosystem Integration
 //!
@@ -341,7 +360,10 @@ pub mod version {
     pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 }
 
-/// Re-export of common utilities and types
+/// Re-export of common utilities and types.
+///
+/// Import everything with `use scirs2::prelude::*;` for the most convenient experience.
+/// All items below that depend on optional features are conditionally compiled.
 pub mod prelude {
     pub use scirs2_core::validation;
     // Use the Error type directly from thiserror
@@ -352,6 +374,13 @@ pub mod prelude {
 
     // Re-export common type conversions (SCIRS2 POLICY: use scirs2_core re-exports)
     pub use scirs2_core::numeric::{Float, One, Zero};
+
+    // GPU buffer type (always present — scirs2-core is non-optional)
+    pub use scirs2_core::gpu::{GpuBuffer, GpuDataType};
+
+    // Memory defragmentation planner (requires memory_management feature)
+    #[cfg(feature = "memory_management")]
+    pub use scirs2_core::memory::defrag::DefragPlanner;
 
     // Various modules with feature gates
     #[cfg(feature = "linalg")]
@@ -368,6 +397,52 @@ pub mod prelude {
 
     #[cfg(feature = "neural")]
     pub use crate::neural;
+
+    // Linear algebra additions (v0.4.2): auto-precision selector and H-matrix kernel compression
+    #[cfg(feature = "linalg")]
+    pub use scirs2_linalg::{HMatrixKernel, Precision};
+
+    // Optimization additions (v0.4.2): CMA-ES global optimizer
+    #[cfg(feature = "optimize")]
+    pub use scirs2_optimize::global::{CmaEs, CmaEsConfig, CmaEsResult};
+
+    // Special function additions (v0.4.2): ball arithmetic (validated numerics)
+    #[cfg(feature = "special")]
+    pub use scirs2_special::validated::{ball_cos, ball_sin, Ball};
+}
+
+/// Neural network building-block re-exports under a single `scirs2::nn` namespace.
+///
+/// Enable with `features = ["nn"]` (implies `neural`).
+///
+/// # Example
+/// ```rust,ignore
+/// use scirs2::nn::{Sequential, Dense, ReLU, Sigmoid};
+/// ```
+#[cfg(feature = "nn")]
+pub mod nn {
+    // Layer types
+    pub use scirs2_neural::layers::{
+        BatchNorm, Conv2D, Dense, Dropout, Layer, LayerNorm, Sequential, LSTM,
+    };
+    // Activation types and functions
+    pub use scirs2_neural::activations_minimal::{Activation, ReLU, Sigmoid, Softmax, Tanh, GELU};
+}
+
+/// Functional array transformation re-exports (`vmap`, `pmap`).
+///
+/// Enable with `features = ["jit"]` (implies `autograd`).
+///
+/// - `vmap` — vectorised map: applies a scalar function over a batch dimension
+/// - `pmap` — parallel map: distributes computation across available threads
+///
+/// # Example
+/// ```rust,ignore
+/// use scirs2::transforms::{vmap, pmap};
+/// ```
+#[cfg(feature = "jit")]
+pub mod transforms {
+    pub use scirs2_autograd::transforms::{pmap, vmap};
 }
 
 // Public API

@@ -19,7 +19,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 # Core module - always included (SCIRS2 POLICY: scirs2-core is the ONLY crate allowed external dependencies)
-scirs2-core = { workspace = true, features = ["cache", "logging", "profiling", "memory_management", "array", "random"] }
+scirs2-core = { workspace = true, features = ["cache", "logging", "profiling", "memory_management", "array", "random", "gpu"] }
 
 # Basic utility dependencies
 thiserror = { workspace = true }
@@ -104,3 +104,29 @@ datasets = ["dep:scirs2-datasets"]
 graph = ["dep:scirs2-graph"]
 vision = ["dep:scirs2-vision"]
 autograd = ["dep:scirs2-autograd"]
+
+# --- v0.4.2 feature groups ---
+
+# Gates GPU-accelerated paths when CUDA kernels land (future)
+cuda = []
+
+# AMD GPU acceleration (future)
+rocm = []
+
+# Cluster/distributed computing abstractions via scirs2-core
+distributed = ["scirs2-core/array_protocol_distributed"]
+
+# JAX-style JIT functional transformations — requires autograd
+jit = ["autograd"]
+
+# iOS Metal + Android NNAPI gated paths (future)
+mobile = []
+
+# Neural architecture re-exports under scirs2::nn
+nn = ["neural"]
+
+# Planned scirs2-symbolic crate integration (future)
+symbolic = []
+
+# Expose benchmark helpers from scirs2-datasets
+benchmarks = ["datasets"]

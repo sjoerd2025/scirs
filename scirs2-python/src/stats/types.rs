@@ -4,6 +4,7 @@
 
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
+use scirs2_stats::distributions::bernoulli::Bernoulli as RustBernoulli;
 use scirs2_stats::distributions::beta::Beta as RustBeta;
 use scirs2_stats::distributions::binomial::Binomial as RustBinomial;
 use scirs2_stats::distributions::cauchy::Cauchy as RustCauchy;
@@ -12,9 +13,11 @@ use scirs2_stats::distributions::exponential::Exponential as RustExponential;
 use scirs2_stats::distributions::f::F as RustF;
 use scirs2_stats::distributions::gamma::Gamma as RustGamma;
 use scirs2_stats::distributions::geometric::Geometric as RustGeometric;
+use scirs2_stats::distributions::hypergeometric::Hypergeometric as RustHypergeometric;
 use scirs2_stats::distributions::laplace::Laplace as RustLaplace;
 use scirs2_stats::distributions::logistic::Logistic as RustLogistic;
 use scirs2_stats::distributions::lognormal::Lognormal as RustLognormal;
+use scirs2_stats::distributions::negative_binomial::NegativeBinomial as RustNegativeBinomial;
 use scirs2_stats::distributions::normal::Normal as RustNormal;
 use scirs2_stats::distributions::pareto::Pareto as RustPareto;
 use scirs2_stats::distributions::poisson::Poisson as RustPoisson;
@@ -743,6 +746,131 @@ impl PyUniform {
         self.dist
             .ppf(q)
             .map_err(|e| PyRuntimeError::new_err(format!("PPF failed: {}", e)))
+    }
+    /// Random variates
+    fn rvs(&self, size: usize) -> PyResult<Vec<f64>> {
+        let arr = self
+            .dist
+            .rvs(size)
+            .map_err(|e| PyRuntimeError::new_err(format!("RVS failed: {}", e)))?;
+        Ok(arr.to_vec())
+    }
+}
+
+/// Bernoulli distribution
+#[pyclass(name = "bernoulli")]
+pub struct PyBernoulli {
+    dist: RustBernoulli<f64>,
+}
+#[pymethods]
+impl PyBernoulli {
+    /// Create a new Bernoulli distribution
+    ///
+    /// Parameters:
+    /// - p: Success probability, 0 <= p <= 1
+    #[new]
+    fn new(p: f64) -> PyResult<Self> {
+        let dist = RustBernoulli::new(p).map_err(|e| {
+            PyRuntimeError::new_err(format!("Bernoulli distribution creation failed: {}", e))
+        })?;
+        Ok(PyBernoulli { dist })
+    }
+    /// Probability mass function
+    fn pmf(&self, k: f64) -> f64 {
+        self.dist.pmf(k)
+    }
+    /// Cumulative distribution function
+    fn cdf(&self, k: f64) -> f64 {
+        self.dist.cdf(k)
+    }
+    /// Percent point function (inverse CDF)
+    fn ppf(&self, p_val: f64) -> PyResult<f64> {
+        self.dist
+            .ppf(p_val)
+            .map_err(|e| PyRuntimeError::new_err(format!("PPF failed: {}", e)))
+    }
+    /// Random variates
+    fn rvs(&self, size: usize) -> PyResult<Vec<f64>> {
+        self.dist
+            .rvs(size)
+            .map_err(|e| PyRuntimeError::new_err(format!("RVS failed: {}", e)))
+    }
+}
+
+/// Negative Binomial distribution
+#[pyclass(name = "nbinom")]
+pub struct PyNegativeBinomial {
+    dist: RustNegativeBinomial<f64>,
+}
+#[pymethods]
+impl PyNegativeBinomial {
+    /// Create a new Negative Binomial distribution
+    ///
+    /// Parameters:
+    /// - n: Number of successes (r parameter), r > 0
+    /// - p: Success probability, 0 < p <= 1
+    #[new]
+    fn new(n: f64, p: f64) -> PyResult<Self> {
+        let dist = RustNegativeBinomial::new(n, p).map_err(|e| {
+            PyRuntimeError::new_err(format!(
+                "Negative Binomial distribution creation failed: {}",
+                e
+            ))
+        })?;
+        Ok(PyNegativeBinomial { dist })
+    }
+    /// Probability mass function
+    fn pmf(&self, k: f64) -> f64 {
+        self.dist.pmf(k)
+    }
+    /// Cumulative distribution function
+    fn cdf(&self, k: f64) -> f64 {
+        self.dist.cdf(k)
+    }
+    /// Percent point function (inverse CDF)
+    fn ppf(&self, pval: f64) -> PyResult<f64> {
+        self.dist
+            .ppf(pval)
+            .map_err(|e| PyRuntimeError::new_err(format!("PPF failed: {}", e)))
+    }
+    /// Random variates
+    fn rvs(&self, size: usize) -> PyResult<Vec<f64>> {
+        self.dist
+            .rvs(size)
+            .map_err(|e| PyRuntimeError::new_err(format!("RVS failed: {}", e)))
+    }
+}
+
+/// Hypergeometric distribution
+#[pyclass(name = "hypergeom")]
+pub struct PyHypergeometric {
+    dist: RustHypergeometric<f64>,
+}
+#[pymethods]
+impl PyHypergeometric {
+    /// Create a new Hypergeometric distribution
+    ///
+    /// Parameters:
+    /// - m: Total population size
+    /// - n: Number of success states in population
+    /// - k: Number of draws
+    #[new]
+    fn new(m: usize, n: usize, k: usize) -> PyResult<Self> {
+        let dist = RustHypergeometric::new(m, n, k, 0.0_f64).map_err(|e| {
+            PyRuntimeError::new_err(format!(
+                "Hypergeometric distribution creation failed: {}",
+                e
+            ))
+        })?;
+        Ok(PyHypergeometric { dist })
+    }
+    /// Probability mass function
+    fn pmf(&self, x: f64) -> f64 {
+        self.dist.pmf(x)
+    }
+    /// Cumulative distribution function
+    fn cdf(&self, x: f64) -> f64 {
+        self.dist.cdf(x)
     }
     /// Random variates
     fn rvs(&self, size: usize) -> PyResult<Vec<f64>> {

@@ -28,6 +28,8 @@ pub mod low_rank;
 pub mod manifold;
 /// Advanced multi-label classification with label dependencies
 pub mod multilabel_advanced;
+/// Convenience ndarray-returning wrappers for advanced generators
+pub mod ndarray_convenience;
 pub mod noise;
 /// Advanced regression generators (Friedman benchmarks, sparse uncorrelated, low-rank)
 pub mod regression;

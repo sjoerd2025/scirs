@@ -48,9 +48,9 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-linalg = "0.4.1"
+//! scirs2-linalg = "0.4.2"
 //! # Optional features
-//! scirs2-linalg = { version = "0.4.1", features = ["simd", "parallel", "gpu"] }
+//! scirs2-linalg = { version = "0.4.2", features = ["simd", "parallel", "gpu"] }
 //! ```
 //!
 //! ### Basic Matrix Operations
@@ -209,7 +209,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.4.1
+//! - **Version**: 0.4.2
 //! - **Release Date**: March 27, 2026
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-linalg](https://docs.rs/scirs2-linalg)
@@ -222,6 +222,9 @@ pub use error::{LinalgError, LinalgResult};
 
 // Backward compatibility layer for ndarray-linalg-style API
 pub mod compat;
+
+// Auto mixed-precision selection based on condition number
+pub mod auto_precision;
 
 // Basic modules
 pub mod attention;
@@ -259,6 +262,8 @@ pub mod matrix_functions;
 pub mod matrix_functions_extended;
 pub mod matrixfree;
 pub mod mixed_precision;
+// Mixed CPU/GPU solver: f32/f64 factorization + iterative refinement
+pub mod mixed_cpu_gpu_solver;
 mod norm;
 pub mod optim;
 pub mod parallel;
@@ -309,8 +314,12 @@ pub mod eigensolvers;
 pub mod gpu_accel;
 // GPU GEMM (cache-blocked, f16/bf16)
 pub mod gpu_gemm;
+// GPU eigensolvers interface (CPU fallback, GPU path is a future enhancement)
+pub mod gpu_eigen;
 // H2-matrix (hierarchical)
 pub mod hmatrix_h2;
+// H-matrix: ACA-based kernel compression (O(N log N) matvec)
+pub mod hmatrix;
 // Matrix functions via Zolotarev
 pub mod matrix_functions_zolotarev;
 // Mixed/adaptive precision
@@ -365,6 +374,21 @@ pub mod accelerated {
 }
 
 // Re-exports for user convenience
+
+// Auto precision selection
+pub use self::auto_precision::{
+    auto_precision_solve, estimate_condition_number, select_precision, Precision, PrecisionPolicy,
+};
+
+// GPU eigensolvers
+pub use self::gpu_eigen::{
+    householder_tridiagonalize, qr_iteration_tridiagonal, EigenTarget, GpuEigenConfig,
+    GpuEigensolver,
+};
+
+// Mixed CPU/GPU solver
+pub use self::mixed_cpu_gpu_solver::{MixedSolver, SolverStats};
+
 pub use self::basic::{det, inv, matrix_power, trace as basic_trace};
 
 // BLAS/LAPACK optimized functions for f64 (Always available for Python bindings)
@@ -460,6 +484,11 @@ pub use self::specialized::{
     specialized_to_operator, BandedMatrix, SpecializedMatrix, SymmetricMatrix, TridiagonalMatrix,
 };
 pub use self::stats::*;
+// H-matrix kernel compression
+pub use self::hmatrix::{
+    aca_approximate, hmatrix_compress, hmatrix_frobenius_norm, hmatrix_matvec, BlockClusterTree,
+    DenseBlock as HDenseBlock, HBlock, HMatrix as HMatrixKernel, LowRankBlock as HLowRankBlock,
+};
 pub use self::structured::{
     structured_to_operator, CirculantMatrix, HankelMatrix, StructuredMatrix, ToeplitzMatrix,
 };

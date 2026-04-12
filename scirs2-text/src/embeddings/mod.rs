@@ -136,6 +136,7 @@ pub mod crosslingual;
 pub mod fasttext;
 pub mod glove;
 pub mod sentence;
+pub mod sentence_encoder;
 
 // Re-export
 pub use fasttext::{FastText, FastTextConfig};

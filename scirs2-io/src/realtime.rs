@@ -1135,16 +1135,16 @@ impl StreamConnection for MqttConnection {
 
         #[cfg(feature = "mqtt")]
         {
-            let mut mqttoptions = rumqttc::MqttOptions::new(&self.client_id, host, port);
+            let mut mqttoptions = rumqttc::MqttOptions::new(&self.client_id, (host, port));
 
             if let Some(password) = url.password() {
-                let username = url.username();
+                let username = url.username().to_owned();
                 if !username.is_empty() {
-                    mqttoptions.set_credentials(username, password);
+                    mqttoptions.set_credentials(username, password.to_owned());
                 }
             }
 
-            mqttoptions.set_keep_alive(Duration::from_secs(60));
+            mqttoptions.set_keep_alive(60u16);
 
             let (client, eventloop) = rumqttc::AsyncClient::new(mqttoptions, 10);
 

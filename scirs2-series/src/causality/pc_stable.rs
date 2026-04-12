@@ -433,4 +433,110 @@ mod tests {
         let result = pc.run(&data);
         assert!(result.is_err(), "Should fail with insufficient data");
     }
+
+    // ---- Requested interface tests ----
+
+    /// test_pc_independent_vars: two independent AR(1) series → 0 cross-variable edges
+    #[test]
+    fn test_pc_independent() {
+        // Two independent AR(1) processes with no cross-dependencies
+        let n = 400;
+        let mut state: u64 = 31415;
+        let next_rand = |s: &mut u64| -> f64 {
+            *s = s
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((*s >> 32) as f64) / (u32::MAX as f64) - 0.5
+        };
+        let mut data = Array2::zeros((n, 2));
+        for t in 1..n {
+            data[[t, 0]] = 0.6 * data[[t - 1, 0]] + next_rand(&mut state) * 0.3;
+            data[[t, 1]] = 0.5 * data[[t - 1, 1]] + next_rand(&mut state) * 0.3;
+        }
+
+        let config = PCStableConfig {
+            tau_max: 1,
+            alpha: 0.01, // stricter threshold
+            max_cond_size: Some(1),
+        };
+        let pc = PCStable::new(Box::new(ParCorr::new()), config);
+        let result = pc.run(&data).expect("pc_stable should run");
+
+        // Cross-dependencies (0->1) and (1->0) should NOT be detected
+        assert!(
+            !result.has_link(0, 1, 1),
+            "Independent series should not show X_{{t-1}} -> Y_t"
+        );
+        assert!(
+            !result.has_link(1, 1, 0),
+            "Independent series should not show Y_{{t-1}} -> X_t"
+        );
+    }
+
+    /// test_pc_lagged_dependency: x causes y with lag 1 → PC-stable finds x->y
+    #[test]
+    fn test_pc_lagged_dependency() {
+        let n = 600;
+        let mut state: u64 = 27182;
+        let next_rand = |s: &mut u64| -> f64 {
+            *s = s
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((*s >> 32) as f64) / (u32::MAX as f64) - 0.5
+        };
+        let mut data = Array2::zeros((n, 2));
+        for t in 1..n {
+            data[[t, 0]] = 0.5 * data[[t - 1, 0]] + next_rand(&mut state) * 0.15;
+            // Y is driven by lagged X with coefficient 0.6
+            data[[t, 1]] =
+                0.6 * data[[t - 1, 0]] + 0.2 * data[[t - 1, 1]] + next_rand(&mut state) * 0.15;
+        }
+
+        let config = PCStableConfig {
+            tau_max: 2,
+            alpha: 0.05,
+            max_cond_size: Some(2),
+        };
+        let pc = PCStable::new(Box::new(ParCorr::new()), config);
+        let result = pc.run(&data).expect("pc_stable should run");
+
+        // X_{t-1} -> Y_t should be detected
+        assert!(
+            result.has_link(0, 1, 1),
+            "PC-stable should detect lagged X_{{t-1}} -> Y_t causality"
+        );
+    }
+
+    /// test_pc_result_n_tests_positive: n_tests > 0 for non-trivial data
+    #[test]
+    fn test_pc_result_n_tests_positive() {
+        let n = 300;
+        let mut data = Array2::zeros((n, 2));
+        let mut state: u64 = 11111;
+        let next_rand = |s: &mut u64| -> f64 {
+            *s = s
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            ((*s >> 32) as f64) / (u32::MAX as f64) - 0.5
+        };
+        for t in 1..n {
+            data[[t, 0]] = 0.4 * data[[t - 1, 0]] + next_rand(&mut state) * 0.2;
+            data[[t, 1]] =
+                0.4 * data[[t - 1, 0]] + 0.3 * data[[t - 1, 1]] + next_rand(&mut state) * 0.2;
+        }
+
+        let config = PCStableConfig {
+            tau_max: 1,
+            alpha: 0.05,
+            max_cond_size: Some(1),
+        };
+        let pc = PCStable::new(Box::new(ParCorr::new()), config);
+        let result = pc.run(&data).expect("pc_stable should run");
+
+        assert!(
+            result.n_tests > 0,
+            "n_tests should be positive for non-trivial data, got {}",
+            result.n_tests
+        );
+    }
 }

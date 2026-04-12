@@ -26,7 +26,7 @@
 //! ```
 
 use scirs2_core::ndarray::Array2;
-use scirs2_core::random::{Rng, SeedableRng, StdRng};
+use scirs2_core::random::{Rng, RngExt, SeedableRng, StdRng};
 
 use crate::error::{GraphError, Result};
 
@@ -69,7 +69,9 @@ pub fn normalized_laplacian(adj: &Array2<f64>) -> Result<Array2<f64>> {
         return Err(GraphError::InvalidGraph("empty adjacency matrix".into()));
     }
     if adj.ncols() != n {
-        return Err(GraphError::InvalidGraph("adjacency matrix must be square".into()));
+        return Err(GraphError::InvalidGraph(
+            "adjacency matrix must be square".into(),
+        ));
     }
 
     // D^{-1/2} diagonal
@@ -116,7 +118,7 @@ fn vec_norm(v: &[f64]) -> f64 {
 }
 
 /// Normalize a slice in-place; returns the norm before normalization.
-fn normalize_inplace(v: &mut Vec<f64>) -> f64 {
+fn normalize_inplace(v: &mut [f64]) -> f64 {
     let n = vec_norm(v);
     if n > 1e-300 {
         v.iter_mut().for_each(|x| *x /= n);
@@ -125,7 +127,7 @@ fn normalize_inplace(v: &mut Vec<f64>) -> f64 {
 }
 
 /// Project `v` away from `basis` vectors (modified Gram-Schmidt deflation).
-fn deflate(v: &mut Vec<f64>, basis: &[Vec<f64>]) {
+fn deflate(v: &mut [f64], basis: &[Vec<f64>]) {
     for b in basis {
         let dot: f64 = v.iter().zip(b.iter()).map(|(a, c)| a * c).sum();
         for (vi, bi) in v.iter_mut().zip(b.iter()) {
@@ -201,7 +203,12 @@ fn inverse_iteration(
         // Rayleigh quotient with original matrix
         let mv = matvec(m, &w);
         let new_eigenvalue: f64 = mv.iter().zip(w.iter()).map(|(a, b)| a * b).sum();
-        let diff: f64 = w.iter().zip(v.iter()).map(|(a, b)| (a - b).powi(2)).sum::<f64>().sqrt();
+        let diff: f64 = w
+            .iter()
+            .zip(v.iter())
+            .map(|(a, b)| (a - b).powi(2))
+            .sum::<f64>()
+            .sqrt();
         v = w;
         if (new_eigenvalue - eigenvalue).abs() < tol && diff < tol {
             eigenvalue = new_eigenvalue;
@@ -249,11 +256,7 @@ fn lu_decompose(a: &Array2<f64>) -> std::result::Result<(Vec<Vec<f64>>, Vec<usiz
 }
 
 /// Solve LU x = b using the factorization from `lu_decompose`.
-fn lu_solve(
-    lu: &[Vec<f64>],
-    piv: &[usize],
-    b: &[f64],
-) -> std::result::Result<Vec<f64>, String> {
+fn lu_solve(lu: &[Vec<f64>], piv: &[usize], b: &[f64]) -> std::result::Result<Vec<f64>, String> {
     let n = lu.len();
     // Apply row permutation to b
     let mut x: Vec<f64> = vec![0.0; n];
@@ -406,7 +409,11 @@ pub struct SpectralClusterResult {
 /// * `adj`  – Symmetric weighted adjacency matrix (n × n).
 /// * `k`    – Number of clusters.
 /// * `seed` – RNG seed for k-means initialization.
-pub fn spectral_clustering(adj: &Array2<f64>, k: usize, seed: u64) -> Result<SpectralClusterResult> {
+pub fn spectral_clustering(
+    adj: &Array2<f64>,
+    k: usize,
+    seed: u64,
+) -> Result<SpectralClusterResult> {
     let n = adj.nrows();
     if n == 0 {
         return Err(GraphError::InvalidGraph("empty adjacency matrix".into()));
@@ -664,7 +671,9 @@ pub fn resistance_matrix(adj: &Array2<f64>) -> Result<Array2<f64>> {
         return Err(GraphError::InvalidGraph("empty adjacency matrix".into()));
     }
     if adj.ncols() != n {
-        return Err(GraphError::InvalidGraph("adjacency matrix must be square".into()));
+        return Err(GraphError::InvalidGraph(
+            "adjacency matrix must be square".into(),
+        ));
     }
 
     let lap = graph_laplacian(adj);
@@ -790,11 +799,17 @@ mod tests {
         // A connected graph must have a positive Fiedler value
         let adj = path_adj(6);
         let (lambda2, fv) = fiedler_vector(&adj).expect("fiedler");
-        assert!(lambda2 > 1e-6, "Fiedler value should be positive: {lambda2}");
+        assert!(
+            lambda2 > 1e-6,
+            "Fiedler value should be positive: {lambda2}"
+        );
         assert_eq!(fv.len(), 6);
         // Verify the vector is a unit vector
         let norm: f64 = fv.iter().map(|x| x * x).sum::<f64>().sqrt();
-        assert!((norm - 1.0).abs() < 1e-6, "Fiedler vector should be unit norm: {norm}");
+        assert!(
+            (norm - 1.0).abs() < 1e-6,
+            "Fiedler vector should be unit norm: {norm}"
+        );
     }
 
     #[test]
@@ -834,16 +849,23 @@ mod tests {
     fn test_spectral_clustering_two_components() {
         // Two disjoint paths: nodes 0-1-2 and nodes 3-4-5
         let mut adj = Array2::zeros((6, 6));
-        adj[[0, 1]] = 1.0; adj[[1, 0]] = 1.0;
-        adj[[1, 2]] = 1.0; adj[[2, 1]] = 1.0;
-        adj[[3, 4]] = 1.0; adj[[4, 3]] = 1.0;
-        adj[[4, 5]] = 1.0; adj[[5, 4]] = 1.0;
+        adj[[0, 1]] = 1.0;
+        adj[[1, 0]] = 1.0;
+        adj[[1, 2]] = 1.0;
+        adj[[2, 1]] = 1.0;
+        adj[[3, 4]] = 1.0;
+        adj[[4, 3]] = 1.0;
+        adj[[4, 5]] = 1.0;
+        adj[[5, 4]] = 1.0;
 
         let result = spectral_clustering(&adj, 2, 7).expect("spectral clustering");
         // The two components must be in different clusters
         let c0 = result.assignments[0];
         let c3 = result.assignments[3];
-        assert_ne!(c0, c3, "disconnected components should be in different clusters");
+        assert_ne!(
+            c0, c3,
+            "disconnected components should be in different clusters"
+        );
         // All nodes in the same component should be in the same cluster
         assert_eq!(result.assignments[0], result.assignments[1]);
         assert_eq!(result.assignments[1], result.assignments[2]);
@@ -944,7 +966,11 @@ mod tests {
         let adj = complete_adj(4);
         let r_mat = resistance_matrix(&adj).expect("res mat");
         for i in 0..4 {
-            assert!(r_mat[[i, i]].abs() < 1e-10, "diagonal[{i}] = {}", r_mat[[i, i]]);
+            assert!(
+                r_mat[[i, i]].abs() < 1e-10,
+                "diagonal[{i}] = {}",
+                r_mat[[i, i]]
+            );
         }
     }
 
@@ -953,9 +979,21 @@ mod tests {
         let adj = path_adj(3);
         let r_mat = resistance_matrix(&adj).expect("res mat");
         // R(0,1)=1, R(1,2)=1, R(0,2)=2
-        assert!((r_mat[[0, 1]] - 1.0).abs() < 1e-4, "R(0,1) = {}", r_mat[[0, 1]]);
-        assert!((r_mat[[1, 2]] - 1.0).abs() < 1e-4, "R(1,2) = {}", r_mat[[1, 2]]);
-        assert!((r_mat[[0, 2]] - 2.0).abs() < 1e-4, "R(0,2) = {}", r_mat[[0, 2]]);
+        assert!(
+            (r_mat[[0, 1]] - 1.0).abs() < 1e-4,
+            "R(0,1) = {}",
+            r_mat[[0, 1]]
+        );
+        assert!(
+            (r_mat[[1, 2]] - 1.0).abs() < 1e-4,
+            "R(1,2) = {}",
+            r_mat[[1, 2]]
+        );
+        assert!(
+            (r_mat[[0, 2]] - 2.0).abs() < 1e-4,
+            "R(0,2) = {}",
+            r_mat[[0, 2]]
+        );
     }
 
     #[test]

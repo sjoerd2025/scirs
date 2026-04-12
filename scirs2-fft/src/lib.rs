@@ -41,7 +41,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-fft = "0.4.1"
+//! scirs2-fft = "0.4.2"
 //! ```
 //!
 //!
@@ -157,7 +157,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.4.1
+//! - **Version**: 0.4.2
 //! - **Release Date**: March 27, 2026
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-fft](https://docs.rs/scirs2-fft)
@@ -527,8 +527,23 @@ pub use butterfly::{
 pub mod cache_oblivious;
 pub use cache_oblivious::{
     cache_oblivious_fft, cache_oblivious_fft_with_config, cache_oblivious_ifft,
-    cache_oblivious_ifft_with_config, CacheObliviousConfig,
+    cache_oblivious_ifft_with_config, cache_oblivious_rfft, CacheObliviousConfig,
 };
+
+// Ring-buffer STFT for online / real-time signal processing
+pub mod ring_buffer_stft;
+pub use ring_buffer_stft::{
+    RingBufferStft, RingBufferStftConfig, StftFrame, StreamingSpectrogram,
+    WindowFunction as StftWindowFunction,
+};
+
+// Streaming FFT processor with configurable overlap-add / overlap-save
+pub mod streaming;
+pub use streaming::{streaming_spectrogram, StreamingFft, StreamingFftConfig, WindowType};
+
+// Out-of-core 2D FFT for large images
+pub mod outofcore;
+pub use outofcore::{small_fft2d, OutOfCoreConfig, OutOfCoreFft2D};
 
 // FFT plan creation, execution, and serialization (algorithm-agnostic)
 pub mod fft_plan;

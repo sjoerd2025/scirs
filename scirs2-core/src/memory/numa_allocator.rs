@@ -56,11 +56,23 @@ pub struct NumaTopology {
 impl NumaTopology {
     /// Attempt to discover NUMA topology from the operating system.
     ///
-    /// On Linux this reads `/sys/devices/system/node/node*/cpulist` and
-    /// `/sys/devices/system/node/node*/meminfo`.  On all other platforms
-    /// (including macOS, Windows and WASM) the function transparently returns
-    /// a single-node topology that covers all logical CPUs.
+    /// Discovery order (first success wins):
+    ///
+    /// 1. **libnuma** (Linux only, requires `libnuma` cargo feature) — uses the
+    ///    `libnuma` C library for authoritative NUMA information.
+    /// 2. **sysfs** (Linux only) — parses
+    ///    `/sys/devices/system/node/node*/cpulist` and `meminfo`.
+    /// 3. **Single-node fallback** — treats the whole machine as one NUMA node.
     pub fn discover() -> Self {
+        // Prefer libnuma when available (Linux + feature flag).
+        #[cfg(all(target_os = "linux", feature = "libnuma"))]
+        {
+            if let Some(topo) = Self::discover_libnuma() {
+                return topo;
+            }
+            // libnuma did not produce a result; fall through to sysfs.
+        }
+
         #[cfg(target_os = "linux")]
         {
             if let Some(topo) = Self::discover_linux() {
@@ -68,6 +80,99 @@ impl NumaTopology {
             }
         }
         Self::single_node_fallback()
+    }
+
+    /// Discover NUMA topology via the `libnuma` C library.
+    ///
+    /// Available only on Linux when the `libnuma` cargo feature is enabled.
+    /// Returns `None` when libnuma reports no NUMA support or when the
+    /// maximum NUMA node id is 0 (single-node machine).
+    #[cfg(all(target_os = "linux", feature = "libnuma"))]
+    fn discover_libnuma() -> Option<Self> {
+        use std::os::raw::{c_int, c_longlong, c_uint, c_ulong};
+
+        // Minimal FFI surface — the libnuma crate links the C library but does
+        // not expose wrappers for all the functions we need, so we declare them
+        // ourselves.  The C ABI is stable and identical to the manpage signatures.
+        // We use an opaque pointer type for bitmask to avoid duplicating its
+        // layout; all access goes through libnuma's own functions.
+        use std::ffi::c_void;
+
+        #[link(name = "numa")]
+        extern "C" {
+            fn numa_available() -> c_int;
+            fn numa_max_node() -> c_int;
+            fn numa_node_size64(node: c_int, freep: *mut c_longlong) -> c_longlong;
+            fn numa_allocate_cpumask() -> *mut c_void;
+            fn numa_node_to_cpus(node: c_int, mask: *mut c_void) -> c_int;
+            fn numa_bitmask_isbitset(bmp: *const c_void, n: c_uint) -> c_int;
+            fn numa_num_configured_cpus() -> c_int;
+            fn numa_bitmask_free(bmp: *mut c_void);
+        }
+
+        // Returns -1 when the kernel has no NUMA support.
+        if unsafe { numa_available() } == -1 {
+            return None;
+        }
+
+        let max_node = unsafe { numa_max_node() };
+        if max_node <= 0 {
+            // Single-node machine; sysfs path will produce a better result.
+            return None;
+        }
+
+        let total_cpus = unsafe { numa_num_configured_cpus() }.max(0) as usize;
+
+        let mut nodes: Vec<NumaNode> = Vec::new();
+        for raw_node in 0..=max_node {
+            // Build CPU list for this node via the cpumask.
+            let mut cpu_ids: Vec<usize> = Vec::new();
+            unsafe {
+                let mask_ptr = numa_allocate_cpumask();
+                if !mask_ptr.is_null() {
+                    if numa_node_to_cpus(raw_node, mask_ptr) == 0 {
+                        for cpu in 0..total_cpus {
+                            if numa_bitmask_isbitset(mask_ptr as *const c_void, cpu as c_uint) != 0
+                            {
+                                cpu_ids.push(cpu);
+                            }
+                        }
+                    }
+                    numa_bitmask_free(mask_ptr);
+                }
+            }
+
+            // Best-effort memory information (numa_node_size64 returns -1 on error).
+            let mut free_bytes: c_longlong = 0;
+            let total_bytes =
+                unsafe { numa_node_size64(raw_node, &mut free_bytes as *mut c_longlong) };
+            let memory_mb = if total_bytes > 0 {
+                total_bytes as usize / (1024 * 1024)
+            } else {
+                0
+            };
+            let free_memory_mb = if free_bytes > 0 {
+                free_bytes as usize / (1024 * 1024)
+            } else {
+                0
+            };
+
+            // Skip memory-only nodes (no CPUs assigned on this platform).
+            if !cpu_ids.is_empty() {
+                nodes.push(NumaNode {
+                    id: raw_node as usize,
+                    cpu_ids,
+                    memory_mb,
+                    free_memory_mb,
+                });
+            }
+        }
+
+        if nodes.is_empty() {
+            return None;
+        }
+        let num_nodes = nodes.len();
+        Some(NumaTopology { nodes, num_nodes })
     }
 
     /// Build a single-node topology that covers all logical CPUs.
@@ -79,7 +184,10 @@ impl NumaTopology {
             memory_mb: 0,
             free_memory_mb: 0,
         };
-        NumaTopology { num_nodes: 1, nodes: vec![node] }
+        NumaTopology {
+            num_nodes: 1,
+            nodes: vec![node],
+        }
     }
 
     /// Linux-specific topology discovery via sysfs.
@@ -108,12 +216,16 @@ impl NumaTopology {
                 .unwrap_or_default();
 
             // Parse meminfo for MemTotal and MemFree.
-            let (memory_mb, free_memory_mb) =
-                fs::read_to_string(node_dir.join("meminfo"))
-                    .map(|s| parse_meminfo(&s))
-                    .unwrap_or((0, 0));
+            let (memory_mb, free_memory_mb) = fs::read_to_string(node_dir.join("meminfo"))
+                .map(|s| parse_meminfo(&s))
+                .unwrap_or((0, 0));
 
-            nodes.push(NumaNode { id: idx, cpu_ids, memory_mb, free_memory_mb });
+            nodes.push(NumaNode {
+                id: idx,
+                cpu_ids,
+                memory_mb,
+                free_memory_mb,
+            });
             idx += 1;
         }
 
@@ -395,8 +507,8 @@ mod tests {
         assert!(buf.as_slice().iter().all(|&v| v == 0.0));
 
         // Mutate via slice.
-        buf.as_mut_slice()[0] = 3.14;
-        assert_eq!(buf.as_slice()[0], 3.14);
+        buf.as_mut_slice()[0] = 3.15;
+        assert_eq!(buf.as_slice()[0], 3.15);
     }
 
     #[test]

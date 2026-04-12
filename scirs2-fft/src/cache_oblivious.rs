@@ -168,6 +168,42 @@ pub fn cache_oblivious_ifft_with_config(
     Ok(transformed.iter().map(|c| c.conj() * inv_n).collect())
 }
 
+/// Compute the real-input FFT using the cache-oblivious algorithm.
+///
+/// For a real-valued input of length `N`, returns the one-sided spectrum of
+/// length `N / 2 + 1` (the positive-frequency bins plus DC and Nyquist).
+/// The full `N`-point complex DFT satisfies the Hermitian symmetry
+/// `X[N-k] = conj(X[k])`, so only the first `N/2 + 1` values are needed.
+///
+/// Works for any positive length; non-power-of-two sizes fall back to
+/// Bluestein automatically.
+///
+/// # Errors
+///
+/// Returns [`FFTError::ValueError`] if `input` is empty.
+///
+/// # Examples
+///
+/// ```rust
+/// use scirs2_fft::cache_oblivious::cache_oblivious_rfft;
+///
+/// let real_signal: Vec<f64> = (0..16).map(|k| (k as f64).sin()).collect();
+/// let spectrum = cache_oblivious_rfft(&real_signal).expect("rfft failed");
+/// assert_eq!(spectrum.len(), 16 / 2 + 1);
+/// ```
+pub fn cache_oblivious_rfft(input: &[f64]) -> FFTResult<Vec<Complex64>> {
+    if input.is_empty() {
+        return Err(FFTError::ValueError(
+            "cache_oblivious_rfft: input must not be empty".into(),
+        ));
+    }
+    let n = input.len();
+    let complex_input: Vec<Complex64> = input.iter().map(|&x| Complex64::new(x, 0.0)).collect();
+    let full = cache_oblivious_fft(&complex_input)?;
+    // Return only the one-sided (positive-frequency) part.
+    Ok(full[..n / 2 + 1].to_vec())
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  Internal: validation
 // ─────────────────────────────────────────────────────────────────────────────
@@ -475,6 +511,41 @@ mod tests {
 
         // 1: should return None
         assert!(find_factorization(1).is_none());
+    }
+
+    // ── cache_oblivious_rfft ─────────────────────────────────────────────
+    #[test]
+    fn test_cache_oblivious_rfft_length() {
+        for &n in &[8_usize, 16, 32, 64] {
+            let signal: Vec<f64> = (0..n).map(|k| (k as f64 * 0.3).sin()).collect();
+            let spectrum = cache_oblivious_rfft(&signal)
+                .unwrap_or_else(|e| panic!("rfft failed for n={n}: {e}"));
+            assert_eq!(spectrum.len(), n / 2 + 1, "one-sided length for n={n}");
+        }
+    }
+
+    #[test]
+    fn test_cache_oblivious_rfft_matches_full_fft() {
+        let n = 32_usize;
+        let signal: Vec<f64> = (0..n).map(|k| (k as f64 * 0.5).cos()).collect();
+        let complex_input: Vec<Complex64> =
+            signal.iter().map(|&x| Complex64::new(x, 0.0)).collect();
+
+        // Full FFT via the cache-oblivious algorithm.
+        let full = cache_oblivious_fft(&complex_input).expect("full fft failed");
+        // One-sided via rfft wrapper.
+        let one_sided = cache_oblivious_rfft(&signal).expect("rfft failed");
+
+        assert_eq!(one_sided.len(), n / 2 + 1);
+        for (k, (r, f)) in one_sided.iter().zip(full.iter()).enumerate() {
+            let diff = (r - f).norm();
+            assert!(diff < 1e-10, "bin {k}: rfft vs fft mismatch, diff={diff}");
+        }
+    }
+
+    #[test]
+    fn test_cache_oblivious_rfft_empty_input() {
+        assert!(cache_oblivious_rfft(&[]).is_err());
     }
 
     // ── non-power-of-2 sizes (N=12, N=15) ──────────────────────────────

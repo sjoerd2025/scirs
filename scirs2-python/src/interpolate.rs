@@ -12,6 +12,7 @@ use scirs2_numpy::{PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
 use scirs2_interpolate::interp1d::{ExtrapolateMode, Interp1d, InterpolationMethod};
 use scirs2_interpolate::interp2d::{Interp2d, Interp2dKind};
 use scirs2_interpolate::spline::CubicSpline;
+use scirs2_interpolate::{RBFInterpolator, RBFKernel};
 
 /// 1D interpolation class
 #[pyclass(name = "Interp1d")]
@@ -285,10 +286,94 @@ impl PyInterp2d {
         // Convert Array2_17 to Array2 (ndarray 0.16)
         let shape = result.dim();
         let vec: Vec<f64> = result.into_iter().collect();
-        scirs_to_numpy_array2(
-            Array2::from_shape_vec(shape, vec).expect("Operation failed"),
-            py,
-        )
+        let arr2 = Array2::from_shape_vec(shape, vec).map_err(|e| {
+            pyo3::exceptions::PyRuntimeError::new_err(format!("Array reshape failed: {e}"))
+        })?;
+        scirs_to_numpy_array2(arr2, py)
+    }
+}
+
+// =============================================================================
+// RBF Interpolation
+// =============================================================================
+
+/// Radial Basis Function (RBF) interpolation class
+#[pyclass(name = "RBFInterpolator")]
+pub struct PyRBFInterpolator {
+    interp: RBFInterpolator<f64>,
+}
+
+#[pymethods]
+impl PyRBFInterpolator {
+    /// Create a new RBF interpolator
+    ///
+    /// Parameters:
+    /// - points: Training data points, shape (n_samples, n_features)
+    /// - values: Training data values, shape (n_samples,)
+    /// - kernel: Kernel type - 'gaussian', 'multiquadric', 'inverse_multiquadric',
+    ///           'thin_plate_spline', 'linear', 'cubic' (default: 'gaussian')
+    /// - epsilon: Shape parameter for the kernel (default: 1.0)
+    #[new]
+    #[pyo3(signature = (points, values, kernel="gaussian", epsilon=1.0))]
+    fn new(
+        points: PyReadonlyArray2<f64>,
+        values: PyReadonlyArray1<f64>,
+        kernel: &str,
+        epsilon: f64,
+    ) -> PyResult<Self> {
+        let pts = points.as_array();
+        let vals = values.as_array();
+
+        // Convert to ndarray 0.17 types
+        let shape = pts.dim();
+        let pts_vec: Vec<f64> = pts.iter().copied().collect();
+        let pts_17 = Array2_17::from_shape_vec(shape, pts_vec).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Invalid points array: {e}"))
+        })?;
+        let vals_vec: Vec<f64> = vals.iter().copied().collect();
+        let vals_17 = scirs2_core::ndarray::Array1::from_vec(vals_vec);
+
+        let rbf_kernel = match kernel.to_lowercase().as_str() {
+            "gaussian" => RBFKernel::Gaussian,
+            "multiquadric" => RBFKernel::Multiquadric,
+            "inverse_multiquadric" | "inverse-multiquadric" => RBFKernel::InverseMultiquadric,
+            "thin_plate_spline" | "thin-plate-spline" => RBFKernel::ThinPlateSpline,
+            "linear" => RBFKernel::Linear,
+            "cubic" => RBFKernel::Cubic,
+            _ => RBFKernel::Gaussian,
+        };
+
+        let interp = RBFInterpolator::new(&pts_17.view(), &vals_17.view(), rbf_kernel, epsilon)
+            .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("{e}")))?;
+
+        Ok(PyRBFInterpolator { interp })
+    }
+
+    /// Evaluate the RBF interpolator at new points
+    ///
+    /// Parameters:
+    /// - query_points: Points to evaluate, shape (n_query, n_features)
+    ///
+    /// Returns:
+    /// - 1D array of interpolated values, shape (n_query,)
+    fn __call__(
+        &self,
+        py: Python,
+        query_points: PyReadonlyArray2<f64>,
+    ) -> PyResult<Py<PyArray1<f64>>> {
+        let pts = query_points.as_array();
+        let shape = pts.dim();
+        let pts_vec: Vec<f64> = pts.iter().copied().collect();
+        let pts_17 = Array2_17::from_shape_vec(shape, pts_vec).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Invalid query array: {e}"))
+        })?;
+
+        let result = self
+            .interp
+            .interpolate(&pts_17.view())
+            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("{e}")))?;
+
+        scirs_to_numpy_array1(Array1::from_vec(result.to_vec()), py)
     }
 }
 
@@ -320,8 +405,12 @@ fn interp_py(
         ));
     }
 
-    let xp_slice = xp_arr.as_slice().expect("Operation failed");
-    let fp_slice = fp_arr.as_slice().expect("Operation failed");
+    let xp_slice = xp_arr
+        .as_slice()
+        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("xp array is not contiguous"))?;
+    let fp_slice = fp_arr
+        .as_slice()
+        .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("fp array is not contiguous"))?;
 
     // Pre-allocate result
     let mut result = Vec::with_capacity(x_arr.len());
@@ -406,6 +495,7 @@ pub fn register_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyInterp1d>()?;
     m.add_class::<PyCubicSpline>()?;
     m.add_class::<PyInterp2d>()?;
+    m.add_class::<PyRBFInterpolator>()?;
     m.add_function(wrap_pyfunction!(interp_py, m)?)?;
     m.add_function(wrap_pyfunction!(interp_with_bounds_py, m)?)?;
 

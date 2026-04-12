@@ -10,6 +10,10 @@
 //! - Liu, H., Simonyan, K. and Yang, Y. (2019). "DARTS: Differentiable Architecture
 //!   Search". ICLR 2019.
 
+pub mod gdas;
+pub mod predictor_nas;
+pub mod snas;
+
 use crate::error::{OptimizeError, OptimizeResult};
 
 // ───────────────────────────────────────────────────────────────── Operations ──
@@ -109,6 +113,101 @@ impl Default for DartsConfig {
             arch_lr: 3e-4,
             weight_lr: 3e-4,
             temperature: 1.0,
+        }
+    }
+}
+
+// ──────────────────────────────────────────────────────────────── Lcg (RNG) ──
+
+/// Minimal linear congruential generator (LCG) to avoid external rand dependency
+/// inside the DARTS sub-modules.  Not cryptographically secure; suitable only for
+/// NAS stochastic sampling.
+pub(crate) struct Lcg {
+    state: u64,
+}
+
+impl Lcg {
+    pub(crate) fn new(seed: u64) -> Self {
+        Self { state: seed }
+    }
+
+    /// Returns a pseudo-random `f64` in `[0, 1)`.
+    pub(crate) fn next_f64(&mut self) -> f64 {
+        self.state = self
+            .state
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1_442_695_040_888_963_407);
+        ((self.state >> 11) as f64) * (1.0 / (1u64 << 53) as f64)
+    }
+}
+
+// ─────────────────────────────────────────────── AnnealingStrategy / Schedule ──
+
+/// Strategy for annealing the softmax / Gumbel-Softmax temperature.
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnealingStrategy {
+    /// Linear decay from initial to final.
+    Linear,
+    /// Exponential decay: `T(t) = T_init * (T_final / T_init)^(t / total)`.
+    Exponential,
+    /// Cosine annealing.
+    Cosine,
+}
+
+/// A temperature schedule for Gumbel-Softmax or concrete relaxation.
+#[derive(Debug, Clone)]
+pub struct TemperatureSchedule {
+    /// Starting temperature.
+    pub initial: f64,
+    /// Ending temperature.
+    pub final_temp: f64,
+    /// Decay strategy.
+    pub strategy: AnnealingStrategy,
+    /// Total number of steps over which the schedule spans.
+    pub total_steps: usize,
+}
+
+impl TemperatureSchedule {
+    /// Construct a new `TemperatureSchedule`.
+    pub fn new(
+        initial: f64,
+        final_temp: f64,
+        strategy: AnnealingStrategy,
+        total_steps: usize,
+    ) -> Self {
+        Self {
+            initial,
+            final_temp,
+            strategy,
+            total_steps,
+        }
+    }
+
+    /// Temperature at the given `step` index.
+    ///
+    /// `step` is clamped to `[0, total_steps]`.
+    pub fn temperature_at(&self, step: usize) -> f64 {
+        let t = step.min(self.total_steps);
+        let frac = if self.total_steps == 0 {
+            1.0
+        } else {
+            t as f64 / self.total_steps as f64
+        };
+        match self.strategy {
+            AnnealingStrategy::Linear => self.initial + (self.final_temp - self.initial) * frac,
+            AnnealingStrategy::Exponential => {
+                if self.initial <= 0.0 || self.final_temp <= 0.0 {
+                    self.final_temp
+                } else {
+                    self.initial * (self.final_temp / self.initial).powf(frac)
+                }
+            }
+            AnnealingStrategy::Cosine => {
+                self.final_temp
+                    + 0.5
+                        * (self.initial - self.final_temp)
+                        * (1.0 + (std::f64::consts::PI * frac).cos())
+            }
         }
     }
 }
@@ -661,5 +760,55 @@ mod tests {
         let mut search = DartsSearch::new(DartsConfig::default());
         let result = search.update_arch_params(&[1.0, 2.0], 0.01);
         assert!(result.is_err());
+    }
+
+    // ── TemperatureSchedule tests ──────────────────────────────────────────────
+
+    #[test]
+    fn temperature_schedule_linear_bounds() {
+        let sched = TemperatureSchedule::new(10.0, 1.0, AnnealingStrategy::Linear, 100);
+        let t0 = sched.temperature_at(0);
+        let t_half = sched.temperature_at(50);
+        let t_end = sched.temperature_at(100);
+        assert!((t0 - 10.0).abs() < 1e-10, "t0={t0}");
+        assert!((t_half - 5.5).abs() < 1e-10, "t_half={t_half}");
+        assert!((t_end - 1.0).abs() < 1e-10, "t_end={t_end}");
+    }
+
+    #[test]
+    fn temperature_schedule_exponential_bounds() {
+        let sched = TemperatureSchedule::new(10.0, 1.0, AnnealingStrategy::Exponential, 100);
+        let t0 = sched.temperature_at(0);
+        let t_end = sched.temperature_at(100);
+        assert!((t0 - 10.0).abs() < 1e-8, "t0={t0}");
+        assert!((t_end - 1.0).abs() < 1e-8, "t_end={t_end}");
+        // Intermediate should be between bounds.
+        let t_mid = sched.temperature_at(50);
+        assert!(t_mid > 1.0 && t_mid < 10.0, "t_mid={t_mid}");
+    }
+
+    #[test]
+    fn temperature_schedule_cosine_bounds() {
+        let sched = TemperatureSchedule::new(10.0, 1.0, AnnealingStrategy::Cosine, 100);
+        let t0 = sched.temperature_at(0);
+        let t_end = sched.temperature_at(100);
+        assert!((t0 - 10.0).abs() < 1e-8, "t0={t0}");
+        assert!((t_end - 1.0).abs() < 1e-8, "t_end={t_end}");
+    }
+
+    #[test]
+    fn temperature_schedule_clamped_beyond_total() {
+        let sched = TemperatureSchedule::new(5.0, 1.0, AnnealingStrategy::Linear, 10);
+        let t_over = sched.temperature_at(999);
+        let t_end = sched.temperature_at(10);
+        assert!((t_over - t_end).abs() < 1e-10);
+    }
+
+    #[test]
+    fn temperature_schedule_zero_steps() {
+        // When total_steps == 0, frac = 1.0 immediately for any step.
+        let sched = TemperatureSchedule::new(5.0, 1.0, AnnealingStrategy::Linear, 0);
+        let t = sched.temperature_at(0);
+        assert!((t - 1.0).abs() < 1e-10, "t={t}");
     }
 }

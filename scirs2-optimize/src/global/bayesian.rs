@@ -580,6 +580,15 @@ impl BayesianOptimizer {
         }
     }
 
+    /// Enforce integer dimension constraints by rounding and clamping
+    fn enforce_integer_dims(&self, x: &mut Array1<f64>) {
+        for (i, (_, param)) in self.space.parameters.iter().enumerate() {
+            if let Parameter::Integer(lo, hi) = param {
+                x[i] = x[i].round().clamp(*lo as f64, *hi as f64);
+            }
+        }
+    }
+
     /// Ask for the next point to evaluate
     pub fn ask(&mut self) -> Array1<f64> {
         // If we don't have enough points, sample randomly
@@ -672,12 +681,16 @@ impl BayesianOptimizer {
             };
 
             self.iteration += 1;
-            return samples[0].clone();
+            let mut point = samples[0].clone();
+            self.enforce_integer_dims(&mut point);
+            return point;
         }
 
         // Otherwise, optimize the acquisition function
         self.iteration += 1;
-        self.optimize_acquisition_function()
+        let mut point = self.optimize_acquisition_function();
+        self.enforce_integer_dims(&mut point);
+        point
     }
 
     /// Update with an observation
@@ -783,10 +796,12 @@ impl BayesianOptimizer {
         }
 
         // Return the best point found
-        best_x.unwrap_or_else(|| {
+        let mut result = best_x.unwrap_or_else(|| {
             // If optimization fails, return a random point
             self.space.sample(1, &mut self.rng)[0].clone()
-        })
+        });
+        self.enforce_integer_dims(&mut result);
+        result
     }
 
     /// Run the full optimization process
@@ -922,5 +937,35 @@ mod tests {
         assert!(result.fun < 0.5);
         assert!(result.x[0].abs() < 0.5);
         assert!(result.x[1].abs() < 0.5);
+    }
+
+    #[test]
+    fn test_integer_dimension_enforcement() {
+        let space = Space::new().add("rating", Parameter::Integer(0, 3));
+        let options = BayesianOptimizationOptions {
+            n_initial_points: 2,
+            seed: Some(42),
+            ..Default::default()
+        };
+        let mut opt = BayesianOptimizer::new(space, Some(options));
+        let result = opt.optimize(
+            |x| {
+                let v = x[0];
+                (v - 2.0).abs()
+            },
+            6,
+        );
+        // All evaluated points must be integers in [0, 3]
+        for obs in &opt.observations {
+            let v = obs.x[0];
+            assert!(v >= 0.0 && v <= 3.0, "Out of bounds: {v}");
+            assert!((v - v.round()).abs() < 1e-12, "Not integer: {v}");
+        }
+        // Best should be x=2
+        assert!(
+            (result.x[0] - 2.0).abs() < 1e-12,
+            "Best x should be 2, got {}",
+            result.x[0]
+        );
     }
 }

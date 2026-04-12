@@ -71,6 +71,7 @@ proptest = { workspace = true }
 [[bench]]
 name = "fft_benchmarks"
 harness = false
+required-features = ["rustfft-backend"]
 
 [[bench]]
 name = "scipy_comparison"
@@ -78,4 +79,12 @@ harness = false
 
 [[example]]
 name = "plan_cache_example"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "benchmark_simple"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "memory_usage_benchmarking"
 required-features = ["rustfft-backend"]

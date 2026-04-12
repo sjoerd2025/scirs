@@ -1300,6 +1300,15 @@ pub mod leak_detection;
 #[cfg(feature = "mmap")]
 pub mod mmap_array;
 
+/// NUMA-aware allocator with optional libnuma backend (feature-gated)
+pub mod numa_allocator;
+
+/// Memory defragmentation: compaction planner and online defragmenter
+pub mod defrag;
+
+/// Cross-NUMA bandwidth measurement and optimal data-placement routing
+pub mod numa_bandwidth;
+
 // Re-export key metric functions for convenient usage
 pub use metrics::{
     format_memory_report, generate_memory_report, track_allocation, track_deallocation,

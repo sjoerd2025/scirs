@@ -28,6 +28,15 @@
 #![allow(dead_code)]
 #![allow(missing_docs)]
 
+pub mod azure_sas;
+pub mod gcs;
+
+pub use azure_sas::{
+    build_sas_url, generate_sas_token, is_sas_valid, parse_sas_token, AzureError, AzureSasParams,
+    SasPermissions, SasResource,
+};
+pub use gcs::{GcsError, GcsResumableUpload, UploadStatus};
+
 use crate::error::{IoError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -264,7 +273,7 @@ impl LocalObjectStore {
         use sha2::{Digest, Sha256};
         let mut h = Sha256::new();
         h.update(data);
-        format!("{:x}", h.finalize())
+        hex::encode(h.finalize())
     }
 }
 
@@ -315,9 +324,7 @@ impl ObjectStore for LocalObjectStore {
         Ok(ObjectMetadata {
             key: key.clone(),
             size: meta.len(),
-            last_modified: meta
-                .modified()
-                .unwrap_or(SystemTime::UNIX_EPOCH),
+            last_modified: meta.modified().unwrap_or(SystemTime::UNIX_EPOCH),
             content_type: None,
             etag: Some(Self::etag_for(&data)),
             user_metadata: HashMap::new(),
@@ -337,8 +344,8 @@ impl LocalObjectStore {
             Err(_) => return Ok(()),
         };
         for entry in entries {
-            let entry = entry
-                .map_err(|e| IoError::FileError(format!("Cannot read dir entry: {e}")))?;
+            let entry =
+                entry.map_err(|e| IoError::FileError(format!("Cannot read dir entry: {e}")))?;
             let path = entry.path();
             if path.is_dir() {
                 self.collect_entries(&path, prefix, results)?;
@@ -388,10 +395,7 @@ impl MemoryObjectStore {
 
     /// Return the number of objects currently stored.
     pub fn len(&self) -> usize {
-        self.data
-            .lock()
-            .map(|g| g.len())
-            .unwrap_or(0)
+        self.data.lock().map(|g| g.len()).unwrap_or(0)
     }
 
     /// Return `true` if the store is empty.
@@ -485,6 +489,7 @@ impl ObjectStore for MemoryObjectStore {
 /// 1. Create an upload session via `MultipartUpload::new(store, key)`.
 /// 2. Upload parts with `upload_part(part_number, data)`.
 /// 3. Finalise with `complete()` which concatenates parts and stores the object.
+///
 /// Parts may be uploaded in any order; they are sorted by part number on `complete`.
 ///
 /// Any part number ≥ 1 is valid.
@@ -568,7 +573,7 @@ impl<'a> MultipartUpload<'a> {
             use sha2::{Digest, Sha256};
             let mut h = Sha256::new();
             h.update(&assembled);
-            format!("{:x}", h.finalize())
+            hex::encode(h.finalize())
         };
         self.store.put(&self.key, &assembled)?;
         Ok(UploadResult {
@@ -688,6 +693,396 @@ impl<S: ObjectStore> ObjectStore for InstrumentedStore<S> {
 
     fn head(&self, key: &ObjectKey) -> Result<ObjectMetadata> {
         self.inner.head(key)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Cloud provider stubs: S3, GCS, Azure Blob
+// ---------------------------------------------------------------------------
+
+/// Cloud storage provider type.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StoreProviderType {
+    /// Local filesystem.
+    LocalFs,
+    /// AWS S3 or S3-compatible (MinIO, Ceph, etc.).
+    S3,
+    /// Google Cloud Storage.
+    Gcs,
+    /// Azure Blob Storage.
+    AzureBlob,
+    /// In-memory (testing).
+    Memory,
+}
+
+/// AWS S3-compatible object store stub.
+///
+/// Full HTTP/SigV4 implementation requires the `aws-sdk-s3` feature.
+/// Without that feature, all operations return `IoError::Other("s3 feature not enabled")`.
+pub struct S3Store {
+    /// Target bucket name.
+    pub bucket: String,
+    /// AWS region (e.g. `"us-east-1"`).
+    pub region: String,
+    /// Optional custom endpoint (for S3-compatible services).
+    pub endpoint: Option<String>,
+    /// AWS access key ID.
+    pub access_key: String,
+    /// AWS secret access key.
+    pub secret_key: String,
+}
+
+impl S3Store {
+    /// Create a new S3 store configuration.
+    pub fn new(
+        bucket: impl Into<String>,
+        region: impl Into<String>,
+        access_key: impl Into<String>,
+        secret_key: impl Into<String>,
+    ) -> Self {
+        Self {
+            bucket: bucket.into(),
+            region: region.into(),
+            endpoint: None,
+            access_key: access_key.into(),
+            secret_key: secret_key.into(),
+        }
+    }
+
+    /// Set a custom endpoint URL (e.g. for MinIO).
+    pub fn with_endpoint(mut self, endpoint: impl Into<String>) -> Self {
+        self.endpoint = Some(endpoint.into());
+        self
+    }
+}
+
+impl ObjectStore for S3Store {
+    fn put(&self, key: &ObjectKey, _data: &[u8]) -> Result<()> {
+        #[cfg(feature = "aws-sdk-s3")]
+        {
+            // Real implementation would use reqwest + SigV4 signing.
+            // For now even with the feature flag we return a stub error.
+            Err(IoError::Other(format!(
+                "S3 put '{}': real HTTP implementation not yet complete",
+                key
+            )))
+        }
+        #[cfg(not(feature = "aws-sdk-s3"))]
+        Err(IoError::Other(format!(
+            "S3 put '{}': enable the 'aws-sdk-s3' feature for AWS S3 support",
+            key
+        )))
+    }
+
+    fn get(&self, key: &ObjectKey) -> Result<Vec<u8>> {
+        #[cfg(feature = "aws-sdk-s3")]
+        {
+            Err(IoError::Other(format!(
+                "S3 get '{}': real HTTP implementation not yet complete",
+                key
+            )))
+        }
+        #[cfg(not(feature = "aws-sdk-s3"))]
+        Err(IoError::Other(format!(
+            "S3 get '{}': enable the 'aws-sdk-s3' feature for AWS S3 support",
+            key
+        )))
+    }
+
+    fn delete(&self, key: &ObjectKey) -> Result<()> {
+        #[cfg(feature = "aws-sdk-s3")]
+        {
+            Err(IoError::Other(format!(
+                "S3 delete '{}': real HTTP implementation not yet complete",
+                key
+            )))
+        }
+        #[cfg(not(feature = "aws-sdk-s3"))]
+        Err(IoError::Other(format!(
+            "S3 delete '{}': enable the 'aws-sdk-s3' feature for AWS S3 support",
+            key
+        )))
+    }
+
+    fn list(&self, prefix: &str) -> Result<Vec<ObjectMetadata>> {
+        #[cfg(feature = "aws-sdk-s3")]
+        {
+            Err(IoError::Other(format!(
+                "S3 list '{}': real HTTP implementation not yet complete",
+                prefix
+            )))
+        }
+        #[cfg(not(feature = "aws-sdk-s3"))]
+        Err(IoError::Other(format!(
+            "S3 list '{}': enable the 'aws-sdk-s3' feature for AWS S3 support",
+            prefix
+        )))
+    }
+
+    fn head(&self, key: &ObjectKey) -> Result<ObjectMetadata> {
+        #[cfg(feature = "aws-sdk-s3")]
+        {
+            Err(IoError::Other(format!(
+                "S3 head '{}': real HTTP implementation not yet complete",
+                key
+            )))
+        }
+        #[cfg(not(feature = "aws-sdk-s3"))]
+        Err(IoError::Other(format!(
+            "S3 head '{}': enable the 'aws-sdk-s3' feature for AWS S3 support",
+            key
+        )))
+    }
+
+    fn exists(&self, key: &ObjectKey) -> bool {
+        // Stubs always report "not found".
+        let _ = key;
+        false
+    }
+}
+
+/// Google Cloud Storage stub.
+///
+/// Full implementation requires the `google-cloud-storage` feature.
+pub struct GcsStore {
+    /// GCS bucket name.
+    pub bucket: String,
+    /// GCP project ID.
+    pub project_id: String,
+    /// Path to service-account JSON key file (optional).
+    pub credentials_path: Option<String>,
+}
+
+impl GcsStore {
+    /// Create a new GCS store configuration.
+    pub fn new(bucket: impl Into<String>, project_id: impl Into<String>) -> Self {
+        Self {
+            bucket: bucket.into(),
+            project_id: project_id.into(),
+            credentials_path: None,
+        }
+    }
+
+    /// Set the service-account credentials JSON path.
+    pub fn with_credentials(mut self, path: impl Into<String>) -> Self {
+        self.credentials_path = Some(path.into());
+        self
+    }
+}
+
+impl ObjectStore for GcsStore {
+    fn put(&self, key: &ObjectKey, _data: &[u8]) -> Result<()> {
+        Err(IoError::Other(format!(
+            "GCS put '{}': enable the 'google-cloud-storage' feature for GCS support",
+            key
+        )))
+    }
+
+    fn get(&self, key: &ObjectKey) -> Result<Vec<u8>> {
+        Err(IoError::Other(format!(
+            "GCS get '{}': enable the 'google-cloud-storage' feature for GCS support",
+            key
+        )))
+    }
+
+    fn delete(&self, key: &ObjectKey) -> Result<()> {
+        Err(IoError::Other(format!(
+            "GCS delete '{}': enable the 'google-cloud-storage' feature for GCS support",
+            key
+        )))
+    }
+
+    fn list(&self, prefix: &str) -> Result<Vec<ObjectMetadata>> {
+        Err(IoError::Other(format!(
+            "GCS list '{}': enable the 'google-cloud-storage' feature for GCS support",
+            prefix
+        )))
+    }
+
+    fn head(&self, key: &ObjectKey) -> Result<ObjectMetadata> {
+        Err(IoError::Other(format!(
+            "GCS head '{}': enable the 'google-cloud-storage' feature for GCS support",
+            key
+        )))
+    }
+
+    fn exists(&self, key: &ObjectKey) -> bool {
+        let _ = key;
+        false
+    }
+}
+
+/// Azure Blob Storage stub.
+///
+/// Full implementation requires the `azure-storage-blobs` feature.
+pub struct AzureBlobStore {
+    /// Storage account name.
+    pub account: String,
+    /// Container name.
+    pub container: String,
+    /// SAS token or account key for authentication.
+    pub credential: Option<String>,
+    /// Optional custom endpoint (for Azurite emulator).
+    pub endpoint: Option<String>,
+}
+
+impl AzureBlobStore {
+    /// Create a new Azure Blob store configuration.
+    pub fn new(account: impl Into<String>, container: impl Into<String>) -> Self {
+        Self {
+            account: account.into(),
+            container: container.into(),
+            credential: None,
+            endpoint: None,
+        }
+    }
+
+    /// Set an authentication credential (SAS token or account key).
+    pub fn with_credential(mut self, cred: impl Into<String>) -> Self {
+        self.credential = Some(cred.into());
+        self
+    }
+
+    /// Set a custom endpoint (e.g. Azurite emulator).
+    pub fn with_endpoint(mut self, endpoint: impl Into<String>) -> Self {
+        self.endpoint = Some(endpoint.into());
+        self
+    }
+}
+
+impl ObjectStore for AzureBlobStore {
+    fn put(&self, key: &ObjectKey, _data: &[u8]) -> Result<()> {
+        Err(IoError::Other(format!(
+            "Azure put '{}': enable the 'azure-storage-blobs' feature for Azure support",
+            key
+        )))
+    }
+
+    fn get(&self, key: &ObjectKey) -> Result<Vec<u8>> {
+        Err(IoError::Other(format!(
+            "Azure get '{}': enable the 'azure-storage-blobs' feature for Azure support",
+            key
+        )))
+    }
+
+    fn delete(&self, key: &ObjectKey) -> Result<()> {
+        Err(IoError::Other(format!(
+            "Azure delete '{}': enable the 'azure-storage-blobs' feature for Azure support",
+            key
+        )))
+    }
+
+    fn list(&self, prefix: &str) -> Result<Vec<ObjectMetadata>> {
+        Err(IoError::Other(format!(
+            "Azure list '{}': enable the 'azure-storage-blobs' feature for Azure support",
+            prefix
+        )))
+    }
+
+    fn head(&self, key: &ObjectKey) -> Result<ObjectMetadata> {
+        Err(IoError::Other(format!(
+            "Azure head '{}': enable the 'azure-storage-blobs' feature for Azure support",
+            key
+        )))
+    }
+
+    fn exists(&self, key: &ObjectKey) -> bool {
+        let _ = key;
+        false
+    }
+}
+
+// ---------------------------------------------------------------------------
+// URL parsing and factory
+// ---------------------------------------------------------------------------
+
+/// Parse a cloud storage URL into provider type, bucket, and path.
+///
+/// Supported URL schemes:
+/// - `s3://bucket/key` — AWS S3
+/// - `gs://bucket/key` — Google Cloud Storage
+/// - `az://container/blob` — Azure Blob Storage
+/// - Any other string — treated as a local filesystem path
+///
+/// Returns `(provider_type, bucket_or_container, object_path)`.
+pub fn parse_store_url(
+    url: &str,
+) -> std::result::Result<(StoreProviderType, String, String), IoError> {
+    if let Some(rest) = url.strip_prefix("s3://") {
+        let (bucket, path) = split_bucket_path(rest)?;
+        return Ok((StoreProviderType::S3, bucket, path));
+    }
+    if let Some(rest) = url.strip_prefix("gs://") {
+        let (bucket, path) = split_bucket_path(rest)?;
+        return Ok((StoreProviderType::Gcs, bucket, path));
+    }
+    if let Some(rest) = url.strip_prefix("az://") {
+        let (bucket, path) = split_bucket_path(rest)?;
+        return Ok((StoreProviderType::AzureBlob, bucket, path));
+    }
+    // Local path
+    Ok((StoreProviderType::LocalFs, String::new(), url.to_string()))
+}
+
+fn split_bucket_path(rest: &str) -> std::result::Result<(String, String), IoError> {
+    match rest.find('/') {
+        Some(idx) => Ok((rest[..idx].to_string(), rest[idx + 1..].to_string())),
+        None => {
+            if rest.is_empty() {
+                Err(IoError::Other(
+                    "Invalid store URL: missing bucket name".to_string(),
+                ))
+            } else {
+                // Bucket-only URL (no path component) — path is empty
+                Ok((rest.to_string(), String::new()))
+            }
+        }
+    }
+}
+
+/// Build a boxed `ObjectStore` from a URL string.
+///
+/// - `file://path` or a bare path: returns `LocalObjectStore` rooted at that path.
+/// - `s3://...`, `gs://...`, `az://...`: returns the corresponding stub store.
+///   The stub will fail at runtime unless credentials are provided via environment
+///   variables and the appropriate Cargo feature is enabled.
+/// - Credentials for cloud stores are read from standard environment variables:
+///   - S3: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`
+///   - GCS: `GCP_PROJECT_ID`
+///   - Azure: `AZURE_STORAGE_ACCOUNT`, `AZURE_STORAGE_KEY`
+pub fn from_url(url: &str) -> std::result::Result<Box<dyn ObjectStore>, IoError> {
+    let (provider, bucket, path) = parse_store_url(url)?;
+    match provider {
+        StoreProviderType::LocalFs => {
+            let root = if path.is_empty() { "." } else { &path };
+            Ok(Box::new(LocalObjectStore::new(root)))
+        }
+        StoreProviderType::S3 => {
+            let access_key = std::env::var("AWS_ACCESS_KEY_ID").unwrap_or_default();
+            let secret_key = std::env::var("AWS_SECRET_ACCESS_KEY").unwrap_or_default();
+            let region =
+                std::env::var("AWS_DEFAULT_REGION").unwrap_or_else(|_| "us-east-1".to_string());
+            Ok(Box::new(S3Store::new(
+                bucket, region, access_key, secret_key,
+            )))
+        }
+        StoreProviderType::Gcs => {
+            let project_id = std::env::var("GCP_PROJECT_ID").unwrap_or_default();
+            let mut store = GcsStore::new(bucket, project_id);
+            if let Ok(creds) = std::env::var("GOOGLE_APPLICATION_CREDENTIALS") {
+                store = store.with_credentials(creds);
+            }
+            Ok(Box::new(store))
+        }
+        StoreProviderType::AzureBlob => {
+            let account = std::env::var("AZURE_STORAGE_ACCOUNT").unwrap_or_else(|_| bucket);
+            let mut store = AzureBlobStore::new(account, path.clone());
+            if let Ok(key) = std::env::var("AZURE_STORAGE_KEY") {
+                store = store.with_credential(key);
+            }
+            Ok(Box::new(store))
+        }
+        StoreProviderType::Memory => Ok(Box::new(MemoryObjectStore::new())),
     }
 }
 
@@ -854,5 +1249,90 @@ mod tests {
         assert_eq!(s.delete_count, 1);
         assert_eq!(s.bytes_written, 5);
         assert_eq!(s.bytes_read, 5);
+    }
+
+    // ---- parse_store_url ----
+
+    #[test]
+    fn test_parse_store_url_s3() {
+        let (provider, bucket, path) = parse_store_url("s3://my-bucket/path/to/key").unwrap();
+        assert_eq!(provider, StoreProviderType::S3);
+        assert_eq!(bucket, "my-bucket");
+        assert_eq!(path, "path/to/key");
+    }
+
+    #[test]
+    fn test_parse_store_url_gcs() {
+        let (provider, bucket, path) = parse_store_url("gs://my-bucket/data/file.parquet").unwrap();
+        assert_eq!(provider, StoreProviderType::Gcs);
+        assert_eq!(bucket, "my-bucket");
+        assert_eq!(path, "data/file.parquet");
+    }
+
+    #[test]
+    fn test_parse_store_url_azure() {
+        let (provider, bucket, path) = parse_store_url("az://mycontainer/blob/path").unwrap();
+        assert_eq!(provider, StoreProviderType::AzureBlob);
+        assert_eq!(bucket, "mycontainer");
+        assert_eq!(path, "blob/path");
+    }
+
+    #[test]
+    fn test_parse_store_url_local() {
+        let (provider, bucket, path) = parse_store_url("/tmp/local/path").unwrap();
+        assert_eq!(provider, StoreProviderType::LocalFs);
+        assert!(bucket.is_empty());
+        assert_eq!(path, "/tmp/local/path");
+    }
+
+    // ---- S3Store / GcsStore / AzureBlobStore stub behaviour ----
+
+    #[test]
+    fn test_s3_store_stub_returns_error() {
+        let store = S3Store::new("bucket", "us-east-1", "key", "secret");
+        let key = ObjectKey::new("bucket", "file.bin");
+        assert!(store.put(&key, b"data").is_err());
+        assert!(store.get(&key).is_err());
+        assert!(store.list("bucket/").is_err());
+        assert!(store.head(&key).is_err());
+        assert!(store.delete(&key).is_err());
+        // exists() must not panic
+        assert!(!store.exists(&key));
+    }
+
+    #[test]
+    fn test_gcs_store_stub_returns_error() {
+        let store = GcsStore::new("my-bucket", "my-project");
+        let key = ObjectKey::new("my-bucket", "file.bin");
+        assert!(store.put(&key, b"data").is_err());
+        assert!(store.get(&key).is_err());
+    }
+
+    #[test]
+    fn test_azure_store_stub_returns_error() {
+        let store = AzureBlobStore::new("myaccount", "mycontainer");
+        let key = ObjectKey::new("mycontainer", "blob.bin");
+        assert!(store.put(&key, b"data").is_err());
+        assert!(store.get(&key).is_err());
+    }
+
+    // ---- from_url ----
+
+    #[test]
+    fn test_from_url_local() {
+        let dir = temp_dir().join(format!("scirs2_from_url_{}", Uuid::new_v4()));
+        let store = from_url(dir.to_str().unwrap()).unwrap();
+        let key = ObjectKey::root("test.bin");
+        store.put(&key, b"hello from_url").unwrap();
+        assert_eq!(store.get(&key).unwrap(), b"hello from_url");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_from_url_s3_stub() {
+        let store = from_url("s3://test-bucket/prefix").unwrap();
+        let key = ObjectKey::new("test-bucket", "file.bin");
+        // Stub should return an error, not panic
+        assert!(store.get(&key).is_err());
     }
 }

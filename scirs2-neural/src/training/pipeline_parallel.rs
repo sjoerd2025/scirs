@@ -118,9 +118,8 @@ impl PipelineStage {
     pub fn new(stage_id: usize, n_in: usize, n_out: usize, seed: u64) -> Self {
         let mut rng = SmallRng::seed_from_u64(seed);
         let scale = (2.0_f64 / (n_in + n_out) as f64).sqrt();
-        let weight = Array2::from_shape_fn((n_in, n_out), |_| {
-            (rng.random::<f64>() * 2.0 - 1.0) * scale
-        });
+        let weight =
+            Array2::from_shape_fn((n_in, n_out), |_| (rng.random::<f64>() * 2.0 - 1.0) * scale);
         let bias = Array1::zeros(n_out);
         Self {
             stage_id,
@@ -139,7 +138,7 @@ impl PipelineStage {
     pub fn forward(&mut self, micro_batch_id: usize, input: &Array2<f64>) -> Array2<f64> {
         // Linear: z = x @ W + b
         let z = input.dot(&self.weight) + &self.bias; // [batch, n_out]
-        // ReLU activation.
+                                                      // ReLU activation.
         let activation = z.mapv(|v| v.max(0.0));
         self.input_stash.insert(micro_batch_id, input.clone());
         self.activation_stash
@@ -151,11 +150,7 @@ impl PipelineStage {
     ///
     /// Returns `grad_input` for the previous stage.
     /// (Weight gradients are computed but not applied here — this is a pure simulation.)
-    pub fn backward(
-        &mut self,
-        micro_batch_id: usize,
-        grad_output: &Array2<f64>,
-    ) -> Array2<f64> {
+    pub fn backward(&mut self, micro_batch_id: usize, grad_output: &Array2<f64>) -> Array2<f64> {
         // Retrieve stashed activation to compute ReLU derivative.
         let activation = self
             .activation_stash
@@ -195,10 +190,7 @@ impl PipelineParallel {
     ///
     /// # Errors
     /// Returns an error if `stages.len() != config.n_stages`.
-    pub fn new(
-        stages: Vec<PipelineStage>,
-        config: PipelineConfig,
-    ) -> NeuralResult<Self> {
+    pub fn new(stages: Vec<PipelineStage>, config: PipelineConfig) -> NeuralResult<Self> {
         if stages.len() != config.n_stages {
             return Err(NeuralError::ConfigError(format!(
                 "PipelineConfig.n_stages={} but {} stages provided",
@@ -213,12 +205,9 @@ impl PipelineParallel {
     ///
     /// Splits `input` into `n_micro_batches`, runs either `FThenB` or `Interleaved1F1B`,
     /// then returns the mean MSE loss over all micro-batches.
-    pub fn run_schedule(
-        &mut self,
-        input: &Array2<f64>,
-        labels: &Array1<f64>,
-    ) -> NeuralResult<f64> {
-        let micro_batches = Self::split_into_micro_batches(input, labels, self.config.n_micro_batches);
+    pub fn run_schedule(&mut self, input: &Array2<f64>, labels: &Array1<f64>) -> NeuralResult<f64> {
+        let micro_batches =
+            Self::split_into_micro_batches(input, labels, self.config.n_micro_batches);
 
         // Run forward passes and collect outputs + micro-batch IDs.
         let mut outputs: Vec<(usize, Array2<f64>)> = Vec::with_capacity(micro_batches.len());
@@ -258,10 +247,10 @@ impl PipelineParallel {
                     outputs.push((mb.id, out));
                     if backward_idx < outputs.len().saturating_sub(warmup) {
                         let (bwd_mb_id, bwd_out) = &outputs[backward_idx];
-                        let mb_labels = micro_batches[*bwd_mb_id]
-                            .labels
-                            .as_ref()
-                            .ok_or_else(|| NeuralError::ComputationError("missing labels".into()))?;
+                        let mb_labels =
+                            micro_batches[*bwd_mb_id].labels.as_ref().ok_or_else(|| {
+                                NeuralError::ComputationError("missing labels".into())
+                            })?;
                         let grad = Self::mse_grad(bwd_out, mb_labels);
                         self.backward_one_micro_batch(*bwd_mb_id, &grad);
                         backward_idx += 1;
@@ -289,11 +278,10 @@ impl PipelineParallel {
         // Compute mean loss over all micro-batches.
         let total_loss: f64 = outputs
             .iter()
-            .map(|(mb_id, out)| {
+            .filter_map(|(mb_id, out)| {
                 let mb_labels = micro_batches[*mb_id].labels.as_ref()?;
                 Some(Self::mse_loss(out, mb_labels))
             })
-            .flatten()
             .sum();
         let n = outputs.len().max(1) as f64;
 
@@ -312,14 +300,18 @@ impl PipelineParallel {
         n: usize,
     ) -> Vec<MicroBatch> {
         let batch_size = input.shape()[0];
-        let chunk = (batch_size + n - 1) / n; // ceiling division
+        let chunk = batch_size.div_ceil(n);
         let mut result = Vec::with_capacity(n);
         let mut start = 0_usize;
         let mut id = 0_usize;
         while start < batch_size && id < n {
             let end = (start + chunk).min(batch_size);
-            let data = input.slice(scirs2_core::ndarray::s![start..end, ..]).to_owned();
-            let lbl = labels.slice(scirs2_core::ndarray::s![start..end]).to_owned();
+            let data = input
+                .slice(scirs2_core::ndarray::s![start..end, ..])
+                .to_owned();
+            let lbl = labels
+                .slice(scirs2_core::ndarray::s![start..end])
+                .to_owned();
             result.push(MicroBatch {
                 id,
                 data,
@@ -450,7 +442,11 @@ mod tests {
         let _ = stage.forward(0, &input);
         let grad_out = Array2::<f64>::ones((5, 8));
         let grad_in = stage.backward(0, &grad_out);
-        assert_eq!(grad_in.shape(), [5, 4], "backward shape must match input shape");
+        assert_eq!(
+            grad_in.shape(),
+            [5, 4],
+            "backward shape must match input shape"
+        );
     }
 
     #[test]
@@ -479,14 +475,10 @@ mod tests {
         let labels = Array1::<f64>::zeros(8);
 
         let mut pp_fthenb = make_pp(2, 2, PipelineSchedule::FThenB);
-        let loss_ftb = pp_fthenb
-            .run_schedule(&input, &labels)
-            .expect("fthenb ok");
+        let loss_ftb = pp_fthenb.run_schedule(&input, &labels).expect("fthenb ok");
 
         let mut pp_1f1b = make_pp(2, 2, PipelineSchedule::Interleaved1F1B);
-        let loss_1f1b = pp_1f1b
-            .run_schedule(&input, &labels)
-            .expect("1f1b ok");
+        let loss_1f1b = pp_1f1b.run_schedule(&input, &labels).expect("1f1b ok");
 
         assert!(loss_ftb.is_finite());
         assert!(loss_1f1b.is_finite());

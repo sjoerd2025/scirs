@@ -34,7 +34,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-text = "0.4.1"
+//! scirs2-text = "0.4.2"
 //! ```
 //!
 //! ```rust,no_run
@@ -50,7 +50,7 @@
 //! let matrix = vectorizer.fit_transform(&docs).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.4.1 (March 27, 2026)
+//! ## 🔒 Version: 0.4.2 (March 27, 2026)
 //!
 //! ## Quick Start
 //!
@@ -176,14 +176,18 @@ pub mod crosslingual;
 pub mod ctm;
 // Dynamic topic model
 pub mod dtm;
+// Hierarchical Dirichlet Process topic model
+pub mod hdp;
 // Sentence embeddings
 pub mod sentence_embeddings;
 // Semantic similarity with embedding-based search
 pub mod similarity;
-// Tokenizer implementations (HuggingFace, byte-level BPE)
+// Tokenizer implementations (HuggingFace, byte-level BPE, Unicode)
 pub mod tokenizers;
 // Transliteration
 pub mod transliteration;
+// Topic modelling (HDP automatic topic selection)
+pub mod topic;
 
 // Re-export commonly used items
 pub use classification::{
@@ -237,8 +241,9 @@ pub use model_registry::{
     SerializableModelData,
 };
 pub use multilingual::{
-    Language, LanguageDetectionResult, LanguageDetector, MultilingualProcessor, ProcessedText,
-    StopWords,
+    is_cjk_char, is_combining_mark, is_cyrillic, Language, LanguageDetectionResult,
+    LanguageDetector, MultilingualProcessor, ProcessedText, ScriptFamily, StopWords,
+    Transliterator, UnicodeTokenizer, UnicodeTokenizerConfig,
 };
 pub use neural_architectures::{
     ActivationFunction, AdditiveAttention, BiLSTM, CNNLSTMHybrid, Conv1D, CrossAttention, Dropout,
@@ -352,4 +357,21 @@ pub use text_similarity::{
 };
 pub use text_summarization::{
     score_position, score_textrank, score_tfidf, summarize, ScoredSentence, SummarizationMethod,
+};
+
+// HDP topic model
+pub use hdp::{HdpConfig, HdpModel, HdpResult};
+
+// New sentence encoder (USE-style, word-level)
+pub use sentence_embeddings::{
+    SentenceEncoder, SentenceEncoderConfig, SentenceEncoderPooling, SimCSELoss, SimCSETrainer,
+};
+
+// topic module re-exports (HDP with automatic topic selection)
+pub use topic::hdp::{Hdp, HdpConfig as HdpAutoConfig, HdpState, TopicError};
+
+// tokenizers module (Unicode tokenizer from tokenizers crate kept accessible via path)
+pub use embeddings::sentence_encoder::{
+    PoolingStrategy as SentencePoolingStrategy, SemanticSimilarity as EmbeddingSearch,
+    SentenceEncoder as ProjSentenceEncoder, SimCseConfig, SimCseTrainer as ProjSimCseTrainer,
 };

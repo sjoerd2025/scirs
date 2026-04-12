@@ -41,11 +41,13 @@
 //! ```
 
 pub mod gp_surrogate;
+pub mod mlp_kriging;
 pub mod neural_basis;
 pub mod types;
 
 // Re-exports
 pub use gp_surrogate::GaussianProcessSurrogate;
+pub use mlp_kriging::{MlpConfig, MlpDeepKriging, MlpDeepKrigingConfig, MlpFeatureMap};
 pub use neural_basis::NeuralBasisKriging;
 pub use types::{
     AcquisitionFunction, Activation, DeepKrigingConfig, GPSurrogateConfig, KernelType,

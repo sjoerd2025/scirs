@@ -27,7 +27,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-datasets = "0.4.1"
+//! scirs2-datasets = "0.4.2"
 //! ```
 //!
 //! ```rust
@@ -41,7 +41,7 @@
 //! let data = make_classification(100, 5, 3, 2, 4, Some(42)).expect("Operation failed");
 //! ```
 //!
-//! ## 🔒 Version: 0.4.1
+//! ## 🔒 Version: 0.4.2
 //!
 //! ### v0.4.0 New Features
 //!
@@ -214,6 +214,8 @@ pub mod formats;
 pub mod benchmarks_module;
 // HuggingFace Hub metadata integration
 pub mod hub_metadata;
+// HuggingFace dataset card metadata (new HfDatasetCard API)
+pub mod huggingface;
 // Dataset sharding API
 pub mod sharding;
 // Mini-batch sampling
@@ -329,8 +331,21 @@ pub use generators::sparse_classification::{
     make_sparse_classification as make_sparse_class, sparsity_ratio, SparseClassConfig,
     SparseClassDataset,
 };
-// Sharding (data-carrying)
-pub use sharding::{merge_shards, shard_dataset, shuffled_shard, stratified_shard, DatasetShard};
+// ndarray-returning convenience wrappers for advanced generators
+pub use generators::ndarray_convenience::{
+    make_concept_drift_nd, make_heterogeneous_nd, make_low_rank as make_low_rank_nd,
+    make_multilabel_classification_nd, make_sparse_classification,
+};
+// Sharding (data-carrying) — index-only API
+pub use sharding::{
+    merge_shards, shard_dataset, shuffled_shard, stratified_shard, DataShard, DatasetShard,
+    ShardConfig, ShardedLoader, ShardingConfig,
+};
+// HuggingFace dataset card metadata API
+pub use huggingface::{
+    card_to_readme, load_dataset_card, parse_dataset_card as parse_hf_dataset_card, to_hf_card,
+    HfDatasetCard, HfError, HfSplitInfo,
+};
 // Mini-batch sampling
 pub use sampling::{iter_batches, MiniBatch, MiniBatchSampler, SamplerConfig, SamplerStrategy};
 // Standard datasets

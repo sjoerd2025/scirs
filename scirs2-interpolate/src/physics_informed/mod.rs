@@ -5,11 +5,13 @@
 //! - Online/streaming RBF updates (`streaming`)
 //! - ANOVA decomposition for adaptive sparse grids (`anova`)
 //! - Automatic interpolation method selection (`auto_select`)
+//! - General linear PDE operators with finite-difference evaluation (`pde_operator`)
 
 pub mod anova;
 pub mod auto_select;
 pub mod legacy;
 pub mod pde_constrained;
+pub mod pde_operator;
 pub mod streaming;
 
 // Re-export legacy content at the module level for backward compatibility
@@ -25,4 +27,7 @@ pub use auto_select::{
     analyze_data, recommend_method, recommend_with_rationale, DataProfile, InterpolationMethod,
 };
 pub use pde_constrained::{PdeConfig, PdeConstrainedRbf, PdeType};
+pub use pde_operator::{
+    PdeOperator, PhysicsInformedRbf, PhysicsInformedRbfConfig, RbfKernel as PdeRbfKernel,
+};
 pub use streaming::{StreamingRbf, StreamingRbfConfig};

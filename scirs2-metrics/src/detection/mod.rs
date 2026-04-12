@@ -6,6 +6,17 @@
 //!
 //! Bounding boxes are represented as `(x1, y1, x2, y2)` tuples where
 //! `(x1, y1)` is the top-left corner and `(x2, y2)` is the bottom-right corner.
+//!
+//! # Rotated Bounding Boxes
+//!
+//! The [`rotated_iou`] sub-module provides IoU metrics for arbitrarily rotated
+//! 2D bounding boxes (represented as centre + width + height + rotation angle).
+
+pub mod rotated_iou;
+pub use rotated_iou::{
+    rotated_box_intersection, rotated_diou, rotated_giou, rotated_iou as rotated_iou_fn,
+    rotated_iou_matrix, rotated_nms, RotatedBox,
+};
 
 use crate::error::{MetricsError, Result};
 
@@ -17,10 +28,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// # Returns
 /// IoU in [0, 1].
-pub fn iou(
-    box1: (f64, f64, f64, f64),
-    box2: (f64, f64, f64, f64),
-) -> Result<f64> {
+pub fn iou(box1: (f64, f64, f64, f64), box2: (f64, f64, f64, f64)) -> Result<f64> {
     let (x1a, y1a, x2a, y2a) = box1;
     let (x1b, y1b, x2b, y2b) = box2;
 
@@ -52,10 +60,7 @@ pub fn iou(
 ///
 /// where C is the smallest enclosing box of A and B.
 /// GIoU ∈ [-1, 1].
-pub fn giou(
-    box1: (f64, f64, f64, f64),
-    box2: (f64, f64, f64, f64),
-) -> Result<f64> {
+pub fn giou(box1: (f64, f64, f64, f64), box2: (f64, f64, f64, f64)) -> Result<f64> {
     let (x1a, y1a, x2a, y2a) = box1;
     let (x1b, y1b, x2b, y2b) = box2;
 
@@ -98,10 +103,7 @@ pub fn giou(
 /// where ρ is the Euclidean distance between box centres and c is the diagonal
 /// length of the enclosing box.
 /// DIoU ∈ [-1, 1].
-pub fn diou(
-    box1: (f64, f64, f64, f64),
-    box2: (f64, f64, f64, f64),
-) -> Result<f64> {
+pub fn diou(box1: (f64, f64, f64, f64), box2: (f64, f64, f64, f64)) -> Result<f64> {
     let (x1a, y1a, x2a, y2a) = box1;
     let (x1b, y1b, x2b, y2b) = box2;
 
@@ -170,9 +172,7 @@ pub fn mean_average_precision_detection(
         )));
     }
     if predictions.is_empty() {
-        return Err(MetricsError::InvalidInput(
-            "No images provided".to_string(),
-        ));
+        return Err(MetricsError::InvalidInput("No images provided".to_string()));
     }
 
     let ap = compute_detection_ap(predictions, ground_truth, iou_threshold)?;
@@ -192,9 +192,7 @@ pub fn coco_ap(
         )));
     }
     if predictions.is_empty() {
-        return Err(MetricsError::InvalidInput(
-            "No images provided".to_string(),
-        ));
+        return Err(MetricsError::InvalidInput("No images provided".to_string()));
     }
 
     let thresholds: Vec<f64> = (0..10).map(|i| 0.50 + i as f64 * 0.05).collect();
@@ -318,10 +316,7 @@ pub fn mean_iou_segmentation(
 /// Dice coefficient for binary segmentation masks.
 ///
 /// Dice = 2 * |P ∩ T| / (|P| + |T|)
-pub fn dice_coefficient(
-    pred_mask: &[Vec<bool>],
-    true_mask: &[Vec<bool>],
-) -> Result<f64> {
+pub fn dice_coefficient(pred_mask: &[Vec<bool>], true_mask: &[Vec<bool>]) -> Result<f64> {
     if pred_mask.len() != true_mask.len() {
         return Err(MetricsError::InvalidInput(
             "pred_mask and true_mask have different numbers of rows".to_string(),
@@ -395,10 +390,7 @@ fn compute_detection_ap(
 
         // Sort image predictions by confidence descending
         let mut sorted_preds: Vec<(f64, f64, f64, f64, f64)> = img_preds.clone();
-        sorted_preds.sort_by(|a, b| {
-            b.4.partial_cmp(&a.4)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        sorted_preds.sort_by(|a, b| b.4.partial_cmp(&a.4).unwrap_or(std::cmp::Ordering::Equal));
 
         for pred in &sorted_preds {
             let pred_box = (pred.0, pred.1, pred.2, pred.3);
@@ -442,10 +434,7 @@ fn compute_detection_ap(
     }
 
     // Sort by confidence descending
-    det_results.sort_by(|a, b| {
-        b.0.partial_cmp(&a.0)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+    det_results.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
     // Compute precision-recall curve
     let mut tp_cumulative = 0_usize;
@@ -485,7 +474,6 @@ fn interpolated_ap(recalls: &[f64], precisions: &[f64]) -> f64 {
     }
     ap / 11.0
 }
-
 
 // ---------------------------------------------------------------------------
 // Array-based BBox API (requested interface)
@@ -612,13 +600,17 @@ pub fn mean_average_precision_per_class(
     let mut ap_sum = 0.0_f64;
     let mut count = 0_usize;
 
-    for (_, (detections, ground_truths)) in per_class {
+    for (detections, ground_truths) in per_class.values() {
         let ap = average_precision_bbox(detections, ground_truths, iou_threshold)?;
         ap_sum += ap;
         count += 1;
     }
 
-    Ok(if count == 0 { 0.0 } else { ap_sum / count as f64 })
+    Ok(if count == 0 {
+        0.0
+    } else {
+        ap_sum / count as f64
+    })
 }
 
 /// COCO-style mAP: mean over IoU thresholds [0.50, 0.55, …, 0.95].
@@ -645,13 +637,10 @@ pub fn coco_map_per_class(
 /// # Arguments
 /// * `detections`    — mutable vector of `(confidence, bbox)` to filter in-place.
 /// * `iou_threshold` — IoU threshold above which a lower-confidence detection
-///                     is suppressed.
+///   is suppressed.
 pub fn nms(detections: &mut Vec<(f64, BBox)>, iou_threshold: f64) {
     // Sort by descending confidence.
-    detections.sort_by(|a, b| {
-        b.0.partial_cmp(&a.0)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+    detections.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
     let mut keep = vec![true; detections.len()];
 
@@ -722,7 +711,10 @@ mod tests {
         let b2 = (2.0, 2.0, 3.0, 3.0);
         let val = giou(b1, b2).expect("should succeed");
         // IoU=0, penalty = (9-2)/9 = 7/9; GIoU = 0 - 7/9 = -7/9 ≈ -0.778
-        assert!(val < 0.0, "GIoU should be negative for non-overlapping boxes, got {val}");
+        assert!(
+            val < 0.0,
+            "GIoU should be negative for non-overlapping boxes, got {val}"
+        );
     }
 
     #[test]
@@ -776,7 +768,10 @@ mod tests {
         let preds = vec![vec![(0.0, 0.0, 1.0, 1.0, 0.9)]];
         let gts = vec![vec![(0.0, 0.0, 1.0, 1.0)]];
         let map = mean_average_precision_detection(&preds, &gts, 0.5).expect("should succeed");
-        assert!(map > 0.5, "mAP should be high for perfect detection, got {map}");
+        assert!(
+            map > 0.5,
+            "mAP should be high for perfect detection, got {map}"
+        );
     }
 
     #[test]
@@ -785,7 +780,10 @@ mod tests {
         let preds = vec![vec![(10.0, 10.0, 11.0, 11.0, 0.9)]];
         let gts = vec![vec![(0.0, 0.0, 1.0, 1.0)]];
         let ap = coco_ap(&preds, &gts).expect("should succeed");
-        assert!((ap - 0.0).abs() < 1e-10, "COCO AP should be 0 for wrong detection, got {ap}");
+        assert!(
+            (ap - 0.0).abs() < 1e-10,
+            "COCO AP should be 0 for wrong detection, got {ap}"
+        );
     }
 
     #[test]

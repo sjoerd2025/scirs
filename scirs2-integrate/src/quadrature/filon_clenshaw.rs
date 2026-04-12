@@ -536,8 +536,10 @@ where
     //       + β(f₀ sin(ωa) + f₂ sin(ωb)) + γ f₁ sin(ω·mid) ]
     //
     // Design regime: ω·h ~ O(1).  For ω·h << 1, standard quadrature is preferred.
-    let integral_cos = h * (alpha * (f0 * s0 - f2 * s2) + beta * (f0 * c0 + f2 * c2) + gamma * f1 * c1);
-    let integral_sin = h * (alpha * (f0 * c0 - f2 * c2) + beta * (f0 * s0 + f2 * s2) + gamma * f1 * s1);
+    let integral_cos =
+        h * (alpha * (f0 * s0 - f2 * s2) + beta * (f0 * c0 + f2 * c2) + gamma * f1 * c1);
+    let integral_sin =
+        h * (alpha * (f0 * c0 - f2 * c2) + beta * (f0 * s0 + f2 * s2) + gamma * f1 * s1);
 
     Ok(FilonCCResult {
         integral_cos,
@@ -707,8 +709,7 @@ mod tests {
     #[test]
     fn test_filon_composite_cos_full_period() {
         let omega = 1.0_f64;
-        let result = filon_composite(|_x| 1.0, 0.0, 2.0 * PI, omega, 20)
-            .expect("composite failed");
+        let result = filon_composite(|_x| 1.0, 0.0, 2.0 * PI, omega, 20).expect("composite failed");
         // ∫_0^{2π} cos(x) dx = 0
         assert!(
             result.integral_cos.abs() < 1e-6,
@@ -749,8 +750,7 @@ mod tests {
     #[test]
     fn test_filon_composite_cos_full_period_sin() {
         // Check sin integral via composite rule: ∫_0^{2π} sin(x) dx = 0
-        let result = filon_composite(|_x| 1.0, 0.0, 2.0 * PI, 1.0, 20)
-            .expect("composite failed");
+        let result = filon_composite(|_x| 1.0, 0.0, 2.0 * PI, 1.0, 20).expect("composite failed");
         assert_approx("composite sin [0,2pi]", result.integral_sin, 0.0, 1e-8);
     }
 }

@@ -227,8 +227,8 @@ fn quad_py(
             let result = fun_clone
                 .bind(py)
                 .call1((x,))
-                .expect("Failed to call function");
-            result.extract().expect("Failed to extract result")
+                .unwrap_or_else(|_| py.None().into_bound(py));
+            result.extract::<f64>().unwrap_or(f64::NAN)
         })
     };
 
@@ -281,16 +281,18 @@ fn solve_ivp_py(
     max_step: Option<f64>,
 ) -> PyResult<Py<PyAny>> {
     let fun_arc = std::sync::Arc::new(fun.clone().unbind());
+    let n_dim = y0.len();
     let f = move |t: f64, y: ArrayView1<f64>| -> Array1_17<f64> {
         let fun_clone = fun_arc.clone();
         Python::attach(|py| {
             let y_vec: Vec<f64> = y.to_vec();
-            let result = fun_clone
-                .bind(py)
-                .call1((t, y_vec))
-                .expect("Failed to call ODE function");
-            let result_vec: Vec<f64> = result.extract().expect("Failed to extract result");
-            Array1_17::from_vec(result_vec)
+            match fun_clone.bind(py).call1((t, y_vec)) {
+                Ok(result) => match result.extract::<Vec<f64>>() {
+                    Ok(v) => Array1_17::from_vec(v),
+                    Err(_) => Array1_17::from_elem(n_dim, f64::NAN),
+                },
+                Err(_) => Array1_17::from_elem(n_dim, f64::NAN),
+            }
         })
     };
 

@@ -179,10 +179,9 @@ impl GdasSearch {
         };
 
         // Clamp to valid range
-        self.temperature = self.temperature.clamp(
-            tau_end.min(tau_start),
-            tau_end.max(tau_start),
-        );
+        self.temperature = self
+            .temperature
+            .clamp(tau_end.min(tau_start), tau_end.max(tau_start));
     }
 
     /// Derive the discrete architecture by taking argmax of alpha per edge.
@@ -235,10 +234,7 @@ fn softmax(logits: &[f64]) -> Vec<f64> {
     if logits.is_empty() {
         return Vec::new();
     }
-    let max_val = logits
-        .iter()
-        .copied()
-        .fold(f64::NEG_INFINITY, f64::max);
+    let max_val = logits.iter().copied().fold(f64::NEG_INFINITY, f64::max);
     let exps: Vec<f64> = logits.iter().map(|&x| (x - max_val).exp()).collect();
     let sum: f64 = exps.iter().sum();
     if sum <= 0.0 {
@@ -278,8 +274,10 @@ mod tests {
 
     #[test]
     fn test_gdas_n_edges_correct() {
-        let mut config = GdasConfig::default();
-        config.n_nodes = 4;
+        let config = GdasConfig {
+            n_nodes: 4,
+            ..Default::default()
+        };
         let search = GdasSearch::new(config);
         // 4 * 3 / 2 = 6 edges
         assert_eq!(search.n_edges(), 6);
@@ -288,11 +286,13 @@ mod tests {
 
     #[test]
     fn test_gdas_anneal_temperature_decreases_exponential() {
-        let mut config = GdasConfig::default();
-        config.schedule = TemperatureSchedule::Exponential;
-        config.tau_start = 10.0;
-        config.tau_end = 0.1;
-        config.n_epochs = 100;
+        let config = GdasConfig {
+            schedule: TemperatureSchedule::Exponential,
+            tau_start: 10.0,
+            tau_end: 0.1,
+            n_epochs: 100,
+            ..Default::default()
+        };
         let mut search = GdasSearch::new(config);
         let initial_temp = search.temperature;
         search.anneal_temperature(50);
@@ -309,11 +309,13 @@ mod tests {
 
     #[test]
     fn test_gdas_anneal_temperature_decreases_linear() {
-        let mut config = GdasConfig::default();
-        config.schedule = TemperatureSchedule::Linear;
-        config.tau_start = 10.0;
-        config.tau_end = 0.1;
-        config.n_epochs = 100;
+        let config = GdasConfig {
+            schedule: TemperatureSchedule::Linear,
+            tau_start: 10.0,
+            tau_end: 0.1,
+            n_epochs: 100,
+            ..Default::default()
+        };
         let mut search = GdasSearch::new(config);
         search.anneal_temperature(50);
         let mid_temp = search.temperature;
@@ -325,11 +327,13 @@ mod tests {
 
     #[test]
     fn test_gdas_anneal_temperature_cosine() {
-        let mut config = GdasConfig::default();
-        config.schedule = TemperatureSchedule::Cosine;
-        config.tau_start = 10.0;
-        config.tau_end = 0.1;
-        config.n_epochs = 100;
+        let config = GdasConfig {
+            schedule: TemperatureSchedule::Cosine,
+            tau_start: 10.0,
+            tau_end: 0.1,
+            n_epochs: 100,
+            ..Default::default()
+        };
         let mut search = GdasSearch::new(config);
         search.anneal_temperature(0);
         assert!(

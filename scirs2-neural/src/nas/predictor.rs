@@ -260,7 +260,12 @@ impl MlpPredictor {
     pub fn new(input_dim: usize, hidden_size: usize, rng: &mut impl Rng) -> Self {
         let w1 = random_matrix(hidden_size, input_dim, rng, (2.0 / input_dim as f64).sqrt());
         let b1 = vec![0.0_f64; hidden_size];
-        let w2 = random_matrix(hidden_size, hidden_size, rng, (2.0 / hidden_size as f64).sqrt());
+        let w2 = random_matrix(
+            hidden_size,
+            hidden_size,
+            rng,
+            (2.0 / hidden_size as f64).sqrt(),
+        );
         let b2 = vec![0.0_f64; hidden_size];
         let w3 = random_vector(hidden_size, rng, (2.0 / hidden_size as f64).sqrt());
         let b3 = 0.0;
@@ -485,10 +490,7 @@ impl PredictorNasSearch {
             .collect();
         let y_train: Vec<f64> = self.evaluated.iter().map(|(_, s)| *s).collect();
 
-        let best_score = y_train
-            .iter()
-            .copied()
-            .fold(f64::NEG_INFINITY, f64::max);
+        let best_score = y_train.iter().copied().fold(f64::NEG_INFINITY, f64::max);
 
         // Generate candidate architectures
         let n_candidates = self.config.n_candidates_per_iter.max(n_proposals);
@@ -517,8 +519,7 @@ impl PredictorNasSearch {
             }
             PredictorType::MlpRegressor => {
                 let hidden = 32_usize.min(feature_dim.max(4));
-                let mut mlp =
-                    MlpPredictor::new(feature_dim, hidden, &mut self.rng.clone());
+                let mut mlp = MlpPredictor::new(feature_dim, hidden, &mut self.rng.clone());
                 mlp.fit(&x_train, &y_train, 20, 1e-3);
                 candidates
                     .into_iter()
@@ -572,13 +573,7 @@ impl PredictorNasSearch {
     }
 
     /// Compute acquisition function score for a candidate with predicted (mu, sigma).
-    fn acquisition_score(
-        &self,
-        mu: f64,
-        sigma: f64,
-        best: f64,
-        rng: &mut impl Rng,
-    ) -> f64 {
+    fn acquisition_score(&self, mu: f64, sigma: f64, best: f64, rng: &mut impl Rng) -> f64 {
         match self.config.acquisition {
             AcquisitionFunction::ExpectedImprovement => Self::expected_improvement(mu, sigma, best),
             AcquisitionFunction::UpperConfidenceBound => mu + self.config.ucb_kappa * sigma,
@@ -587,8 +582,8 @@ impl PredictorNasSearch {
                 let u: f64 = rng.random();
                 let u2: f64 = rng.random();
                 let u_clamped = u.max(1e-40);
-                let normal_sample = (-2.0 * u_clamped.ln()).sqrt()
-                    * (2.0 * std::f64::consts::PI * u2).cos();
+                let normal_sample =
+                    (-2.0 * u_clamped.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                 mu + sigma * normal_sample
             }
         }
@@ -622,10 +617,10 @@ fn standard_normal_pdf(z: f64) -> f64 {
 /// Standard normal CDF approximation (Abramowitz & Stegun 26.2.17)
 fn standard_normal_cdf(z: f64) -> f64 {
     let t = 1.0 / (1.0 + 0.2316419 * z.abs());
-    let poly = t * (0.319_381_53
-        + t * (-0.356_563_782
-            + t * (1.781_477_937
-                + t * (-1.821_255_978 + t * 1.330_274_429))));
+    let poly = t
+        * (0.319_381_53
+            + t * (-0.356_563_782
+                + t * (1.781_477_937 + t * (-1.821_255_978 + t * 1.330_274_429))));
     let phi = 1.0 - standard_normal_pdf(z) * poly;
     if z >= 0.0 {
         phi
@@ -709,8 +704,8 @@ fn random_matrix(rows: usize, cols: usize, rng: &mut impl Rng, scale: f64) -> Ve
                     let u: f64 = rng.random();
                     let u2: f64 = rng.random();
                     let u_clamped = u.max(1e-40);
-                    let normal = (-2.0 * u_clamped.ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * u2).cos();
+                    let normal =
+                        (-2.0 * u_clamped.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                     scale * normal
                 })
                 .collect()
@@ -724,8 +719,7 @@ fn random_vector(len: usize, rng: &mut impl Rng, scale: f64) -> Vec<f64> {
             let u: f64 = rng.random();
             let u2: f64 = rng.random();
             let u_clamped = u.max(1e-40);
-            let normal =
-                (-2.0 * u_clamped.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+            let normal = (-2.0 * u_clamped.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             scale * normal
         })
         .collect()
@@ -765,8 +759,10 @@ mod tests {
     #[test]
     fn test_gdas_anneal_temperature_decreases() {
         use crate::nas::gdas::{GdasConfig, GdasSearch, TemperatureSchedule};
-        let mut config = GdasConfig::default();
-        config.schedule = TemperatureSchedule::Exponential;
+        let config = GdasConfig {
+            schedule: TemperatureSchedule::Exponential,
+            ..Default::default()
+        };
         let mut search = GdasSearch::new(config);
         let initial = search.temperature;
         search.anneal_temperature(50);
@@ -809,7 +805,9 @@ mod tests {
         let search = SnasSearch::new(config);
         let mut rng = make_rng(42);
         let logits = vec![1.0, 0.5, -1.0, 2.0, 0.0, -0.5, 1.5, 0.3];
-        let weights = search.gumbel_softmax_sample(&logits, 1.0, &mut rng).unwrap();
+        let weights = search
+            .gumbel_softmax_sample(&logits, 1.0, &mut rng)
+            .unwrap();
         let sum: f64 = weights.iter().sum();
         assert!((sum - 1.0).abs() < 1e-10);
     }
@@ -834,7 +832,10 @@ mod tests {
         let mut search = SnasSearch::new(config);
         search.alpha[0] = vec![20.0, -10.0, -10.0, -10.0];
         let kl = search.kl_divergence_from_uniform(0).unwrap();
-        assert!(kl > 0.1, "Peaked distribution should have positive KL, got {kl}");
+        assert!(
+            kl > 0.1,
+            "Peaked distribution should have positive KL, got {kl}"
+        );
     }
 
     #[test]
@@ -878,7 +879,10 @@ mod tests {
         let arch2 = vec![1, 0, 2];
         let f1 = extractor.encode(&arch1);
         let f2 = extractor.encode(&arch2);
-        assert_ne!(f1, f2, "Different architectures should produce different features");
+        assert_ne!(
+            f1, f2,
+            "Different architectures should produce different features"
+        );
     }
 
     #[test]
@@ -890,7 +894,10 @@ mod tests {
         for edge in 0..4 {
             let block = &features[edge * 5..(edge + 1) * 5];
             let sum: f64 = block.iter().sum();
-            assert!((sum - 1.0).abs() < 1e-10, "One-hot property failed at edge {edge}");
+            assert!(
+                (sum - 1.0).abs() < 1e-10,
+                "One-hot property failed at edge {edge}"
+            );
         }
     }
 
@@ -910,7 +917,10 @@ mod tests {
         let (mean, std) = gp.predict(&[0.5, 0.5]);
         assert!(std > 0.0, "Standard deviation should be positive");
         // Mean should be roughly in the range of training labels
-        assert!(mean > -0.5 && mean < 2.5, "Mean {mean} should be in plausible range");
+        assert!(
+            mean > -0.5 && mean < 2.5,
+            "Mean {mean} should be in plausible range"
+        );
     }
 
     #[test]
@@ -921,7 +931,10 @@ mod tests {
         gp.fit(&x, &y);
         // At training points, uncertainty should be small
         let (_, std_at_train) = gp.predict(&[0.0]);
-        assert!(std_at_train < 0.5, "Variance at training point should be small, got {std_at_train}");
+        assert!(
+            std_at_train < 0.5,
+            "Variance at training point should be small, got {std_at_train}"
+        );
     }
 
     // ── MLP predictor tests ─────────────────────────────────────────────
@@ -953,7 +966,10 @@ mod tests {
     fn test_expected_improvement_at_best_zero() {
         // When mu == best and sigma is tiny, EI should be ~0
         let ei = PredictorNasSearch::expected_improvement(1.0, 1e-9, 1.0);
-        assert!(ei.abs() < 1e-6, "EI at current best with tiny sigma should be ~0, got {ei}");
+        assert!(
+            ei.abs() < 1e-6,
+            "EI at current best with tiny sigma should be ~0, got {ei}"
+        );
     }
 
     #[test]
@@ -967,9 +983,15 @@ mod tests {
     fn test_expected_improvement_zero_sigma_clamp() {
         // sigma < 1e-6 uses simplified formula: max(mu - best, 0)
         let ei_above = PredictorNasSearch::expected_improvement(1.5, 1e-8, 1.0);
-        assert!((ei_above - 0.5).abs() < 1e-6, "Expected 0.5, got {ei_above}");
+        assert!(
+            (ei_above - 0.5).abs() < 1e-6,
+            "Expected 0.5, got {ei_above}"
+        );
         let ei_below = PredictorNasSearch::expected_improvement(0.5, 1e-8, 1.0);
-        assert!(ei_below == 0.0, "EI should be 0 when mu < best with tiny sigma");
+        assert!(
+            ei_below == 0.0,
+            "EI should be 0 when mu < best with tiny sigma"
+        );
     }
 
     // ── PredictorNasSearch tests ────────────────────────────────────────

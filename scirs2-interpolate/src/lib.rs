@@ -35,7 +35,7 @@
 //! Add to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! scirs2-interpolate = "0.4.1"
+//! scirs2-interpolate = "0.4.2"
 //! ```
 //!
 //! ### 1D Interpolation
@@ -184,7 +184,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.4.1
+//! - **Version**: 0.4.2
 //! - **Release Date**: March 27, 2026
 //! - **MSRV** (Minimum Supported Rust Version): 1.70.0
 //! - **Documentation**: [docs.rs/scirs2-interpolate](https://docs.rs/scirs2-interpolate)
@@ -352,6 +352,10 @@ pub mod adaptive_gp;
 pub mod adaptive_learning;
 pub mod adaptive_singularity;
 pub mod advanced;
+// Problem-specification-driven automatic method selection
+pub mod auto_select;
+// Generic 1-D extrapolation wrapper
+pub mod extrapolation_wrapper;
 
 // Deep Kriging and GP Surrogate
 pub mod advanced_statistical;
@@ -449,6 +453,11 @@ pub mod tensor_train;
 pub mod scipy_compatibility;
 // pub mod scipy_parity_enhanced;
 
+// New interpolation modules (Wave 44)
+pub mod active_learning;
+pub mod gpu_rbf;
+pub mod physics_interp;
+
 // Enhanced performance validation for stable release
 // pub mod performance_validation_enhanced;
 
@@ -467,8 +476,20 @@ pub mod scipy_compatibility;
 // Deep Kriging and GP Surrogate re-exports
 pub use deep_kriging::{
     AcquisitionFunction, Activation, DeepKrigingConfig, GPSurrogateConfig,
-    GaussianProcessSurrogate, KernelType as DeepKernelType, NeuralBasisKriging, SurrogateResult,
+    GaussianProcessSurrogate, KernelType as DeepKernelType, MlpConfig, MlpDeepKriging,
+    MlpDeepKrigingConfig, MlpFeatureMap, NeuralBasisKriging, SurrogateResult,
 };
+
+// GPU-accelerated RBF solver (simulation mode)
+pub use gpu_rbf::{GpuDispatch, GpuRbfConfig, GpuRbfKernel, GpuRbfSolver};
+
+// Physics-informed interpolation with PDE residual penalty
+pub use physics_interp::{
+    LaplaceResidual, PdeResidual, PhysicsInformedInterp, PhysicsInterpConfig,
+};
+
+// Active sampling for adaptive interpolation
+pub use active_learning::{ActiveAcquisitionFunction, ActiveSampler, ActiveSamplerConfig};
 
 // Advanced mode coordinator for advanced AI-driven optimization
 pub use advanced_coordinator::{
@@ -491,6 +512,19 @@ pub use adaptive_singularity::{
     apply_singularity_handling, SingularityDetector, SingularityDetectorConfig, SingularityInfo,
     SingularityType, TreatmentStrategy,
 };
+// Problem-specification-driven auto method selection
+pub use auto_select::{
+    auto_select as auto_select_method, auto_select_validated,
+    InterpolationMethod as ProblemInterpolationMethod, InterpolationProblem, MethodRecommendation,
+    RbfKernelHint,
+};
+
+// Generic 1-D extrapolation wrapper
+pub use extrapolation_wrapper::{
+    ExtrapolatingInterpolator, ExtrapolatingInterpolatorAsymmetric, ExtrapolationMode,
+    Interpolate1D,
+};
+
 pub use advanced::akima::{make_akima_spline, AkimaSpline};
 pub use advanced::barycentric::{
     make_barycentric_interpolator, BarycentricInterpolator, BarycentricTriangulation,

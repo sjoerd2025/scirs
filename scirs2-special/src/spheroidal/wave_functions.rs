@@ -7,7 +7,7 @@
 use std::f64::consts::PI;
 
 use crate::error::{SpecialError, SpecialResult};
-use crate::mathieu::advanced::{tridiag_eigenvector, tridiag_eigenvalues};
+use crate::mathieu::advanced::{tridiag_eigenvalues, tridiag_eigenvector};
 
 /// Prolate vs. oblate spheroidal geometry.
 #[non_exhaustive]
@@ -83,8 +83,7 @@ pub fn associated_legendre(l: usize, m: usize, x: f64) -> f64 {
     let mut pl_prev = pmm;
     let mut pl = pmm1;
     for k in (m + 1)..l {
-        let pk1 = ((2 * k + 1) as f64 * x * pl - (k + m) as f64 * pl_prev)
-            / (k - m + 1) as f64;
+        let pk1 = ((2 * k + 1) as f64 * x * pl - (k + m) as f64 * pl_prev) / (k - m + 1) as f64;
         pl_prev = pl;
         pl = pk1;
     }
@@ -126,15 +125,14 @@ fn build_spheroidal_tridiag(
     for p in 0..nf {
         let k = 2 * p + parity; // index into the full expansion
         let ell = (m + k) as f64; // degree of P_{m+k}^m(x)
-        // Diagonal: ell(ell+1) + c² * coupling diagonal term
-        // The c²-diagonal term from (x² - 1) d/dx stuff:
-        //   α = -c² (ell+m)(ell+m-1) / ((2ell-1)(2ell+1))
-        //   γ = -c² (ell-m+1)(ell-m+2) / ((2ell+1)(2ell+3))
-        // so diagonal adjustment = α + γ expressed in terms of ell
+                                  // Diagonal: ell(ell+1) + c² * coupling diagonal term
+                                  // The c²-diagonal term from (x² - 1) d/dx stuff:
+                                  //   α = -c² (ell+m)(ell+m-1) / ((2ell-1)(2ell+1))
+                                  //   γ = -c² (ell-m+1)(ell-m+2) / ((2ell+1)(2ell+3))
+                                  // so diagonal adjustment = α + γ expressed in terms of ell
         let alpha_p = if k >= 2 {
             let ll = ell; // ell = m+k
-            -c2 * (ll + m as f64) * (ll + m as f64 - 1.0)
-                / ((2.0 * ll - 1.0) * (2.0 * ll + 1.0))
+            -c2 * (ll + m as f64) * (ll + m as f64 - 1.0) / ((2.0 * ll - 1.0) * (2.0 * ll + 1.0))
         } else {
             0.0
         };
@@ -205,14 +203,11 @@ pub fn spheroidal_eigenvalue(
 
     // Select the (n-m)/2-th eigenvalue (0-indexed by the parity offset)
     let target = (n - m) / 2;
-    eigenvalues
-        .get(target)
-        .copied()
-        .ok_or_else(|| {
-            SpecialError::ComputationError(format!(
-                "spheroidal_eigenvalue: failed to find eigenvalue for m={m}, n={n}, c={c}"
-            ))
-        })
+    eigenvalues.get(target).copied().ok_or_else(|| {
+        SpecialError::ComputationError(format!(
+            "spheroidal_eigenvalue: failed to find eigenvalue for m={m}, n={n}, c={c}"
+        ))
+    })
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -381,7 +376,11 @@ pub fn radial_spheroidal_1(
     let norm_idx = target; // p index for k = n-m
     let d_norm = if norm_idx < coeffs.len() {
         let v = coeffs[norm_idx];
-        if v.abs() < 1e-15 { 1.0 } else { v }
+        if v.abs() < 1e-15 {
+            1.0
+        } else {
+            v
+        }
     } else {
         1.0
     };
@@ -412,7 +411,10 @@ mod tests {
         // P_0^0(x) = 1
         for &x in &[-0.5, 0.0, 0.5, 1.0] {
             let val = associated_legendre(0, 0, x);
-            assert!((val - 1.0).abs() < 1e-14, "P_0^0({x}) should be 1, got {val}");
+            assert!(
+                (val - 1.0).abs() < 1e-14,
+                "P_0^0({x}) should be 1, got {val}"
+            );
         }
     }
 
@@ -421,7 +423,10 @@ mod tests {
         // P_1^0(x) = x
         for &x in &[-0.7, -0.3, 0.0, 0.4, 0.8] {
             let val = associated_legendre(1, 0, x);
-            assert!((val - x).abs() < 1e-14, "P_1^0({x}) should be {x}, got {val}");
+            assert!(
+                (val - x).abs() < 1e-14,
+                "P_1^0({x}) should be {x}, got {val}"
+            );
         }
     }
 
@@ -495,18 +500,27 @@ mod tests {
     #[test]
     fn test_angular_spheroidal_c_zero_legendre() {
         // At c=0, S_{0n}(0, x) reduces to P_n^0(x) (up to normalization)
-        let config = SpheroidalConfig { n_expansion: 20, tol: 1e-12 };
+        let config = SpheroidalConfig {
+            n_expansion: 20,
+            tol: 1e-12,
+        };
         let x = 0.5;
         let s = angular_spheroidal(0, 2, 0.0, x, &SpheroidType::Prolate, &config).unwrap();
         // P_2^0(0.5) = (3*0.25 - 1)/2 = -0.125
         // Should be proportional (up to normalization)
-        assert!(s.is_finite(), "angular_spheroidal c=0 should be finite, got {s}");
+        assert!(
+            s.is_finite(),
+            "angular_spheroidal c=0 should be finite, got {s}"
+        );
     }
 
     #[test]
     fn test_radial_spheroidal_1_finite() {
         let config = SpheroidalConfig::default();
         let val = radial_spheroidal_1(0, 2, 1.0, 1.5, &config).unwrap();
-        assert!(val.is_finite(), "radial_spheroidal_1 should be finite, got {val}");
+        assert!(
+            val.is_finite(),
+            "radial_spheroidal_1 should be finite, got {val}"
+        );
     }
 }

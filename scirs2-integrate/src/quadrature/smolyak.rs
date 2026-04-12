@@ -33,21 +33,16 @@ use std::f64::consts::PI;
 // ---------------------------------------------------------------------------
 
 /// Supported 1-D quadrature rule families.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub enum OneDimRule {
     /// Clenshaw-Curtis (nested) nodes on `[-1, 1]`.
+    #[default]
     ClenshawCurtis,
     /// Gauss-Legendre nodes on `[-1, 1]`.
     GaussLegendre,
     /// Gauss-Patterson nested nodes on `[-1, 1]` (fallback to CC for high levels).
     GaussPatterson,
-}
-
-impl Default for OneDimRule {
-    fn default() -> Self {
-        Self::ClenshawCurtis
-    }
 }
 
 /// Configuration for Smolyak sparse-grid quadrature.
@@ -109,7 +104,7 @@ pub struct SparseGridResult {
 
 /// Clenshaw-Curtis nodes and weights for `n` points on `[-1, 1]`.
 ///
-/// * `n = 1` → midpoint rule: x = [0], w = [2].
+/// * `n = 1` → midpoint rule: x = \[0\], w = \[2\].
 /// * `n > 1` → Chebyshev extreme (Gauss-Lobatto) nodes with exact CC weights.
 ///
 /// Uses the Waldvogel (2006) formula:
@@ -125,9 +120,7 @@ pub fn cc_points_weights(n: usize) -> (Vec<f64>, Vec<f64>) {
     let m = n - 1; // N = polynomial degree
     let mf = m as f64;
     // Nodes: x_j = -cos(π j / m),  j = 0 … m
-    let nodes: Vec<f64> = (0..n)
-        .map(|j| -(PI * j as f64 / mf).cos())
-        .collect();
+    let nodes: Vec<f64> = (0..n).map(|j| -(PI * j as f64 / mf).cos()).collect();
 
     // Weights: w_j = (c_j / m) * [1 - sum_{k=1..m/2} b_k/(4k²-1) * cos(2π j k / m)]
     let mut weights = vec![0.0_f64; n];
@@ -136,7 +129,11 @@ pub fn cc_points_weights(n: usize) -> (Vec<f64>, Vec<f64>) {
         let half = m / 2;
         let mut s = 0.0_f64;
         for k in 1..=half {
-            let bk = if k == half && m % 2 == 0 { 1.0 } else { 2.0 };
+            let bk = if k == half && m.is_multiple_of(2) {
+                1.0
+            } else {
+                2.0
+            };
             let denom = 4.0 * (k as f64).powi(2) - 1.0;
             s += bk / denom * (2.0 * PI * j as f64 * k as f64 / mf).cos();
         }
@@ -161,7 +158,7 @@ pub fn gl_points_weights(n: usize) -> (Vec<f64>, Vec<f64>) {
     let mut nodes = vec![0.0_f64; n];
     let mut weights = vec![0.0_f64; n];
     // Only half the roots need computing (symmetry)
-    let half = (n + 1) / 2;
+    let half = n.div_ceil(2);
     let nf = n as f64;
     for i in 0..half {
         // Initial guess (Tricomi approximation)
@@ -283,7 +280,14 @@ fn binom(n: usize, k: usize) -> i64 {
 
 /// Enumerate all multi-indices `i = (i_1, …, i_n)` with `i_j >= 1` and
 /// `sum(i) == target`.
-fn multi_indices_sum(n_dims: usize, target: usize, base: usize, result: &mut Vec<Vec<usize>>, current: &mut Vec<usize>) {
+#[allow(clippy::only_used_in_recursion)]
+fn multi_indices_sum(
+    n_dims: usize,
+    target: usize,
+    base: usize,
+    result: &mut Vec<Vec<usize>>,
+    current: &mut Vec<usize>,
+) {
     if current.len() == n_dims {
         if base == 0 {
             result.push(current.clone());
@@ -312,7 +316,11 @@ fn multi_indices_sum(n_dims: usize, target: usize, base: usize, result: &mut Vec
 /// The Smolyak formula sums over all multi-indices `i` (each component ≥ 1)
 /// with `|i| = sum(i) ≤ level + n_dims - 1`, weighted by the difference-
 /// operator coefficient `(-1)^{level+n_dims-1-|i|} * C(n_dims-1, level+n_dims-1-|i|)`.
-pub fn smolyak_grid(n_dims: usize, level: usize, rule: &OneDimRule) -> IntegrateResult<SmolyakGrid> {
+pub fn smolyak_grid(
+    n_dims: usize,
+    level: usize,
+    rule: &OneDimRule,
+) -> IntegrateResult<SmolyakGrid> {
     if n_dims == 0 {
         return Err(IntegrateError::InvalidInput(
             "n_dims must be at least 1".into(),
@@ -334,7 +342,11 @@ pub fn smolyak_grid(n_dims: usize, level: usize, rule: &OneDimRule) -> Integrate
     for s in n_dims..=max_sum {
         // Coefficient: (-1)^{max_sum - s} * C(n_dims - 1, max_sum - s)
         let diff = max_sum - s;
-        let sign = if diff % 2 == 0 { 1_i64 } else { -1_i64 };
+        let sign = if diff.is_multiple_of(2) {
+            1_i64
+        } else {
+            -1_i64
+        };
         let coeff = sign * binom(n_dims - 1, diff);
         if coeff == 0 {
             continue;
@@ -521,13 +533,9 @@ mod tests {
     #[test]
     fn test_gauss_legendre_rule() {
         // ∫_{-1}^{1} x^4 dx = 2/5
-        let result = smolyak_integrate_with_error(
-            |p| p[0].powi(4),
-            1,
-            3,
-            OneDimRule::GaussLegendre,
-        )
-        .expect("GL integration should succeed");
+        let result =
+            smolyak_integrate_with_error(|p| p[0].powi(4), 1, 3, OneDimRule::GaussLegendre)
+                .expect("GL integration should succeed");
         let exact = 2.0 / 5.0;
         assert!(
             (result.value - exact).abs() < 1e-10,
@@ -557,7 +565,11 @@ mod tests {
         let sum_w: f64 = w.iter().sum();
         assert!((sum_w - 2.0).abs() < 1e-12, "sum of GL weights = {}", sum_w);
         // ∫x^4 dx = 2/5
-        let val: f64 = x.iter().zip(w.iter()).map(|(&xi, &wi)| wi * xi.powi(4)).sum();
+        let val: f64 = x
+            .iter()
+            .zip(w.iter())
+            .map(|(&xi, &wi)| wi * xi.powi(4))
+            .sum();
         assert!((val - 0.4).abs() < 1e-12, "GL integral of x^4 = {}", val);
     }
 }

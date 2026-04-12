@@ -873,7 +873,7 @@ impl MetadataVersionControl {
         let json = serde_json::to_string(metadata).unwrap_or_default();
         let mut hasher = Sha256::new();
         hasher.update(json.as_bytes());
-        format!("{:x}", hasher.finalize())
+        hex::encode(hasher.finalize())
     }
 }
 
@@ -1214,7 +1214,7 @@ impl MetadataProvenance {
         }
         let json = serde_json::to_string(metadata).unwrap_or_default();
         hasher.update(json.as_bytes());
-        format!("{:x}", hasher.finalize())
+        hex::encode(hasher.finalize())
     }
 
     /// Export provenance as a verifiable certificate

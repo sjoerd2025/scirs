@@ -7,6 +7,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 pub mod async_execution;
+pub mod async_transfer;
 pub mod auto_tuning;
 pub mod backends;
 pub mod benchmarks;
@@ -14,7 +15,14 @@ mod cpu_ops;
 pub mod heterogeneous;
 pub mod kernels;
 pub mod memory_management;
+pub mod stream_allocator;
 pub mod tensor_cores;
+
+pub use async_transfer::{
+    AsyncTransferError, AsyncTransferPipeline, TransferDirection, TransferHandle,
+};
+pub use memory_management::unified_memory::{SyncState, UnifiedAllocator, UnifiedBuffer};
+pub use stream_allocator::{StreamAllocator, StreamId};
 
 /// GPU backend type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -504,9 +512,23 @@ impl GpuKernelHandle {
         self.inner.set_f64(name, value);
     }
 
-    /// Dispatch the kernel with the given work group counts
+    /// Dispatch the kernel with the given work group counts.
+    ///
+    /// If batch mode is active (see [`GpuContext::begin_batch`]), the
+    /// dispatch is encoded into the shared command buffer instead of
+    /// submitting immediately.
     pub fn dispatch(&self, workgroups: [u32; 3]) {
-        self.inner.dispatch(workgroups);
+        if !self.inner.try_batch_dispatch(workgroups) {
+            self.inner.dispatch(workgroups);
+        }
+    }
+
+    /// Dispatch the kernel without waiting for GPU completion.
+    ///
+    /// This submits work to the GPU command queue but returns immediately.
+    /// Use [`GpuContext::gpu_sync()`] to wait for all pending dispatches.
+    pub fn dispatch_no_wait(&self, workgroups: [u32; 3]) {
+        self.inner.dispatch_no_wait(workgroups);
     }
 }
 
@@ -672,7 +694,32 @@ impl GpuContext {
         }
     }
 
-    /// Create a buffer with the given size
+    /// Wait for all pending GPU dispatches to complete.
+    ///
+    /// After calling [`GpuKernelHandle::dispatch_no_wait()`], results are
+    /// not guaranteed to be available until this method returns.
+    pub fn gpu_sync(&self) -> Result<(), GpuError> {
+        self.inner.gpu_sync()
+    }
+
+    /// Begin batch dispatch mode.
+    ///
+    /// While active, kernel dispatches are encoded into a shared command
+    /// buffer instead of creating individual ones.  Call [`end_batch`](Self::end_batch)
+    /// to submit all encoded work and wait for completion.
+    pub fn begin_batch(&self) -> Result<(), GpuError> {
+        self.inner.begin_batch()
+    }
+
+    /// End batch dispatch mode.
+    ///
+    /// Submits the shared command buffer containing all dispatches that
+    /// were encoded since [`begin_batch`](Self::begin_batch), then waits
+    /// for the GPU to finish.
+    pub fn end_batch(&self) -> Result<(), GpuError> {
+        self.inner.end_batch()
+    }
+
     pub fn create_buffer<T: GpuDataType>(&self, size: usize) -> GpuBuffer<T> {
         let byte_size = size.saturating_mul(std::mem::size_of::<T>());
         let inner = self.inner.create_buffer(byte_size);
@@ -1066,6 +1113,22 @@ pub(crate) trait GpuKernelImpl: Send + Sync {
 
     /// Dispatch the kernel
     fn dispatch(&self, workgroups: [u32; 3]);
+
+    /// Dispatch the kernel without waiting for completion.
+    /// The GPU work is submitted and will execute asynchronously.
+    /// Call `gpu_sync()` on the context to wait for all pending work.
+    fn dispatch_no_wait(&self, workgroups: [u32; 3]) {
+        // Default: fall back to synchronous dispatch
+        self.dispatch(workgroups);
+    }
+
+    /// Try to encode a dispatch into the active batch (if any).
+    ///
+    /// Returns `true` if the dispatch was batched, `false` if no batch is
+    /// active and the caller should use the normal `dispatch()` path.
+    fn try_batch_dispatch(&self, _workgroups: [u32; 3]) -> bool {
+        false
+    }
 }
 
 /// GPU compiler implementation trait
@@ -1089,6 +1152,27 @@ pub(crate) trait GpuContextImpl: Send + Sync {
 
     /// Create a compiler
     fn create_compiler(&self) -> Arc<dyn GpuCompilerImpl>;
+
+    /// Wait for all pending GPU operations to complete.
+    fn gpu_sync(&self) -> Result<(), GpuError> {
+        Ok(()) // Default: no-op (synchronous backends already block)
+    }
+
+    /// Begin batch dispatch mode.
+    ///
+    /// While active, kernel dispatches are encoded into a shared command
+    /// buffer instead of creating individual ones.
+    fn begin_batch(&self) -> Result<(), GpuError> {
+        Ok(()) // Default: no-op (backends without batch support)
+    }
+
+    /// End batch dispatch mode.
+    ///
+    /// Submits the shared command buffer and waits for all encoded
+    /// dispatches to complete on the GPU.
+    fn end_batch(&self) -> Result<(), GpuError> {
+        Ok(()) // Default: no-op
+    }
 
     /// Support dynamic downcasting of concrete context implementations
     fn as_any(&self) -> &dyn std::any::Any
@@ -1572,5 +1656,61 @@ mod tests {
         assert!(debug_str.contains("GpuContext"));
         assert!(debug_str.contains("backend"));
         assert!(debug_str.contains("Cpu"));
+    }
+
+    #[test]
+    fn test_gpu_context_batch_dispatch() {
+        // Create context with CPU backend (always available)
+        let context = GpuContext::new(GpuBackend::Cpu).expect("Failed to create CPU context");
+
+        // Begin batch mode
+        let begin_result = context.begin_batch();
+        assert!(
+            begin_result.is_ok(),
+            "begin_batch should succeed on CPU backend"
+        );
+
+        // Compile a kernel and dispatch it inside the batch
+        let dispatch_result = context.execute(|compiler| {
+            compiler.compile("dummy kernel source").map(|kernel| {
+                kernel.dispatch([4, 1, 1]);
+            })
+        });
+        assert!(
+            dispatch_result.is_ok(),
+            "kernel dispatch inside batch should succeed"
+        );
+
+        // End batch — submits and waits
+        let end_result = context.end_batch();
+        assert!(
+            end_result.is_ok(),
+            "end_batch should succeed on CPU backend"
+        );
+    }
+
+    #[test]
+    fn test_gpu_context_gpu_sync() {
+        // Create context with CPU backend
+        let context = GpuContext::new(GpuBackend::Cpu).expect("Failed to create CPU context");
+
+        // gpu_sync should complete without error on CPU backend
+        let result = context.gpu_sync();
+        assert!(result.is_ok(), "gpu_sync should return Ok on CPU backend");
+    }
+
+    #[test]
+    fn test_gpu_kernel_dispatch_no_wait() {
+        // Create a kernel handle backed by CpuKernel
+        let kernel = Arc::new(CpuKernel);
+        let handle = GpuKernelHandle::new(kernel);
+
+        // Bind a buffer and scalar so the kernel has state
+        let buffer = GpuBuffer::<f32>::new(Arc::new(CpuBuffer::new(16)), 4);
+        handle.set_buffer("input", &buffer);
+        handle.set_u32("size", 4);
+
+        // dispatch_no_wait returns () — just verify no panic
+        handle.dispatch_no_wait([4, 1, 1]);
     }
 }

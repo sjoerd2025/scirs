@@ -16,11 +16,11 @@
 //! | Heston Volatility | Coupled SDEs | Stochastic volatility |
 
 use crate::error::{IntegrateError, IntegrateResult};
-use crate::sde::{SdeSolution};
 use crate::sde::euler_maruyama::euler_maruyama;
 use crate::sde::milstein::scalar_milstein;
 use crate::sde::runge_kutta_sde::platen_scheme;
 use crate::sde::SdeProblem;
+use crate::sde::SdeSolution;
 use scirs2_core::ndarray::{array, Array1, Array2};
 use scirs2_core::random::prelude::StdRng;
 
@@ -277,10 +277,14 @@ pub fn cir_process(
     let sol_raw = platen_scheme(&prob, dt, rng)?;
 
     // Apply absorbing/reflecting boundary at 0
-    let reflected: Vec<Array1<f64>> = sol_raw.x.into_iter().map(|mut xi| {
-        xi[0] = xi[0].max(0.0);
-        xi
-    }).collect();
+    let reflected: Vec<Array1<f64>> = sol_raw
+        .x
+        .into_iter()
+        .map(|mut xi| {
+            xi[0] = xi[0].max(0.0);
+            xi
+        })
+        .collect();
 
     Ok(SdeSolution {
         t: sol_raw.t,
@@ -332,14 +336,7 @@ pub fn arithmetic_brownian_motion(
         )));
     }
     // Additive noise: EM is exact (no Milstein correction needed)
-    scalar_milstein(
-        move |_t, _x| mu,
-        move |_t, _x| sigma,
-        x0,
-        t_span,
-        dt,
-        rng,
-    )
+    scalar_milstein(move |_t, _x| mu, move |_t, _x| sigma, x0, t_span, dt, rng)
 }
 
 /// Simulate the Vasicek (linear OU) interest rate model.
@@ -529,10 +526,14 @@ pub fn heston(
     let sol_raw = euler_maruyama(&prob, dt, rng)?;
 
     // Reflect variance at 0 (truncation scheme)
-    let reflected: Vec<Array1<f64>> = sol_raw.x.into_iter().map(|mut xi| {
-        xi[1] = xi[1].max(0.0);
-        xi
-    }).collect();
+    let reflected: Vec<Array1<f64>> = sol_raw
+        .x
+        .into_iter()
+        .map(|mut xi| {
+            xi[1] = xi[1].max(0.0);
+            xi
+        })
+        .collect();
 
     Ok(SdeSolution {
         t: sol_raw.t,
@@ -548,7 +549,8 @@ mod tests {
     #[test]
     fn test_gbm_positive() {
         let mut rng = seeded_rng(42);
-        let sol = geometric_brownian_motion(0.05, 0.2, 100.0, [0.0, 1.0], 0.01, &mut rng).expect("geometric_brownian_motion should succeed");
+        let sol = geometric_brownian_motion(0.05, 0.2, 100.0, [0.0, 1.0], 0.01, &mut rng)
+            .expect("geometric_brownian_motion should succeed");
         for xi in &sol.x {
             assert!(xi[0] > 0.0, "GBM must stay positive");
         }
@@ -568,7 +570,8 @@ mod tests {
         let mut sum = 0.0;
         for seed in 0..n_paths as u64 {
             let mut rng = seeded_rng(seed + 100);
-            let sol = geometric_brownian_motion(mu, sigma, s0, [0.0, t1], dt, &mut rng).expect("geometric_brownian_motion should succeed");
+            let sol = geometric_brownian_motion(mu, sigma, s0, [0.0, t1], dt, &mut rng)
+                .expect("geometric_brownian_motion should succeed");
             sum += sol.x_final().expect("solution has state")[0];
         }
         let mean = sum / n_paths as f64;
@@ -595,7 +598,8 @@ mod tests {
         let mut sum = 0.0;
         for seed in 0..n_paths as u64 {
             let mut rng = seeded_rng(seed + 200);
-            let sol = ornstein_uhlenbeck(theta, mu_ou, sigma, x0, [0.0, t1], dt, &mut rng).expect("ornstein_uhlenbeck should succeed");
+            let sol = ornstein_uhlenbeck(theta, mu_ou, sigma, x0, [0.0, t1], dt, &mut rng)
+                .expect("ornstein_uhlenbeck should succeed");
             sum += sol.x_final().expect("solution has state")[0];
         }
         let mean = sum / n_paths as f64;
@@ -611,7 +615,8 @@ mod tests {
     fn test_cir_non_negative() {
         // Feller condition: 2κθ = 2.0 > σ² = 0.09 → stays positive
         let mut rng = seeded_rng(7);
-        let sol = cir_process(1.0, 1.0, 0.3, 1.0, [0.0, 5.0], 0.005, &mut rng).expect("cir_process should succeed");
+        let sol = cir_process(1.0, 1.0, 0.3, 1.0, [0.0, 5.0], 0.005, &mut rng)
+            .expect("cir_process should succeed");
         for xi in &sol.x {
             assert!(xi[0] >= 0.0, "CIR must be non-negative, got {}", xi[0]);
         }
@@ -632,7 +637,8 @@ mod tests {
         let mut sum = 0.0;
         for seed in 0..n_paths as u64 {
             let mut rng = seeded_rng(seed + 300);
-            let sol = cir_process(kappa, theta, sigma, r0, [0.0, t1], dt, &mut rng).expect("cir_process should succeed");
+            let sol = cir_process(kappa, theta, sigma, r0, [0.0, t1], dt, &mut rng)
+                .expect("cir_process should succeed");
             sum += sol.x_final().expect("solution has state")[0];
         }
         let mean = sum / n_paths as f64;
@@ -658,7 +664,8 @@ mod tests {
         let mut sum = 0.0;
         for seed in 0..n_paths as u64 {
             let mut rng = seeded_rng(seed + 400);
-            let sol = arithmetic_brownian_motion(mu, sigma, x0, [0.0, t1], dt, &mut rng).expect("arithmetic_brownian_motion should succeed");
+            let sol = arithmetic_brownian_motion(mu, sigma, x0, [0.0, t1], dt, &mut rng)
+                .expect("arithmetic_brownian_motion should succeed");
             sum += sol.x_final().expect("solution has state")[0];
         }
         let mean = sum / n_paths as f64;
@@ -673,7 +680,8 @@ mod tests {
     #[test]
     fn test_vasicek_basic() {
         let mut rng = seeded_rng(5);
-        let sol = vasicek(0.1, 1.0, 0.05, 0.05, [0.0, 10.0], 0.01, &mut rng).expect("vasicek should succeed");
+        let sol = vasicek(0.1, 1.0, 0.05, 0.05, [0.0, 10.0], 0.01, &mut rng)
+            .expect("vasicek should succeed");
         assert!(!sol.is_empty());
         // Long-run mean = a/b = 0.1
         // Final value should be near 0.1 on average (we just test it ran)
@@ -683,10 +691,18 @@ mod tests {
     fn test_heston_non_negative_variance() {
         let mut rng = seeded_rng(42);
         let sol = heston(
-            0.05, 2.0, 0.04, 0.2, -0.7,
-            100.0, 0.04,
-            [0.0, 1.0], 0.005, &mut rng,
-        ).expect("heston should succeed");
+            0.05,
+            2.0,
+            0.04,
+            0.2,
+            -0.7,
+            100.0,
+            0.04,
+            [0.0, 1.0],
+            0.005,
+            &mut rng,
+        )
+        .expect("heston should succeed");
         for xi in &sol.x {
             assert!(xi[0] > 0.0, "Heston S must be positive");
             assert!(xi[1] >= 0.0, "Heston v must be non-negative");

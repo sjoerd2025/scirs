@@ -113,8 +113,8 @@
 ## v0.4.0 Roadmap
 
 ### GPU Acceleration
-- [ ] GPU-accelerated LBM: target millions of cells at interactive frame rates
-- [ ] GPU ODE ensemble integration: batched RK45 across thousands of parameter sets
+- [x] GPU-accelerated LBM: target millions of cells at interactive frame rates — Implemented in v0.4.2 (`gpu_lbm.rs`, D2Q9 BGK, periodic/no-slip/free-slip BC, Poiseuille init)
+- [x] GPU ODE ensemble integration: batched RK45 across thousands of parameter sets — Implemented in v0.4.2 (`gpu_ode_ensemble.rs`, Dormand-Prince RK45, sequential/simulated dispatch)
 - [ ] GPU FEM assembly: shared-memory atomic scatter for sparse stiffness matrix
 - [ ] CUDA graph capture for repeated ODE solve patterns (neural ODE training)
 
@@ -144,7 +144,7 @@
 
 ### Integration and Quadrature
 - [x] Filon quadrature for highly oscillatory integrands — Implemented in v0.4.0 (`quadrature/filon.rs`, `quadrature/filon_clenshaw.rs`)
-- [ ] Sparse grid quadrature for high-dimensional smooth functions
+- [x] Sparse grid quadrature for high-dimensional smooth functions — Implemented in v0.4.2 (`quadrature/sparse_grid.rs`, SmolyakGrid/SmolyakConfig/UnivariateRule API with CC/GL/GP rules)
 - [ ] Clenshaw-Curtis adaptive quadrature with contour deformation
 
 ## Known Issues

@@ -5,6 +5,9 @@ edition.workspace = true
 description = "Policy linter for SciRS2 workspace compliance"
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
+keywords = ["cargo", "policy", "lint", "cooljapan", "workspace"]
+categories = ["development-tools", "development-tools::cargo-plugins"]
 
 [lib]
 name = "cargo_scirs2_policy"

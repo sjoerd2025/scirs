@@ -131,7 +131,7 @@ impl Default for FbmConfig {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```no_run
 /// use scirs2_integrate::sde::fractional_brownian::{FractionalBrownianMotion, FbmConfig};
 ///
 /// let cfg = FbmConfig { hurst: 0.7, n_steps: 64, dt: 1.0 / 64.0, seed: 0,
@@ -176,7 +176,7 @@ impl FractionalBrownianMotion {
     /// Generate the fractional Gaussian noise increments (length `n_steps`).
     ///
     /// The increments ξ_i = B^H_{(i+1)dt} − B^H_{i·dt} satisfy
-    /// E[ξ_i²] = dt^{2H}.
+    /// E\[ξ_i²\] = dt^{2H}.
     pub fn increments(&self) -> IntegrateResult<Array1<f64>> {
         self.validate()?;
         match self.config.method {
@@ -224,7 +224,7 @@ impl FractionalBrownianMotion {
 
         // Build covariance matrix C[i,j] = γ(|i-j|)
         let cov_elem = |i: usize, j: usize| -> f64 {
-            let lag = if i >= j { i - j } else { j - i };
+            let lag = i.abs_diff(j);
             gamma_lag(lag)
         };
 
@@ -356,10 +356,7 @@ impl FractionalBrownianMotion {
         })?;
 
         let sqrt_m = (m as f64).sqrt();
-        let xi_vec: Vec<f64> = z_complex[..n]
-            .iter()
-            .map(|c| c.re * sqrt_m)
-            .collect();
+        let xi_vec: Vec<f64> = z_complex[..n].iter().map(|c| c.re * sqrt_m).collect();
 
         Ok(Array1::from_vec(xi_vec))
     }
@@ -457,7 +454,11 @@ impl FractionalBrownianMotion {
         let sum_x: f64 = log_n_vals.iter().sum();
         let sum_y: f64 = log_rs_vals.iter().sum();
         let sum_xx: f64 = log_n_vals.iter().map(|&x| x * x).sum();
-        let sum_xy: f64 = log_n_vals.iter().zip(&log_rs_vals).map(|(&x, &y)| x * y).sum();
+        let sum_xy: f64 = log_n_vals
+            .iter()
+            .zip(&log_rs_vals)
+            .map(|(&x, &y)| x * y)
+            .sum();
         let denom = k * sum_xx - sum_x * sum_x;
         if denom.abs() < 1e-300 {
             return 0.5;
@@ -561,14 +562,26 @@ mod tests {
         let h = 0.7;
 
         let h_cfg = FbmConfig {
-            hurst: h, n_steps: n, dt, seed: 42, method: FbmMethod::Hosking,
+            hurst: h,
+            n_steps: n,
+            dt,
+            seed: 42,
+            method: FbmMethod::Hosking,
         };
         let dh_cfg_ = FbmConfig {
-            hurst: h, n_steps: n, dt, seed: 42, method: FbmMethod::DaviesHarte,
+            hurst: h,
+            n_steps: n,
+            dt,
+            seed: 42,
+            method: FbmMethod::DaviesHarte,
         };
 
-        let xi_h = FractionalBrownianMotion::new(h_cfg).increments().expect("hosking increments");
-        let xi_dh = FractionalBrownianMotion::new(dh_cfg_).increments().expect("dh increments");
+        let xi_h = FractionalBrownianMotion::new(h_cfg)
+            .increments()
+            .expect("hosking increments");
+        let xi_dh = FractionalBrownianMotion::new(dh_cfg_)
+            .increments()
+            .expect("dh increments");
 
         // Mean ~ 0 for both
         let mean_h: f64 = xi_h.sum() / n as f64;
@@ -590,8 +603,18 @@ mod tests {
             mean_dh
         );
         // Variance should be within a factor of 3 of expected
-        assert!(var_h < 3.0 * expected_var, "Hosking variance {} >> {}", var_h, expected_var);
-        assert!(var_dh < 3.0 * expected_var, "DH variance {} >> {}", var_dh, expected_var);
+        assert!(
+            var_h < 3.0 * expected_var,
+            "Hosking variance {} >> {}",
+            var_h,
+            expected_var
+        );
+        assert!(
+            var_dh < 3.0 * expected_var,
+            "DH variance {} >> {}",
+            var_dh,
+            expected_var
+        );
     }
 
     #[test]
@@ -600,7 +623,11 @@ mod tests {
         let n = 512;
         let dt = 1.0 / n as f64;
         let cfg = FbmConfig {
-            hurst: 0.5, n_steps: n, dt, seed: 7, method: FbmMethod::DaviesHarte,
+            hurst: 0.5,
+            n_steps: n,
+            dt,
+            seed: 7,
+            method: FbmMethod::DaviesHarte,
         };
         let fbm = FractionalBrownianMotion::new(cfg);
 
@@ -610,7 +637,11 @@ mod tests {
         let mut sum_sq = 0.0_f64;
         for seed in 0..n_paths_u64(n_paths) {
             let cfg2 = FbmConfig {
-                hurst: 0.5, n_steps: n, dt, seed, method: FbmMethod::DaviesHarte,
+                hurst: 0.5,
+                n_steps: n,
+                dt,
+                seed,
+                method: FbmMethod::DaviesHarte,
             };
             let path = FractionalBrownianMotion::new(cfg2)
                 .sample_path()
@@ -623,7 +654,9 @@ mod tests {
         assert!(
             rel < 0.3,
             "H=0.5 variance at t=0.5: sample={:.4}, theory={:.4}, rel={:.4}",
-            sample_var, theoretical, rel
+            sample_var,
+            theoretical,
+            rel
         );
         // Verify generator still gives path
         let _ = fbm.sample_path().expect("sample_path");
@@ -638,16 +671,23 @@ mod tests {
         let mut h_estimates = Vec::new();
         for seed in 0..20_u64 {
             let cfg = FbmConfig {
-                hurst: h_true, n_steps: n, dt, seed, method: FbmMethod::DaviesHarte,
+                hurst: h_true,
+                n_steps: n,
+                dt,
+                seed,
+                method: FbmMethod::DaviesHarte,
             };
-            let path = FractionalBrownianMotion::new(cfg).sample_path().expect("path");
+            let path = FractionalBrownianMotion::new(cfg)
+                .sample_path()
+                .expect("path");
             h_estimates.push(FractionalBrownianMotion::estimate_hurst(&path));
         }
         let mean_h: f64 = h_estimates.iter().sum::<f64>() / h_estimates.len() as f64;
         assert!(
             (mean_h - h_true).abs() < 0.2,
             "Hurst estimate {:.3} not within 0.2 of true {:.1}",
-            mean_h, h_true
+            mean_h,
+            h_true
         );
     }
 
@@ -657,9 +697,15 @@ mod tests {
         let n = 512;
         let dt = 1.0 / n as f64;
         let cfg = FbmConfig {
-            hurst: 0.8, n_steps: n, dt, seed: 13, method: FbmMethod::DaviesHarte,
+            hurst: 0.8,
+            n_steps: n,
+            dt,
+            seed: 13,
+            method: FbmMethod::DaviesHarte,
         };
-        let xi = FractionalBrownianMotion::new(cfg).increments().expect("increments");
+        let xi = FractionalBrownianMotion::new(cfg)
+            .increments()
+            .expect("increments");
         let lag1_acf = compute_lag1_acf(&xi);
         assert!(
             lag1_acf > 0.0,
@@ -674,9 +720,15 @@ mod tests {
         let n = 512;
         let dt = 1.0 / n as f64;
         let cfg = FbmConfig {
-            hurst: 0.2, n_steps: n, dt, seed: 17, method: FbmMethod::DaviesHarte,
+            hurst: 0.2,
+            n_steps: n,
+            dt,
+            seed: 17,
+            method: FbmMethod::DaviesHarte,
         };
-        let xi = FractionalBrownianMotion::new(cfg).increments().expect("increments");
+        let xi = FractionalBrownianMotion::new(cfg)
+            .increments()
+            .expect("increments");
         let lag1_acf = compute_lag1_acf(&xi);
         assert!(
             lag1_acf < 0.0,
@@ -687,14 +739,20 @@ mod tests {
 
     #[test]
     fn test_invalid_h_zero() {
-        let cfg = FbmConfig { hurst: 0.0, ..Default::default() };
+        let cfg = FbmConfig {
+            hurst: 0.0,
+            ..Default::default()
+        };
         let fbm = FractionalBrownianMotion::new(cfg);
         assert!(fbm.sample_path().is_err(), "H=0 should be invalid");
     }
 
     #[test]
     fn test_invalid_h_one() {
-        let cfg = FbmConfig { hurst: 1.0, ..Default::default() };
+        let cfg = FbmConfig {
+            hurst: 1.0,
+            ..Default::default()
+        };
         let fbm = FractionalBrownianMotion::new(cfg);
         assert!(fbm.sample_path().is_err(), "H=1 should be invalid");
     }

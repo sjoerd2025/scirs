@@ -58,7 +58,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-io = "0.4.1"
+//! scirs2-io = "0.4.2"
 //! ```
 //!
 //! ```rust,no_run
@@ -73,7 +73,7 @@
 //! let (headers, data) = read_csv("data.csv", Some(config)).unwrap();
 //! ```
 //!
-//! ## 🔒 Version: 0.4.1 (March 27, 2026)
+//! ## 🔒 Version: 0.4.2 (March 27, 2026)
 //!
 //! ## Modules
 //!
@@ -273,6 +273,14 @@ pub mod matrix_market;
 /// - Format-specific extensions
 /// - Standard metadata keys for scientific data
 pub mod metadata;
+/// Mini-batch sampler with shuffle and stratified splitting.
+///
+/// Provides index-based batch sampling for machine learning pipelines:
+/// - Configurable batch size with optional last-batch dropping
+/// - Deterministic or random shuffling via seeded PRNG
+/// - Stratified sampling that preserves class-label distributions across batches
+/// - Train/validation/test split with optional stratification
+pub mod minibatch;
 /// Machine learning framework compatibility
 ///
 /// Provides conversion utilities and interfaces for ML frameworks:
@@ -564,8 +572,18 @@ pub mod workflow;
 /// - Minimized memory allocations for large datasets
 pub mod zero_copy;
 
-// Adaptive compression
+// Adaptive compression (entropy-based; OxiARC-backed codecs)
 pub mod adaptive_compression;
+// Cloud storage abstraction: ObjectStore trait, LocalObjectStore, MemoryObjectStore,
+// S3/GCS/Azure stubs, MultipartUpload, URL parsing.
+// GCS resumable upload state machine and Azure Blob SAS token support included.
+pub mod cloud;
+// AWS S3-specific multipart upload state machine (simulation + feature-gated stubs).
+pub mod s3_multipart;
+// Exactly-once delivery semantics for streaming pipeline sinks.
+// Uses idempotency keys + write-ahead log to ensure each message is processed once.
+pub mod exactly_once;
+pub use exactly_once::{ExactlyOnceSink, WriteAheadLog};
 // Delta Lake integration
 pub mod delta;
 // Lance columnar format
@@ -580,6 +598,14 @@ pub mod table_provider;
 pub mod tensors;
 // TileDB array storage
 pub mod tiledb;
+// Apache Iceberg table format support
+pub mod iceberg;
+// DataFusion-compatible table provider interface
+pub mod datafusion_provider;
+// Vectorized expression evaluation for filter and project operations
+pub mod vectorized_eval;
+// Join algorithms for cross-format dataset merging
+pub mod joins;
 
 // Re-export commonly used functionality
 pub use advanced_coordinator::{

@@ -124,13 +124,23 @@ where
     let mut t = t0;
 
     for step in 0..n_steps {
-        let h = if step == n_steps - 1 { t1 - t } else { dt.min(t1 - t) };
-        if h <= 0.0 { break; }
+        let h = if step == n_steps - 1 {
+            t1 - t
+        } else {
+            dt.min(t1 - t)
+        };
+        if h <= 0.0 {
+            break;
+        }
         let sqrt_h = h.sqrt();
 
         // Two-point Rademacher increments: each ΔŴ_j ∈ {-√h, +√h}
         let dw: Array1<f64> = Array1::from_shape_fn(m, |_| {
-            if rng.random::<bool>() { sqrt_h } else { -sqrt_h }
+            if rng.random::<bool>() {
+                sqrt_h
+            } else {
+                -sqrt_h
+            }
         });
 
         let f_val = (prob.f_drift)(t, &x);
@@ -247,13 +257,23 @@ where
     let mut t = t0;
 
     for step in 0..n_steps {
-        let h = if step == n_steps - 1 { t1 - t } else { dt.min(t1 - t) };
-        if h <= 0.0 { break; }
+        let h = if step == n_steps - 1 {
+            t1 - t
+        } else {
+            dt.min(t1 - t)
+        };
+        if h <= 0.0 {
+            break;
+        }
         let sqrt_h = h.sqrt();
 
         // Rademacher increments for the main step
         let dw: Array1<f64> = Array1::from_shape_fn(m, |_| {
-            if rng.random::<bool>() { sqrt_h } else { -sqrt_h }
+            if rng.random::<bool>() {
+                sqrt_h
+            } else {
+                -sqrt_h
+            }
         });
 
         let f0 = (prob.f_drift)(t, &x);
@@ -393,12 +413,12 @@ where
     };
 
     // Extrapolated final state: 2·X_fine - X_coarse
-    let x_coarse_final = sol_coarse.x_final().ok_or_else(|| {
-        IntegrateError::ComputationError("Coarse solution is empty".to_string())
-    })?;
-    let x_fine_final = sol_fine.x_final().ok_or_else(|| {
-        IntegrateError::ComputationError("Fine solution is empty".to_string())
-    })?;
+    let x_coarse_final = sol_coarse
+        .x_final()
+        .ok_or_else(|| IntegrateError::ComputationError("Coarse solution is empty".to_string()))?;
+    let x_fine_final = sol_fine
+        .x_final()
+        .ok_or_else(|| IntegrateError::ComputationError("Fine solution is empty".to_string()))?;
 
     let x_extrapolated = x_fine_final * 2.0 - x_coarse_final;
 
@@ -506,10 +526,7 @@ where
     }
 
     // Divide by n_paths
-    let mean_x: Vec<Array1<f64>> = sum_x
-        .into_iter()
-        .map(|s| s / n_paths as f64)
-        .collect();
+    let mean_x: Vec<Array1<f64>> = sum_x.into_iter().map(|s| s / n_paths as f64).collect();
 
     let _ = n_state; // used indirectly via sum_x construction
 
@@ -597,8 +614,14 @@ where
     let mut t = t0;
 
     for step in 0..n_steps {
-        let h = if step == n_steps - 1 { t1 - t } else { dt.min(t1 - t) };
-        if h <= 0.0 { break; }
+        let h = if step == n_steps - 1 {
+            t1 - t
+        } else {
+            dt.min(t1 - t)
+        };
+        if h <= 0.0 {
+            break;
+        }
         let sqrt_h = h.sqrt();
 
         let dw: Array1<f64> = Array1::from_shape_fn(m, |_| normal.sample(rng) * sqrt_h);
@@ -636,13 +659,17 @@ fn validate_dimensions(
     if f.len() != n_state {
         return Err(IntegrateError::DimensionMismatch(format!(
             "Drift output dimension {} != state dimension {}",
-            f.len(), n_state
+            f.len(),
+            n_state
         )));
     }
     if g.nrows() != n_state || g.ncols() != m {
         return Err(IntegrateError::DimensionMismatch(format!(
             "Diffusion matrix shape ({},{}) != expected ({},{})",
-            g.nrows(), g.ncols(), n_state, m
+            g.nrows(),
+            g.ncols(),
+            n_state,
+            m
         )));
     }
     Ok(())
@@ -659,7 +686,12 @@ mod tests {
     use scirs2_core::ndarray::{array, Array2};
     use scirs2_core::random::prelude::seeded_rng;
 
-    fn make_gbm(mu: f64, sigma: f64, s0: f64, t1: f64) -> SdeProblem<
+    fn make_gbm(
+        mu: f64,
+        sigma: f64,
+        s0: f64,
+        t1: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {
@@ -676,7 +708,13 @@ mod tests {
         )
     }
 
-    fn make_ou(theta: f64, mu_ou: f64, sigma: f64, x0: f64, t1: f64) -> SdeProblem<
+    fn make_ou(
+        theta: f64,
+        mu_ou: f64,
+        sigma: f64,
+        x0: f64,
+        t1: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {
@@ -685,7 +723,11 @@ mod tests {
             [0.0, t1],
             1,
             move |_t, x| array![theta * (mu_ou - x[0])],
-            move |_t, _x| { let mut g = Array2::zeros((1, 1)); g[[0, 0]] = sigma; g },
+            move |_t, _x| {
+                let mut g = Array2::zeros((1, 1));
+                g[[0, 0]] = sigma;
+                g
+            },
         )
     }
 
@@ -722,7 +764,9 @@ mod tests {
         assert!(
             rel_err < 0.05,
             "Weak Euler GBM mean {:.4} vs analytic {:.4}, rel_err {:.4}",
-            mean, analytic, rel_err
+            mean,
+            analytic,
+            rel_err
         );
     }
 
@@ -730,7 +774,8 @@ mod tests {
     fn test_simplified_weak_2_solution_length() {
         let prob = make_ou(1.0, 0.0, 0.5, 1.0, 1.0);
         let mut rng = seeded_rng(0);
-        let sol = simplified_weak_2(&prob, 0.1, &mut rng).expect("simplified_weak_2 should succeed");
+        let sol =
+            simplified_weak_2(&prob, 0.1, &mut rng).expect("simplified_weak_2 should succeed");
         assert_eq!(sol.len(), 11);
     }
 
@@ -750,7 +795,8 @@ mod tests {
         for seed in 0..n_paths as u64 {
             let prob = make_ou(theta, mu_ou, sigma, x0, t1);
             let mut rng = seeded_rng(seed + 30000);
-            let sol = simplified_weak_2(&prob, dt, &mut rng).expect("simplified_weak_2 should succeed");
+            let sol =
+                simplified_weak_2(&prob, dt, &mut rng).expect("simplified_weak_2 should succeed");
             sum += sol.x_final().expect("solution has state")[0];
         }
         let mean = sum / n_paths as f64;
@@ -758,7 +804,9 @@ mod tests {
         assert!(
             abs_err < 0.1,
             "Simplified weak-2 OU mean {:.4} vs analytic {:.4}, abs_err {:.4}",
-            mean, analytic, abs_err
+            mean,
+            analytic,
+            abs_err
         );
     }
 
@@ -766,7 +814,8 @@ mod tests {
     fn test_gaussian_weak_euler_length() {
         let prob = make_gbm(0.05, 0.2, 1.0, 1.0);
         let mut rng = seeded_rng(5);
-        let sol = gaussian_weak_euler(&prob, 0.1, &mut rng).expect("gaussian_weak_euler should succeed");
+        let sol =
+            gaussian_weak_euler(&prob, 0.1, &mut rng).expect("gaussian_weak_euler should succeed");
         assert_eq!(sol.len(), 11);
     }
 
@@ -774,7 +823,8 @@ mod tests {
     fn test_talay_tubaro_runs() {
         let prob = make_ou(1.0, 0.0, 0.3, 2.0, 1.0);
         let mut rng = seeded_rng(42);
-        let result = talay_tubaro(&prob, 0.05, &mut rng, BaseScheme::WeakEuler).expect("talay_tubaro should succeed");
+        let result = talay_tubaro(&prob, 0.05, &mut rng, BaseScheme::WeakEuler)
+            .expect("talay_tubaro should succeed");
         assert!(result.x_extrapolated[0].is_finite());
         assert!(!result.sol_coarse.is_empty());
         assert!(!result.sol_fine.is_empty());
@@ -782,8 +832,14 @@ mod tests {
         let n_coarse = result.sol_coarse.len();
         let n_fine = result.sol_fine.len();
         // Both should reach T=1.0
-        let t_coarse = result.sol_coarse.t_final().expect("coarse solution has time steps");
-        let t_fine = result.sol_fine.t_final().expect("fine solution has time steps");
+        let t_coarse = result
+            .sol_coarse
+            .t_final()
+            .expect("coarse solution has time steps");
+        let t_fine = result
+            .sol_fine
+            .t_final()
+            .expect("fine solution has time steps");
         assert!((t_coarse - 1.0).abs() < 1e-10);
         assert!((t_fine - 1.0).abs() < 1e-10);
         assert!(n_fine > n_coarse, "Fine should have more steps than coarse");
@@ -793,7 +849,8 @@ mod tests {
     fn test_talay_tubaro_simplified() {
         let prob = make_ou(1.0, 0.0, 0.3, 2.0, 1.0);
         let mut rng = seeded_rng(7);
-        let result = talay_tubaro(&prob, 0.1, &mut rng, BaseScheme::SimplifiedWeak2).expect("talay_tubaro should succeed");
+        let result = talay_tubaro(&prob, 0.1, &mut rng, BaseScheme::SimplifiedWeak2)
+            .expect("talay_tubaro should succeed");
         assert!(result.x_extrapolated[0].is_finite());
     }
 
@@ -801,8 +858,13 @@ mod tests {
     fn test_monte_carlo_mean_shape() {
         let prob = make_gbm(0.05, 0.2, 1.0, 1.0);
         let mut rng = seeded_rng(0);
-        let mean_sol = monte_carlo_mean(&prob, 0.1, 50, &mut rng).expect("monte_carlo_mean should succeed");
-        assert_eq!(mean_sol.len(), 11, "Mean trajectory should have 11 time points");
+        let mean_sol =
+            monte_carlo_mean(&prob, 0.1, 50, &mut rng).expect("monte_carlo_mean should succeed");
+        assert_eq!(
+            mean_sol.len(),
+            11,
+            "Mean trajectory should have 11 time points"
+        );
         assert!((mean_sol.t[0] - 0.0).abs() < 1e-12);
         assert!((mean_sol.t_final().expect("mean solution has time steps") - 1.0).abs() < 1e-10);
     }
@@ -817,13 +879,16 @@ mod tests {
         let analytic = s0 * (mu * t1).exp();
         let prob = make_gbm(mu, sigma, s0, t1);
         let mut rng = seeded_rng(42);
-        let mean_sol = monte_carlo_mean(&prob, 0.01, 1000, &mut rng).expect("monte_carlo_mean should succeed");
+        let mean_sol =
+            monte_carlo_mean(&prob, 0.01, 1000, &mut rng).expect("monte_carlo_mean should succeed");
         let final_mean = mean_sol.x_final().expect("mean solution has state")[0];
         let rel_err = (final_mean - analytic).abs() / analytic;
         assert!(
             rel_err < 0.05,
             "MC mean {:.4} vs analytic {:.4}, rel_err {:.4}",
-            final_mean, analytic, rel_err
+            final_mean,
+            analytic,
+            rel_err
         );
     }
 
@@ -838,9 +903,13 @@ mod tests {
     #[test]
     fn test_save_only_last() {
         let prob = make_gbm(0.05, 0.2, 1.0, 1.0);
-        let opts = SdeOptions { save_all_steps: false, ..Default::default() };
+        let opts = SdeOptions {
+            save_all_steps: false,
+            ..Default::default()
+        };
         let mut rng = seeded_rng(1);
-        let sol = weak_euler_with_options(&prob, 0.01, &mut rng, &opts).expect("weak_euler_with_options should succeed");
+        let sol = weak_euler_with_options(&prob, 0.01, &mut rng, &opts)
+            .expect("weak_euler_with_options should succeed");
         assert_eq!(sol.len(), 2);
     }
 

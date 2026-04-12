@@ -1,8 +1,8 @@
 # SciRS2 Development Roadmap
 
-**Current Version**: 0.4.1 (Released)
-**Status**: Production Ready — All 25,863 tests passing (100% pass rate)
-**Scale**: ~2.9M lines of Rust, ~7,600 source files, ~29 workspace crates
+**Current Version**: 0.4.2 (Released)
+**Status**: Production Ready — All 27,632 tests passing (100% pass rate)
+**Scale**: ~2.94M lines of Rust, ~7,600 source files, ~29 workspace crates
 
 This document tracks the development roadmap for SciRS2. Completed items in v0.3.4 are documented here for historical reference; the active roadmap is the v0.4.0 section.
 
@@ -497,6 +497,97 @@ These are pulled in by external crates we depend on — not direct violations, b
 
 ---
 
+## v0.4.2 — RELEASED (April 12, 2026)
+
+### scirs2-core
+- [x] Metal GPU batch dispatch mode (begin_batch/end_batch/try_batch_dispatch)
+- [x] Metal GPU async dispatch (dispatch_no_wait + gpu_sync)
+- [x] Removed all .expect() violations from GPU backends
+
+### scirs2-optimize
+- [x] Bayesian optimization integer dimension enforcement (enforce_integer_dims)
+- [x] GDAS (Gumbel-DARTS) NAS with Gumbel-Softmax sampling and temperature annealing
+- [x] SNAS (Stochastic NAS) with concrete distribution relaxation and resource penalty
+- [x] Predictor-based NAS with kernel ridge regression surrogate and active learning
+- [x] NAS module consolidation — nas/ module wired up to lib.rs
+
+### scirs2-integration-tests
+- [x] Real integration tests for sparse linear solvers (CG/BiCGSTAB/GMRES)
+- [x] Real integration tests for statistical analysis (correlation, hypothesis testing)
+- [x] Enhanced FFT integration tests (spectral peaks, filtering, convolution theorem)
+- [x] Optimizer convergence integration tests
+
+### Wave 42 (April 2026)
+- [x] scirs2-core: Async GPU buffer transfer pipeline with overlapping CPU/GPU transfers
+- [x] scirs2-core: Unified memory allocator (CPU+GPU shared pages)
+- [x] scirs2-core: Persistent vector (RRB-tree) with structural sharing
+- [x] scirs2-core: Tracy profiler integration (feature-gated)
+- [x] scirs2-core: NUMA-local allocator with libnuma feature gate
+- [x] scirs2-signal: GPU-accelerated spectrogram computation (GpuSpectrogram)
+- [x] scirs2-signal: GPU matched filter bank (MatchedFilterBank)
+- [x] scirs2-linalg: Auto mixed-precision selection by condition number
+- [x] scirs2-linalg: GPU eigensolver interface (Householder + QL + Lanczos)
+- [x] scirs2-linalg: Mixed CPU/GPU solver with iterative refinement
+- [x] scirs2-io: Apache Iceberg table format support
+- [x] scirs2-io: DataFusion-compatible table provider interface
+- [x] scirs2-io: Vectorized expression evaluation for filter/project
+- [x] scirs2-io: Hash join, merge join, nested-loop join algorithms
+- [x] scirs2-special: Hecke L-functions and Maass forms
+- [x] scirs2-special: Elliptic curve L-functions (BSD numerics)
+- [x] scirs2-special: Validated numerics (ball arithmetic with certified enclosures)
+- [x] scirs2-special: Connection formula generator (Bessel, hypergeometric, Legendre, Kummer)
+- [x] scirs2-integration-tests: ML pipeline (datasets → neural → optimize → metrics)
+- [x] scirs2-integration-tests: Signal analysis pipeline (signal → fft → stats)
+- [x] scirs2-integration-tests: NLP pipeline (text → neural → metrics)
+- [x] scirs2-integration-tests: Computer vision pipeline (ndimage → vision → metrics)
+- [x] scirs2-integration-tests: Graph ML pipeline (graph → linalg → metrics)
+- [x] scirs2-integration-tests: Scientific computing pipeline (integrate → linalg → sparse)
+
+### Wave 43 (April 2026)
+- [x] scirs2-core: Per-stream allocation (StreamAllocator, StreamId) in gpu/stream_allocator.rs
+- [x] scirs2-core: Memory defragmentation (DefragPlanner, OnlineDefragmenter) in memory/defrag.rs
+- [x] scirs2-core: Cross-NUMA bandwidth measurement and routing in memory/numa_bandwidth.rs
+- [x] scirs2-core: Automatic NUMA-aware placement (optimal_placement_node)
+- [x] scirs2-io: Object-store abstraction layer (LocalFsStore, MemoryStore, S3/GCS/Azure stubs)
+- [x] scirs2-io: AWS S3 multipart upload state machine (feature-gated)
+- [x] scirs2-io: Adaptive compression with entropy-based algorithm selection (OxiARC-backed)
+- [x] scirs2-io: Mini-batch sampler with shuffle, stratified splitting, train/val/test split
+- [x] scirs2-io: SafeTensors, ONNX proto, TFRecord ML formats (already existed — verified and documented)
+- [x] scirs2-special: GPU auto-dispatch (batch_gamma, batch_erf, batch_bessel_j0)
+- [x] scirs2-special: Mixed-precision f16 accumulation (batch_eval_gamma_f16, batch_eval_erf_f16)
+- [x] scirs2-special: Clebsch-Gordan series for SU(2), SU(3), SO(5) Lie groups
+- [x] scirs2-special: Hall polynomials for p-group extensions
+- [x] scirs2-series: All 6 v0.4.0 items already implemented — verified and marked done
+- [x] scirs2-sparse: Mixed CPU/GPU preconditioning (ILU(0) + preconditioned CG)
+- [x] scirs2-optimize: Subspace embedding methods (Gaussian/Sparse/JL + sketched least-squares)
+- [x] scirs2-python: scirs2.special, scirs2.interpolate, scirs2.integrate Python bindings; no-unwrap fixes
+- [x] scirs2-numpy: DLPack protocol (__dlpack__, __dlpack_device__), masked arrays, structured dtype, PyUntypedArray, runtime dtype inspection
+- [x] scirs2-neural: Pipeline parallelism, tensor parallelism wired up; all 9 v0.4.0 TODO items confirmed complete; INT4 quantization verified
+
+### Wave 44 (April 2026)
+- [x] scirs2-neural: NAS module repair — GDAS/SNAS/predictor-based NAS, 74 tests passing
+- [x] scirs2-neural: Mamba SSM (state-space model) verified working
+- [x] scirs2-core: Numerical validation tests (40 tests) for core mathematical operations
+- [x] scirs2-core: Cross-crate consistency tests (16 tests)
+- [x] scirs2-optimize: CMA-ES (covariance matrix adaptation evolution strategy) optimizer, 10 tests
+- [x] scirs2-text: Enhanced BPE tokenizer with chat templates (14 tests)
+
+### Wave 45 (April 2026)
+- [x] scirs2-linalg: H-matrix compression (hierarchical matrix representation), 10 tests
+- [x] scirs2-special: Spheroidal wave functions + Mathieu-Hill enhancements, 25 tests
+- [x] scirs2-fft: Streaming FFT (out-of-core ring-buffer STFT), 18 tests
+- [x] scirs2-signal: Batched Welch PSD + EFDD modal analysis, 12 tests
+- [x] scirs2-numpy: Array protocol + DLPack extensions, 27 tests
+- [x] scirs2-datasets: HuggingFace integration + sharding + generators, 493 lib tests
+- [x] scirs2-io: GCS + Azure SAS presigned URLs + exactly-once semantics, 35 tests
+- [x] scirs2-interpolate: GPU RBF + physics-informed + deep kriging + active learning, 25 tests
+- [x] scirs2-text: Sentence embeddings + multilingual + HDP topic modeling, 34 tests
+- [x] scirs2: Feature groups + prelude module (facade crate enhancements)
+- [x] scirs2-metrics: Rotated IoU + bounding box overlap utilities, 17 tests
+- [x] scirs2-integrate: GPU LBM + ODE ensemble + sparse grid quadrature, 27 tests
+
+---
+
 ## v1.0.0 — PLANNED (Q4 2026)
 
 ### API Stability Guarantees
@@ -533,7 +624,7 @@ These are pulled in by external crates we depend on — not direct violations, b
 ### Current CI Infrastructure
 - Pure Rust toolchain with cargo-nextest
 - Zero warnings enforcement (clippy + rustc)
-- Comprehensive test coverage (25,863 tests)
+- Comprehensive test coverage (27,632 tests)
 - No-unwrap policy enforced in code review
 
 ### Planned CI Enhancements
@@ -595,6 +686,6 @@ All development must adhere to the following policies:
 
 ---
 
-**Last Updated**: March 28, 2026
-**Branch**: 0.4.1
-**Status**: v0.4.1 released — all items implemented (Waves 1-39)
+**Last Updated**: April 12, 2026
+**Branch**: 0.4.2
+**Status**: v0.4.2 RELEASED — 27,632 tests passing, ~2.94M lines of Rust, Waves 40-45 complete (NAS, datasets, text, series, integrate, FFT, signal, interpolate, linalg, io, special, metrics)

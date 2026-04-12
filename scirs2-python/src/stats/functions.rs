@@ -19,7 +19,9 @@ pub fn describe_py(py: Python, data: &Bound<'_, PyArray1<f64>>) -> PyResult<Py<P
     if n == 0 {
         return Err(PyRuntimeError::new_err("Empty array provided"));
     }
-    let slice = arr.as_slice().expect("Operation failed");
+    let slice = arr
+        .as_slice()
+        .ok_or_else(|| PyRuntimeError::new_err("Array is not contiguous in memory"))?;
     let mut sum0 = 0.0f64;
     let mut sum1 = 0.0f64;
     let mut sum2 = 0.0f64;
@@ -125,7 +127,9 @@ pub fn mean_py(data: &Bound<'_, PyArray1<f64>>) -> PyResult<f64> {
     if n == 0 {
         return Err(PyRuntimeError::new_err("Empty array provided"));
     }
-    let slice = arr.as_slice().expect("Operation failed");
+    let slice = arr
+        .as_slice()
+        .ok_or_else(|| PyRuntimeError::new_err("Array is not contiguous in memory"))?;
     let mut sum0 = 0.0f64;
     let mut sum1 = 0.0f64;
     let mut sum2 = 0.0f64;
@@ -159,7 +163,9 @@ pub fn std_py(data: &Bound<'_, PyArray1<f64>>, ddof: usize) -> PyResult<f64> {
             "Not enough data points for given ddof",
         ));
     }
-    let slice = arr.as_slice().expect("Operation failed");
+    let slice = arr
+        .as_slice()
+        .ok_or_else(|| PyRuntimeError::new_err("Array is not contiguous in memory"))?;
     let mut sum0 = 0.0f64;
     let mut sum1 = 0.0f64;
     let mut sum2 = 0.0f64;
@@ -220,7 +226,9 @@ pub fn var_py(data: &Bound<'_, PyArray1<f64>>, ddof: usize) -> PyResult<f64> {
             "Not enough data points for given ddof",
         ));
     }
-    let slice = arr.as_slice().expect("Operation failed");
+    let slice = arr
+        .as_slice()
+        .ok_or_else(|| PyRuntimeError::new_err("Array is not contiguous in memory"))?;
     let mut sum0 = 0.0f64;
     let mut sum1 = 0.0f64;
     let mut sum2 = 0.0f64;

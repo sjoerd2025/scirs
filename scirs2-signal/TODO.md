@@ -165,9 +165,9 @@
 - [x] Streaming OMP for adaptive sparse coding — Implemented in v0.4.0 (`streaming/streaming_omp.rs`)
 
 ### GPU-Accelerated FFT Pipeline
-- [ ] OxiFFT GPU backend integration for large-batch spectrograms
-- [ ] GPU-accelerated matched filter bank (multiple templates simultaneously)
-- [ ] Batched Welch PSD for parallel channel processing
+- [x] OxiFFT GPU backend integration for large-batch spectrograms — implemented in v0.4.2 (`gpu_spectrograms.rs`)
+- [x] GPU-accelerated matched filter bank (multiple templates simultaneously) — implemented in v0.4.2 (`gpu_matched_filter.rs`)
+- [x] Batched Welch PSD for parallel channel processing — Implemented in v0.4.2 (`welch_batch.rs`)
 - [ ] GPU wavelet transform for high-throughput applications
 
 ### Deep Learning-Based Denoising
@@ -178,7 +178,7 @@
 
 ### Modal Analysis (Structural Dynamics)
 - [x] Frequency Domain Decomposition (FDD) for operational modal analysis — Implemented in v0.4.0 (`modal_analysis/fdd.rs`)
-- [ ] Enhanced FDD (EFDD) with damping estimation
+- [x] Enhanced FDD (EFDD) with damping estimation — Implemented in v0.4.2 (`oma_efdd.rs`)
 - [x] Stochastic Subspace Identification (SSI-COV, SSI-DATA) — Implemented in v0.4.0 (`modal_analysis/ssi.rs`)
 - [x] Modal Assurance Criterion (MAC) for mode shape comparison — Implemented in v0.4.0 (`modal_analysis/mac.rs`)
 

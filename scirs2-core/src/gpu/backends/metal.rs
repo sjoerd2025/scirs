@@ -68,6 +68,29 @@ pub struct MetalContext {
     /// Metal Performance Shaders operations (if available)
     // MPS operations are available when Metal feature is enabled
     mps_operations: Option<Arc<MPSOperations>>,
+    /// Shared batch dispatch state
+    batch_state: Arc<Mutex<MetalBatchState>>,
+}
+
+/// Batch dispatch state for Metal.
+///
+/// When active, kernel dispatches are accumulated as [`MetalBatchEntry`]
+/// values instead of being submitted individually.  The entries are
+/// encoded into a single command buffer when [`MetalContext::end_batch`]
+/// is called.
+pub(crate) struct MetalBatchState {
+    active: bool,
+    entries: Vec<MetalBatchEntry>,
+}
+
+/// A single dispatch entry in a Metal batch.
+struct MetalBatchEntry {
+    pipeline: Arc<ComputePipelineState>,
+    /// (buffer_index, gpu_buffer_impl) — kept alive as Arc
+    buffer_bindings: Vec<(u64, Arc<dyn GpuBufferImpl>)>,
+    /// (buffer_index, raw_bytes) — inline scalar data for set_bytes
+    scalar_bindings: Vec<(u64, Vec<u8>)>,
+    workgroups: [u32; 3],
 }
 
 /// Metal device capabilities
@@ -111,6 +134,10 @@ impl MetalContext {
             capabilities,
             // MPS operations are available when Metal feature is enabled
             mps_operations,
+            batch_state: Arc::new(Mutex::new(MetalBatchState {
+                active: false,
+                entries: Vec::new(),
+            })),
         })
     }
 
@@ -145,7 +172,82 @@ impl GpuContextImpl for MetalContext {
             self.device.clone(),
             self.command_queue.clone(),
             self.library_cache.clone(),
+            self.batch_state.clone(),
         ))
+    }
+
+    fn gpu_sync(&self) -> Result<(), GpuError> {
+        // Metal command queues execute in FIFO order.
+        // Submit an empty command buffer and wait — this acts as a fence
+        // ensuring all previous dispatches have completed.
+        let command_buffer = self.command_queue.new_command_buffer();
+        command_buffer.commit();
+        command_buffer.wait_until_completed();
+        Ok(())
+    }
+
+    fn begin_batch(&self) -> Result<(), GpuError> {
+        let mut state = self
+            .batch_state
+            .lock()
+            .map_err(|_| GpuError::Other("batch state lock poisoned".into()))?;
+        state.active = true;
+        state.entries.clear();
+        Ok(())
+    }
+
+    fn end_batch(&self) -> Result<(), GpuError> {
+        let entries = {
+            let mut state = self
+                .batch_state
+                .lock()
+                .map_err(|_| GpuError::Other("batch state lock poisoned".into()))?;
+            if !state.active {
+                return Ok(());
+            }
+            state.active = false;
+            std::mem::take(&mut state.entries)
+        };
+        // Lock released — safe to do GPU work.
+
+        if entries.is_empty() {
+            return Ok(());
+        }
+
+        let command_buffer = self.command_queue.new_command_buffer();
+        let encoder = command_buffer.new_compute_command_encoder();
+
+        for entry in &entries {
+            encoder.set_compute_pipeline_state(&entry.pipeline);
+
+            for &(index, ref buf_impl) in &entry.buffer_bindings {
+                if let Some(metal_buf) = buf_impl.as_any().downcast_ref::<MetalBuffer>() {
+                    encoder.set_buffer(index, Some(metal_buf.metal_buffer()), 0);
+                }
+            }
+
+            for &(index, ref data) in &entry.scalar_bindings {
+                encoder.set_bytes(
+                    index,
+                    data.len() as u64,
+                    data.as_ptr() as *const std::ffi::c_void,
+                );
+            }
+
+            let threads_per_threadgroup = MTLSize::new(256, 1, 1);
+            let threadgroups = MTLSize::new(
+                entry.workgroups[0] as u64,
+                entry.workgroups[1] as u64,
+                entry.workgroups[2] as u64,
+            );
+            encoder.dispatch_thread_groups(threadgroups, threads_per_threadgroup);
+        }
+
+        encoder.end_encoding();
+        command_buffer.commit();
+        command_buffer.wait_until_completed();
+
+        Ok(())
     }
 }
 
@@ -255,6 +357,8 @@ pub struct MetalCompiler {
     pipeline_cache: Arc<RwLock<HashMap<String, Arc<ComputePipelineState>>>>,
     /// Shared library cache
     library_cache: Arc<RwLock<HashMap<String, Library>>>,
+    /// Shared batch state
+    batch_state: Arc<Mutex<MetalBatchState>>,
 }
 
 impl MetalCompiler {
@@ -263,12 +367,14 @@ impl MetalCompiler {
         device: Device,
         command_queue: CommandQueue,
         library_cache: Arc<RwLock<HashMap<String, Library>>>,
+        batch_state: Arc<Mutex<MetalBatchState>>,
     ) -> Self {
         Self {
             device,
             command_queue,
             pipeline_cache: Arc::new(RwLock::new(HashMap::new())),
             library_cache,
+            batch_state,
         }
     }
 
@@ -277,7 +383,10 @@ impl MetalCompiler {
         // Check cache first
         let cache_key = source.to_string();
         {
-            let cache = self.pipeline_cache.read().expect("Operation failed");
+            let cache = self
+                .pipeline_cache
+                .read()
+                .map_err(|_| GpuError::Other("pipeline cache read lock poisoned".into()))?;
             if let Some(pipeline) = cache.get(&cache_key) {
                 return Ok(pipeline.clone());
             }
@@ -320,7 +429,10 @@ impl MetalCompiler {
 
         // Cache the compiled pipeline
         {
-            let mut cache = self.pipeline_cache.write().expect("Operation failed");
+            let mut cache = self
+                .pipeline_cache
+                .write()
+                .map_err(|_| GpuError::Other("pipeline cache write lock poisoned".into()))?;
             cache.insert(cache_key, pipeline.clone());
         }
 
@@ -335,6 +447,7 @@ impl GpuCompilerImpl for MetalCompiler {
             self.device.clone(),
             self.command_queue.clone(),
             pipeline,
+            self.batch_state.clone(),
         )))
     }
 
@@ -350,6 +463,7 @@ impl GpuCompilerImpl for MetalCompiler {
             self.device.clone(),
             self.command_queue.clone(),
             name.to_string(),
+            self.batch_state.clone(),
         ))
     }
 }
@@ -361,6 +475,8 @@ pub struct MetalKernel {
     pipeline: Option<Arc<ComputePipelineState>>,
     /// Parameters bound to the kernel
     parameters: Arc<Mutex<KernelParameters>>,
+    /// Shared batch state
+    batch_state: Arc<Mutex<MetalBatchState>>,
 }
 
 /// Kernel parameters storage
@@ -383,6 +499,7 @@ impl MetalKernel {
         device: Device,
         command_queue: CommandQueue,
         pipeline: Arc<ComputePipelineState>,
+        batch_state: Arc<Mutex<MetalBatchState>>,
     ) -> Self {
         Self {
             device,
@@ -392,11 +509,17 @@ impl MetalKernel {
                 buffers: HashMap::new(),
                 scalars: HashMap::new(),
             })),
+            batch_state,
         }
     }
 
     /// Create a stub kernel for typed compilation
-    fn stub(device: Device, commandqueue: CommandQueue, name: String) -> Self {
+    fn stub(
+        device: Device,
+        commandqueue: CommandQueue,
+        name: String,
+        batch_state: Arc<Mutex<MetalBatchState>>,
+    ) -> Self {
         Self {
             device,
             command_queue: commandqueue,
@@ -405,57 +528,63 @@ impl MetalKernel {
                 buffers: HashMap::new(),
                 scalars: HashMap::new(),
             })),
+            batch_state,
         }
     }
 
-    /// Helper to create and bind a scalar value as a constant buffer
-    fn create_and_bind_scalar(
-        &self,
-        encoder: &ComputeCommandEncoderRef,
-        index: usize,
-        bytes: &[u8],
-    ) {
-        // Create a buffer for the scalar value - use new_buffer_with_data to copy the bytes
-        let buffer = self.device.new_buffer_with_data(
-            bytes.as_ptr() as *const std::ffi::c_void,
+    fn bind_scalar_bytes(encoder: &ComputeCommandEncoderRef, index: usize, bytes: &[u8]) {
+        encoder.set_bytes(
+            index as u64,
             bytes.len() as u64,
-            MTLResourceOptions::StorageModeShared,
+            bytes.as_ptr() as *const std::ffi::c_void,
         );
-
-        // Bind the buffer to the encoder
-        encoder.set_buffer(index as u64, Some(&buffer), 0);
     }
 }
 
 impl GpuKernelImpl for MetalKernel {
     fn set_buffer(&self, name: &str, buffer: &Arc<dyn GpuBufferImpl>) {
-        let mut params = self.parameters.lock().expect("Operation failed");
+        let Ok(mut params) = self.parameters.lock() else {
+            eprintln!("Warning: kernel parameters lock poisoned in set_buffer");
+            return;
+        };
         params.buffers.insert(name.to_string(), buffer.clone());
     }
 
     fn set_u32(&self, name: &str, value: u32) {
-        let mut params = self.parameters.lock().expect("Operation failed");
+        let Ok(mut params) = self.parameters.lock() else {
+            eprintln!("Warning: kernel parameters lock poisoned in set_u32");
+            return;
+        };
         params
             .scalars
             .insert(name.to_string(), ScalarValue::U32(value));
     }
 
     fn set_i32(&self, name: &str, value: i32) {
-        let mut params = self.parameters.lock().expect("Operation failed");
+        let Ok(mut params) = self.parameters.lock() else {
+            eprintln!("Warning: kernel parameters lock poisoned in set_i32");
+            return;
+        };
         params
             .scalars
             .insert(name.to_string(), ScalarValue::I32(value));
     }
 
     fn set_f32(&self, name: &str, value: f32) {
-        let mut params = self.parameters.lock().expect("Operation failed");
+        let Ok(mut params) = self.parameters.lock() else {
+            eprintln!("Warning: kernel parameters lock poisoned in set_f32");
+            return;
+        };
         params
             .scalars
             .insert(name.to_string(), ScalarValue::F32(value));
     }
 
     fn set_f64(&self, name: &str, value: f64) {
-        let mut params = self.parameters.lock().expect("Operation failed");
+        let Ok(mut params) = self.parameters.lock() else {
+            eprintln!("Warning: kernel parameters lock poisoned in set_f64");
+            return;
+        };
         params
             .scalars
             .insert(name.to_string(), ScalarValue::F64(value));
@@ -475,7 +604,10 @@ impl GpuKernelImpl for MetalKernel {
         encoder.set_compute_pipeline_state(pipeline);
 
         // Bind parameters
-        let params = self.parameters.lock().expect("Operation failed");
+        let Ok(params) = self.parameters.lock() else {
+            eprintln!("Warning: kernel parameters lock poisoned in dispatch");
+            return;
+        };
 
         // Bind buffers in a specific order based on common kernel conventions
         // For AXPY: x at index 0, y at index 1
@@ -512,27 +644,25 @@ impl GpuKernelImpl for MetalKernel {
                 match value {
                     ScalarValue::U32(v) => {
                         let bytes = v.to_ne_bytes();
-                        self.create_and_bind_scalar(&encoder, current_index as usize, &bytes);
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
                     }
                     ScalarValue::I32(v) => {
-                        // Convert i32 to u32 for Metal (both are 4 bytes)
                         let bytes = (*v as u32).to_ne_bytes();
-                        self.create_and_bind_scalar(&encoder, current_index as usize, &bytes);
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
                     }
                     ScalarValue::F32(v) => {
                         let bytes = v.to_ne_bytes();
-                        self.create_and_bind_scalar(&encoder, current_index as usize, &bytes);
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
                     }
                     ScalarValue::F64(v) => {
                         let bytes = v.to_ne_bytes();
-                        self.create_and_bind_scalar(&encoder, current_index as usize, &bytes);
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
                     }
                 };
                 current_index += 1;
             }
         }
 
-        // Dispatch the kernel
         let threads_per_threadgroup = MTLSize::new(256, 1, 1);
         let threadgroups = MTLSize::new(
             workgroups[0] as u64,
@@ -546,6 +676,143 @@ impl GpuKernelImpl for MetalKernel {
         encoder.end_encoding();
         command_buffer.commit();
         command_buffer.wait_until_completed();
+    }
+
+    fn try_batch_dispatch(&self, workgroups: [u32; 3]) -> bool {
+        let Some(pipeline) = &self.pipeline else {
+            return false;
+        };
+
+        let Ok(mut state) = self.batch_state.lock() else {
+            return false;
+        };
+        if !state.active {
+            return false;
+        }
+
+        // Snapshot current parameters into a batch entry.
+        let Ok(params) = self.parameters.lock() else {
+            return false;
+        };
+
+        let buffer_names = ["x", "y", "a", "b", "result", "output"];
+        let mut buffer_bindings = Vec::new();
+        let mut buffer_index: u64 = 0;
+
+        for name in &buffer_names {
+            if let Some(buffer) = params.buffers.get(*name) {
+                buffer_bindings.push((buffer_index, buffer.clone()));
+                buffer_index += 1;
+            }
+        }
+        for (name, buffer) in &params.buffers {
+            if !buffer_names.contains(&name.as_str()) {
+                buffer_bindings.push((buffer_index, buffer.clone()));
+                buffer_index += 1;
+            }
+        }
+
+        let scalar_order = ["alpha", "beta", "n", "m", "k"];
+        let mut scalar_bindings = Vec::new();
+        let mut current_index = buffer_index;
+
+        for param_name in &scalar_order {
+            if let Some(value) = params.scalars.get(*param_name) {
+                let bytes: Vec<u8> = match value {
+                    ScalarValue::U32(v) => v.to_ne_bytes().to_vec(),
+                    ScalarValue::I32(v) => (*v as u32).to_ne_bytes().to_vec(),
+                    ScalarValue::F32(v) => v.to_ne_bytes().to_vec(),
+                    ScalarValue::F64(v) => v.to_ne_bytes().to_vec(),
+                };
+                scalar_bindings.push((current_index, bytes));
+                current_index += 1;
+            }
+        }
+
+        state.entries.push(MetalBatchEntry {
+            pipeline: pipeline.clone(),
+            buffer_bindings,
+            scalar_bindings,
+            workgroups,
+        });
+        true
+    }
+
+    fn dispatch_no_wait(&self, workgroups: [u32; 3]) {
+        let Some(pipeline) = &self.pipeline else {
+            eprintln!("Warning: Attempting to dispatch stub kernel");
+            return;
+        };
+
+        let command_buffer = self.command_queue.new_command_buffer();
+        let encoder = command_buffer.new_compute_command_encoder();
+        encoder.set_compute_pipeline_state(pipeline);
+
+        let Ok(params) = self.parameters.lock() else {
+            eprintln!("Warning: kernel parameters lock poisoned in dispatch_no_wait");
+            return;
+        };
+
+        // Bind buffers (same order as dispatch)
+        let buffer_names = ["x", "y", "a", "b", "result", "output"];
+        let mut buffer_index = 0;
+
+        for name in &buffer_names {
+            if let Some(buffer) = params.buffers.get(*name) {
+                if let Some(metal_buffer) = buffer.as_any().downcast_ref::<MetalBuffer>() {
+                    encoder.set_buffer(buffer_index, Some(metal_buffer.metal_buffer()), 0);
+                    buffer_index += 1;
+                }
+            }
+        }
+
+        for (name, buffer) in &params.buffers {
+            if !buffer_names.contains(&name.as_str()) {
+                if let Some(metal_buffer) = buffer.as_any().downcast_ref::<MetalBuffer>() {
+                    encoder.set_buffer(buffer_index, Some(metal_buffer.metal_buffer()), 0);
+                    buffer_index += 1;
+                }
+            }
+        }
+
+        // Bind scalars (same order as dispatch)
+        let scalar_order = ["alpha", "beta", "n", "m", "k"];
+        let mut current_index = buffer_index;
+
+        for param_name in &scalar_order {
+            if let Some(value) = params.scalars.get(*param_name) {
+                match value {
+                    ScalarValue::U32(v) => {
+                        let bytes = v.to_ne_bytes();
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
+                    }
+                    ScalarValue::I32(v) => {
+                        let bytes = (*v as u32).to_ne_bytes();
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
+                    }
+                    ScalarValue::F32(v) => {
+                        let bytes = v.to_ne_bytes();
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
+                    }
+                    ScalarValue::F64(v) => {
+                        let bytes = v.to_ne_bytes();
+                        Self::bind_scalar_bytes(&encoder, current_index as usize, &bytes);
+                    }
+                };
+                current_index += 1;
+            }
+        }
+
+        let threads_per_threadgroup = MTLSize::new(256, 1, 1);
+        let threadgroups = MTLSize::new(
+            workgroups[0] as u64,
+            workgroups[1] as u64,
+            workgroups[2] as u64,
+        );
+
+        encoder.dispatch_thread_groups(threadgroups, threads_per_threadgroup);
+        encoder.end_encoding();
+        command_buffer.commit();
     }
 }
 

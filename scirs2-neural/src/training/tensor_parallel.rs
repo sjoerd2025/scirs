@@ -109,7 +109,7 @@ impl ColumnParallelLinear {
                 "TensorParallelConfig.n_workers must be > 0".into(),
             ));
         }
-        if n_out % config.n_workers != 0 {
+        if !n_out.is_multiple_of(config.n_workers) {
             return Err(NeuralError::ConfigError(format!(
                 "n_out ({n_out}) must be divisible by n_workers ({})",
                 config.n_workers
@@ -225,7 +225,7 @@ impl RowParallelLinear {
                 "TensorParallelConfig.n_workers must be > 0".into(),
             ));
         }
-        if n_in % config.n_workers != 0 {
+        if !n_in.is_multiple_of(config.n_workers) {
             return Err(NeuralError::ConfigError(format!(
                 "n_in ({n_in}) must be divisible by n_workers ({})",
                 config.n_workers
@@ -237,8 +237,7 @@ impl RowParallelLinear {
 
         let mut local_weights = Vec::with_capacity(config.n_workers);
         for _ in 0..config.n_workers {
-            let w =
-                Array2::from_shape_fn((chunk, n_out), |_| xavier_init(&mut rng, n_in, n_out));
+            let w = Array2::from_shape_fn((chunk, n_out), |_| xavier_init(&mut rng, n_in, n_out));
             local_weights.push(w);
         }
         let bias = Array1::zeros(n_out);
@@ -324,7 +323,7 @@ impl ParallelEmbedding {
                 "ParallelEmbedding: n_workers must be > 0".into(),
             ));
         }
-        if vocab_size % n_workers != 0 {
+        if !vocab_size.is_multiple_of(n_workers) {
             return Err(NeuralError::ConfigError(format!(
                 "vocab_size ({vocab_size}) must be divisible by n_workers ({n_workers})"
             )));
@@ -409,7 +408,10 @@ mod tests {
 
     #[test]
     fn test_column_parallel_output_shape() {
-        let cfg = TensorParallelConfig { n_workers: 2, gather_output: true };
+        let cfg = TensorParallelConfig {
+            n_workers: 2,
+            gather_output: true,
+        };
         let layer = ColumnParallelLinear::new(8, 4, cfg, 0).expect("ok");
         let input = Array2::<f64>::ones((5, 8));
         let out = layer.forward(&input).expect("forward ok");
@@ -418,7 +420,10 @@ mod tests {
 
     #[test]
     fn test_column_parallel_n_out() {
-        let cfg = TensorParallelConfig { n_workers: 4, gather_output: true };
+        let cfg = TensorParallelConfig {
+            n_workers: 4,
+            gather_output: true,
+        };
         let layer = ColumnParallelLinear::new(6, 8, cfg, 1).expect("ok");
         assert_eq!(layer.n_out(), 8);
         assert_eq!(layer.n_workers(), 4);
@@ -429,19 +434,28 @@ mod tests {
         // With 1 worker, output should be same as a regular linear (W*X + b).
         let n_in = 4;
         let n_out = 6;
-        let cfg = TensorParallelConfig { n_workers: 1, gather_output: true };
+        let cfg = TensorParallelConfig {
+            n_workers: 1,
+            gather_output: true,
+        };
         let layer = ColumnParallelLinear::new(n_in, n_out, cfg, 42).expect("ok");
         let input = Array2::from_shape_fn((3, n_in), |(i, j)| (i * n_in + j) as f64 * 0.1);
         let out = layer.forward(&input).expect("forward ok");
         // Manual linear: y = input @ W + b.
         let expected = input.dot(&layer.local_weights[0]) + &layer.local_biases[0];
         let diff: f64 = (&out - &expected).mapv(|v| v.abs()).sum();
-        assert!(diff < 1e-12, "n_workers=1 must match single linear; diff={diff}");
+        assert!(
+            diff < 1e-12,
+            "n_workers=1 must match single linear; diff={diff}"
+        );
     }
 
     #[test]
     fn test_column_parallel_indivisible_n_out_error() {
-        let cfg = TensorParallelConfig { n_workers: 3, gather_output: true };
+        let cfg = TensorParallelConfig {
+            n_workers: 3,
+            gather_output: true,
+        };
         assert!(
             ColumnParallelLinear::new(4, 7, cfg, 0).is_err(),
             "n_out=7 is not divisible by 3"
@@ -452,7 +466,10 @@ mod tests {
 
     #[test]
     fn test_row_parallel_output_shape() {
-        let cfg = TensorParallelConfig { n_workers: 2, gather_output: true };
+        let cfg = TensorParallelConfig {
+            n_workers: 2,
+            gather_output: true,
+        };
         let layer = RowParallelLinear::new(8, 4, cfg, 0).expect("ok");
         let input = Array2::<f64>::ones((5, 8));
         let out = layer.forward(&input).expect("forward ok");
@@ -461,7 +478,10 @@ mod tests {
 
     #[test]
     fn test_row_parallel_n_in() {
-        let cfg = TensorParallelConfig { n_workers: 2, gather_output: true };
+        let cfg = TensorParallelConfig {
+            n_workers: 2,
+            gather_output: true,
+        };
         let layer = RowParallelLinear::new(6, 3, cfg, 0).expect("ok");
         assert_eq!(layer.n_in(), 6);
     }
@@ -471,7 +491,10 @@ mod tests {
         // Row-parallel sum across workers must equal a full matrix multiply.
         let n_in = 8;
         let n_out = 4;
-        let cfg = TensorParallelConfig { n_workers: 2, gather_output: true };
+        let cfg = TensorParallelConfig {
+            n_workers: 2,
+            gather_output: true,
+        };
         let layer = RowParallelLinear::new(n_in, n_out, cfg, 7).expect("ok");
         let input = Array2::from_shape_fn((3, n_in), |(i, j)| (i * n_in + j) as f64 * 0.1);
         let out_parallel = layer.forward(&input).expect("row parallel ok");
@@ -481,18 +504,16 @@ mod tests {
         use scirs2_core::ndarray::Axis;
         let full_w: Array2<f64> = concatenate(
             Axis(0),
-            &[
-                layer.local_weights[0].view(),
-                layer.local_weights[1].view(),
-            ],
+            &[layer.local_weights[0].view(), layer.local_weights[1].view()],
         )
         .expect("concat ok");
         let out_full = input.dot(&full_w) + &layer.bias;
 
-        let diff: f64 = (&out_parallel - &out_full)
-            .mapv(|v| v.abs())
-            .sum();
-        assert!(diff < 1e-12, "row-parallel must equal full matmul; diff={diff}");
+        let diff: f64 = (&out_parallel - &out_full).mapv(|v| v.abs()).sum();
+        assert!(
+            diff < 1e-12,
+            "row-parallel must equal full matmul; diff={diff}"
+        );
     }
 
     #[test]
@@ -500,8 +521,14 @@ mod tests {
         let n_in = 8;
         let hidden = 16;
         let n_out = 4;
-        let cfg1 = TensorParallelConfig { n_workers: 2, gather_output: true };
-        let cfg2 = TensorParallelConfig { n_workers: 2, gather_output: true };
+        let cfg1 = TensorParallelConfig {
+            n_workers: 2,
+            gather_output: true,
+        };
+        let cfg2 = TensorParallelConfig {
+            n_workers: 2,
+            gather_output: true,
+        };
         let col = ColumnParallelLinear::new(n_in, hidden, cfg1, 0).expect("col ok");
         let row = RowParallelLinear::new(hidden, n_out, cfg2, 1).expect("row ok");
         let input = Array2::<f64>::ones((5, n_in));
@@ -517,7 +544,11 @@ mod tests {
         let emb = ParallelEmbedding::new(8, 16, 2, 0).expect("ok");
         let indices = vec![0_usize, 1, 3, 7];
         let out = emb.forward(&indices).expect("forward ok");
-        assert_eq!(out.shape(), [4, 16], "shape should be [n_indices, embed_dim]");
+        assert_eq!(
+            out.shape(),
+            [4, 16],
+            "shape should be [n_indices, embed_dim]"
+        );
     }
 
     #[test]

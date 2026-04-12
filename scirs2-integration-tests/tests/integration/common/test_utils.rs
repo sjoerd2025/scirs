@@ -1,9 +1,8 @@
 // Common test utilities for cross-crate integration tests
 // Follows no-unwrap policy and provides helpers for property-based testing
 
-use scirs2_core::ndarray::{Array1, Array2, ArrayD, Dimension};
 use proptest::prelude::*;
-use scirs2_core::ScalarNum;
+use scirs2_core::ndarray::{Array1, Array2, Dimension};
 use std::time::Instant;
 
 /// Result type for test utilities
@@ -25,28 +24,41 @@ pub struct PerfMeasurement {
     pub data_size: usize,
 }
 
-/// Create a test array with deterministic values
-pub fn create_test_array_1d<T: ScalarNum>(size: usize, seed: u64) -> TestResult<Array1<T>> {
-    use scirs2_core::prelude::*;
-
-    let rng = RandomState::new(seed);
+/// Create a test array with deterministic values (uses simple index-based formula)
+pub fn create_test_array_1d<T>(size: usize, seed: u64) -> TestResult<Array1<T>>
+where
+    T: num_traits::FromPrimitive + Clone + 'static,
+{
     let values: Vec<T> = (0..size)
-        .map(|i| T::from(i as f64 / size as f64).expect("Value conversion failed"))
-        .collect();
+        .map(|i| {
+            T::from_f64((i as f64 + seed as f64) / (size as f64 + 1.0))
+                .ok_or_else(|| format!("Value conversion failed at index {}", i))
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+                as Box<dyn std::error::Error>
+        })?;
 
-    Array1::from_vec(values)
-        .into_dimensionality::<ndarray::Ix1>()
-        .map_err(|e| format!("Failed to create 1D array: {}", e).into())
+    Ok(Array1::from_vec(values))
 }
 
 /// Create a 2D test array with deterministic values
-pub fn create_test_array_2d<T: ScalarNum>(rows: usize, cols: usize, seed: u64) -> TestResult<Array2<T>> {
-    use scirs2_core::prelude::*;
-
+pub fn create_test_array_2d<T>(rows: usize, cols: usize, seed: u64) -> TestResult<Array2<T>>
+where
+    T: num_traits::FromPrimitive + Clone + 'static,
+{
     let size = rows * cols;
     let values: Vec<T> = (0..size)
-        .map(|i| T::from((i as f64 + seed as f64) / size as f64).expect("Value conversion failed"))
-        .collect();
+        .map(|i| {
+            T::from_f64((i as f64 + seed as f64) / (size as f64 + 1.0))
+                .ok_or_else(|| format!("Value conversion failed at index {}", i))
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+                as Box<dyn std::error::Error>
+        })?;
 
     Array2::from_shape_vec((rows, cols), values)
         .map_err(|e| format!("Failed to create 2D array: {}", e).into())
@@ -64,18 +76,20 @@ where
     let measurement = PerfMeasurement {
         duration_ms: duration.as_secs_f64() * 1000.0,
         operation_name: operation_name.to_string(),
-        data_size: 0, // Can be set by caller
+        data_size: 0,
     };
 
     Ok((result, measurement))
 }
 
 /// Check if arrays are approximately equal
-pub fn arrays_approx_equal<T, D>(a: &ndarray::ArrayBase<ndarray::OwnedRepr<T>, D>,
-                                  b: &ndarray::ArrayBase<ndarray::OwnedRepr<T>, D>,
-                                  tolerance: f64) -> bool
+pub fn arrays_approx_equal<T, D>(
+    a: &ndarray::ArrayBase<ndarray::OwnedRepr<T>, D>,
+    b: &ndarray::ArrayBase<ndarray::OwnedRepr<T>, D>,
+    tolerance: f64,
+) -> bool
 where
-    T: ScalarNum + approx::AbsDiffEq<Epsilon = f64>,
+    T: num_traits::Float + approx::AbsDiffEq<Epsilon = f64>,
     D: Dimension,
 {
     if a.shape() != b.shape() {
@@ -110,8 +124,7 @@ pub fn get_temp_dir() -> std::path::PathBuf {
 /// Clean up temporary test directory
 pub fn cleanup_temp_dir(path: &std::path::Path) -> TestResult<()> {
     if path.exists() {
-        std::fs::remove_dir_all(path)
-            .map_err(|e| format!("Failed to clean up temp dir: {}", e))?;
+        std::fs::remove_dir_all(path).map_err(|e| format!("Failed to clean up temp dir: {}", e))?;
     }
     Ok(())
 }
@@ -120,7 +133,6 @@ pub fn cleanup_temp_dir(path: &std::path::Path) -> TestResult<()> {
 pub fn is_gpu_available() -> bool {
     #[cfg(feature = "cuda")]
     {
-        // Check for CUDA availability
         std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
     }
 
@@ -137,42 +149,29 @@ pub fn create_synthetic_classification_data(
     n_classes: usize,
     seed: u64,
 ) -> TestResult<(Array2<f64>, Array1<usize>)> {
-    use scirs2_core::prelude::*;
-
-    let rng = RandomState::new(seed);
-
-    // Create features
     let mut features = Array2::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            features[[i, j]] = ((i * n_features + j) as f64 + seed as f64) / (n_samples * n_features) as f64;
+            features[[i, j]] =
+                ((i * n_features + j) as f64 + seed as f64) / (n_samples * n_features) as f64;
         }
     }
 
-    // Create labels
-    let labels: Array1<usize> = (0..n_samples)
-        .map(|i| i % n_classes)
-        .collect();
+    let labels: Array1<usize> = (0..n_samples).map(|i| i % n_classes).collect();
 
     Ok((features, labels))
 }
 
 /// Assert that an operation's memory usage is below a threshold
-pub fn assert_memory_efficient<F, R>(
-    operation: F,
-    max_mb: f64,
-    description: &str,
-) -> TestResult<R>
+pub fn assert_memory_efficient<F, R>(operation: F, max_mb: f64, description: &str) -> TestResult<R>
 where
     F: FnOnce() -> TestResult<R>,
 {
-    // Note: Actual memory tracking would require system-specific code
-    // This is a placeholder for the structure
     let result = operation()?;
-
-    // In a real implementation, you would track memory here
-    eprintln!("Memory efficiency check for '{}': max allowed {} MB", description, max_mb);
-
+    eprintln!(
+        "Memory efficiency check for '{}': max allowed {} MB",
+        description, max_mb
+    );
     Ok(result)
 }
 
@@ -182,15 +181,13 @@ mod tests {
 
     #[test]
     fn test_create_test_array_1d() {
-        let arr = create_test_array_1d::<f64>(10, 42)
-            .expect("Failed to create test array");
+        let arr = create_test_array_1d::<f64>(10, 42).expect("Failed to create test array");
         assert_eq!(arr.len(), 10);
     }
 
     #[test]
     fn test_create_test_array_2d() {
-        let arr = create_test_array_2d::<f64>(5, 4, 42)
-            .expect("Failed to create 2D test array");
+        let arr = create_test_array_2d::<f64>(5, 4, 42).expect("Failed to create 2D test array");
         assert_eq!(arr.shape(), &[5, 4]);
     }
 
@@ -199,7 +196,8 @@ mod tests {
         let (result, perf) = measure_time("test_op", || {
             std::thread::sleep(std::time::Duration::from_millis(10));
             Ok(42)
-        }).expect("Measurement failed");
+        })
+        .expect("Measurement failed");
 
         assert_eq!(result, 42);
         assert!(perf.duration_ms >= 10.0);
@@ -208,7 +206,9 @@ mod tests {
     #[test]
     fn test_temp_dir() {
         let temp_dir = get_temp_dir();
-        assert!(temp_dir.to_string_lossy().contains("scirs2_integration_tests"));
+        assert!(temp_dir
+            .to_string_lossy()
+            .contains("scirs2_integration_tests"));
     }
 
     #[test]

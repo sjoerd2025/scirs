@@ -478,4 +478,52 @@ mod tests {
         let res = ClenshawCurtisRule::<f64>::new(0);
         assert!(res.is_err(), "order 0 should be invalid");
     }
+
+    // ---- Requested interface tests ----
+
+    /// test_cc_integrate_poly: ∫_0^1 x^4 dx = 0.2
+    #[test]
+    fn test_cc_integrate_poly() {
+        let res = quad_cc(|x: f64| x.powi(4), 0.0, 1.0, None).expect("quad_cc x^4");
+        assert!(res.converged, "should converge");
+        assert!(
+            (res.value - 0.2).abs() < 1e-10,
+            "∫_0^1 x^4 dx = 0.2, got {}",
+            res.value
+        );
+    }
+
+    /// test_cc_integrate_smooth: ∫_0^pi sin(x) dx = 2.0
+    #[test]
+    fn test_cc_integrate_smooth() {
+        let res = quad_cc(|x: f64| x.sin(), 0.0, PI, None).expect("quad_cc sin");
+        assert!(res.converged, "should converge");
+        assert!(
+            (res.value - 2.0).abs() < 1e-10,
+            "∫_0^π sin(x) dx = 2.0, got {}",
+            res.value
+        );
+    }
+
+    /// test_cc_convergence: relative error < 1e-8 for e^x on [0,1]
+    #[test]
+    fn test_cc_convergence() {
+        let exact = std::f64::consts::E - 1.0;
+        let res = quad_cc(
+            |x: f64| x.exp(),
+            0.0,
+            1.0,
+            Some(ClenshawCurtisOptions {
+                rtol: to_f(1e-10),
+                ..Default::default()
+            }),
+        )
+        .expect("quad_cc exp");
+        let rel_err = (res.value - exact).abs() / exact;
+        assert!(
+            rel_err < 1e-8,
+            "Relative error for e^x integral should be < 1e-8, got {}",
+            rel_err
+        );
+    }
 }

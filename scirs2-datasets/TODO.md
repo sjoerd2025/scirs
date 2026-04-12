@@ -77,9 +77,9 @@
 
 ### HuggingFace Dataset Format Compatibility
 - [ ] Read `datasets` format (Arrow-backed, parquet shards)
-- [ ] Support HuggingFace Hub metadata schema (dataset cards)
-- [ ] Load datasets from local HuggingFace cache directory
-- [ ] Convert SciRS2 datasets to HuggingFace `datasets` format
+- [x] Support HuggingFace Hub metadata schema (dataset cards) — `src/huggingface.rs` (`HfDatasetCard`, `parse_dataset_card`, `load_dataset_card`, `to_hf_card`, `card_to_readme`)
+- [x] Load datasets from local HuggingFace cache directory — `load_dataset_card(dir: &Path)` in `src/huggingface.rs`
+- [x] Convert SciRS2 datasets to HuggingFace `datasets` format — `to_hf_card` + `card_to_readme` in `src/huggingface.rs`
 
 ### Additional Benchmark Datasets
 - [ ] M5 competition time series (retail forecasting)
@@ -89,17 +89,17 @@
 - [ ] ImageNet subset (100-class synthetic)
 
 ### Distributed Dataset Processing
-- [ ] Shard-aware loading for multi-process/multi-node training
-- [ ] Dataset sharding API: split dataset into N equal parts by index
-- [ ] Consistent random shuffling across shards with same seed
+- [x] Shard-aware loading for multi-process/multi-node training — `ShardedLoader` in `src/sharding/mod.rs`
+- [x] Dataset sharding API: split dataset into N equal parts by index — `ShardedLoader::get_shard`, `shard_by_index` in `src/sharding/mod.rs`
+- [x] Consistent random shuffling across shards with same seed — `ShardedLoader::global_permutation` + `consistent_shuffle` in `src/sharding/mod.rs`
 - [ ] Integration with `scirs2-core` distributed primitives
 
 ### Enhanced Generators
-- [ ] `make_low_rank` - Low-rank matrix completion benchmarks
-- [ ] `make_sparse_classification` - Very high-dimensional sparse features
-- [ ] `make_multilabel_classification` - True multi-label (not one-hot)
-- [ ] `make_heterogeneous` - Mixed numeric/categorical features
-- [ ] `make_concept_drift` - Time series with distribution shift
+- [x] `make_low_rank` - Low-rank matrix completion benchmarks — `generators/low_rank.rs` + ndarray wrapper in `generators/ndarray_convenience.rs`
+- [x] `make_sparse_classification` - Very high-dimensional sparse features — `generators/sparse_classification.rs` + ndarray wrapper
+- [x] `make_multilabel_classification` - True multi-label (not one-hot) — `generators/classification.rs` + ndarray wrapper
+- [x] `make_heterogeneous` - Mixed numeric/categorical features — `generators/heterogeneous.rs` + ndarray wrapper
+- [x] `make_concept_drift` - Time series with distribution shift — `generators/concept_drift.rs` + ndarray wrapper
 
 ### Format Support
 - [ ] Native Parquet read via `scirs2-io`

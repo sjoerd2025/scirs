@@ -153,15 +153,15 @@
 - [x] Conformal prediction coverage metrics — Implemented in v0.4.0 (`calibration/advanced.rs`)
 
 ### Active Learning Utility
-- [ ] Margin sampling score
-- [ ] Entropy-based uncertainty score
-- [ ] Query-by-committee disagreement
-- [ ] Core-set selection metrics
-- [ ] Expected model change
+- [x] Margin sampling score — Implemented in v0.4.0 (`active_learning/mod.rs` `margin_sampling_score`)
+- [x] Entropy-based uncertainty score — Implemented in v0.4.0 (`active_learning/mod.rs` `EntropySampling`)
+- [x] Query-by-committee disagreement — Implemented in v0.4.0 (`active_learning/mod.rs` `query_by_committee`)
+- [x] Core-set selection metrics — Implemented in v0.4.0 (`active_learning/mod.rs` `CoreSet` / `greedy_k_center`)
+- [x] Expected model change — Implemented in v0.4.0 (`active_learning/mod.rs` `expected_model_change`)
 
 ### Expanded Detection Metrics
 - [x] 3D IoU for point cloud bounding boxes — Implemented in v0.4.0 (`detection_3d/iou_3d.rs`)
-- [ ] Rotated bounding box IoU
+- [x] Rotated bounding box IoU — Implemented in v0.4.2 (`detection/rotated_iou.rs`)
 - [x] Tracking metrics: MOTA, MOTP, IDF1 — Implemented in v0.4.0 (`tracking/` module)
 - [x] Keypoint metrics: OKS (Object Keypoint Similarity), PCK — Implemented in v0.4.0 (`keypoint/mod.rs`)
 

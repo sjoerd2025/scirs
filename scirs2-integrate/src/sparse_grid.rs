@@ -651,4 +651,82 @@ mod tests {
         );
         assert!(res.is_err(), "level 0 should be invalid");
     }
+
+    // ---- Requested interface tests ----
+
+    /// test_sparse_grid_constant_function: ∫ 1 dx^d = 2^d over [-1,1]^d
+    /// (Integration domain is [-1,1]^d for the Smolyak smolyak module,
+    ///  but the exposed sparse_grid_quad uses arbitrary [a,b]^d.
+    ///  Use [0,2]^d so that the integral of 1 equals 2^d.)
+    #[test]
+    fn test_sparse_grid_constant_function() {
+        // ∫ 1 over [-1,1]^2 = 4 = 2^2
+        let res = sparse_grid_quad(
+            |_x: &Array1<f64>| 1.0,
+            &[(-1.0, 1.0), (-1.0, 1.0)],
+            Some(SparseGridOptions {
+                level: 2,
+                ..Default::default()
+            }),
+        )
+        .expect("sparse_grid_quad constant 2d");
+        assert!(
+            (res.value - 4.0).abs() < 1e-10,
+            "∫ 1 over [-1,1]^2 = 4, got {}",
+            res.value
+        );
+    }
+
+    /// test_sparse_grid_linear_function: ∫ (x0 + x1) d(x0,x1) = 0 over [-1,1]^2
+    #[test]
+    fn test_sparse_grid_linear_function() {
+        let res = sparse_grid_quad(
+            |x: &Array1<f64>| x[0] + x[1],
+            &[(-1.0, 1.0), (-1.0, 1.0)],
+            Some(SparseGridOptions {
+                level: 2,
+                ..Default::default()
+            }),
+        )
+        .expect("sparse_grid_quad linear 2d");
+        assert!(
+            res.value.abs() < 1e-12,
+            "∫ (x0+x1) over [-1,1]^2 = 0 by symmetry, got {}",
+            res.value
+        );
+    }
+
+    /// test_sparse_grid_more_points_higher_level: level 3 has more points than level 2
+    /// Uses Gauss-Legendre (non-nested) so point counts grow strictly with level.
+    #[test]
+    fn test_sparse_grid_more_points_higher_level() {
+        // Gauss-Legendre is non-nested, so each new level adds genuinely new points.
+        // In 2D with GL: level k uses k-point 1D rules, tensor-producted in Smolyak fashion.
+        let res_l2 = sparse_grid_quad(
+            |_x: &Array1<f64>| 1.0,
+            &[(0.0, 1.0), (0.0, 1.0)],
+            Some(SparseGridOptions {
+                level: 2,
+                rule_family: SparseGridRuleFamily::GaussLegendre,
+            }),
+        )
+        .expect("GL level 2");
+
+        let res_l3 = sparse_grid_quad(
+            |_x: &Array1<f64>| 1.0,
+            &[(0.0, 1.0), (0.0, 1.0)],
+            Some(SparseGridOptions {
+                level: 3,
+                rule_family: SparseGridRuleFamily::GaussLegendre,
+            }),
+        )
+        .expect("GL level 3");
+
+        assert!(
+            res_l3.n_points > res_l2.n_points,
+            "GL level 3 should have more unique grid points than level 2 ({} vs {})",
+            res_l3.n_points,
+            res_l2.n_points
+        );
+    }
 }

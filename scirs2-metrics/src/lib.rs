@@ -39,7 +39,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-metrics = "0.4.1"
+//! scirs2-metrics = "0.4.2"
 //! ```
 //!
 //! ```rust,no_run
@@ -58,7 +58,7 @@
 //! let mse = mean_squared_error(&y_true_reg, &y_pred_reg).expect("should succeed");
 //! ```
 //!
-//! ## 🔒 Version: 0.4.1 (March 27, 2026)
+//! ## 🔒 Version: 0.4.2 (March 27, 2026)
 //!
 //! # Classification Metrics
 //!
@@ -716,6 +716,8 @@ pub mod visualization;
 
 // Active learning metrics
 pub mod active_learning;
+// 2D object detection metrics (IoU, GIoU, DIoU, mAP, NMS, rotated IoU)
+pub mod detection;
 // 3D detection metrics (IoU, AP)
 pub mod detection_3d;
 // Distribution distance metrics (Wasserstein, MMD)

@@ -116,7 +116,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-core = { version = "0.4.1", features = ["simd", "parallel"] }
+//! scirs2-core = { version = "0.4.2", features = ["simd", "parallel"] }
 //! ```
 //!
 //! ### SIMD Operations
@@ -360,7 +360,7 @@
 //!
 //! ## 🔒 Version
 //!
-//! Current version: **0.4.1**
+//! Current version: **0.4.2**
 //!
 //! ## 📚 Examples
 //!
@@ -530,6 +530,8 @@ pub mod scipy_migration;
 pub mod arithmetic;
 // Concurrent/lock-free collections (RRB-vector, bit vector, flat map, tiny vec)
 pub mod collections;
+// Advanced data structures (RRB-tree persistent vector, etc.)
+pub mod data_structures;
 // Reactive signals and dataflow
 pub mod reactive;
 // Task dependency graph with scheduling

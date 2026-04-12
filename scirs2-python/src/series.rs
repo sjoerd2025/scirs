@@ -148,7 +148,7 @@ impl PyTimeSeries {
 
         // Calculate quantiles
         let mut sorted_values = values.to_vec();
-        sorted_values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
+        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         let len = sorted_values.len();
 
         stats.insert("25%".to_string(), sorted_values[len / 4]);

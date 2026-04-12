@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 
 use crate::error::OptimizeError;
-use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::random::{rngs::StdRng, Rng, RngExt, SeedableRng};
 
 /// A single hyperparameter's search domain.
 #[derive(Debug, Clone)]

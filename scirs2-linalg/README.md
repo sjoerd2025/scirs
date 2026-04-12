@@ -12,17 +12,17 @@
 
 ```toml
 [dependencies]
-scirs2-linalg = "0.4.1"
+scirs2-linalg = "0.4.2"
 ```
 
 With optional acceleration:
 
 ```toml
 [dependencies]
-scirs2-linalg = { version = "0.4.1", features = ["simd", "parallel"] }
+scirs2-linalg = { version = "0.4.2", features = ["simd", "parallel"] }
 ```
 
-## Features (v0.4.1)
+## Features (v0.4.2)
 
 ### Core Decompositions
 - LU (with partial/rook/complete pivoting), QR, SVD, Cholesky, LDL^T

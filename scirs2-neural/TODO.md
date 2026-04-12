@@ -80,6 +80,17 @@
 - Model compression utilities
 - On-device optimization
 
+## v0.4.2 IN PROGRESS
+
+### State Space Models — Implemented in v0.4.2
+- [x] Mamba/SSM architecture (selective state space model) in src/models/architectures/mamba.rs
+  - `MambaConfig` with builder methods (d_model, d_state, d_conv, expand, n_layers, vocab_size, num_classes)
+  - `SelectiveSSM` (S6 selective scan with ZOH discretization)
+  - `MambaBlock` (Conv1D causal convolution, SiLU gating, residual connection)
+  - `Mamba` full model (Layer trait impl, optional classifier head, final LayerNorm)
+  - `S4Layer` (non-selective SSM with HiPPO initialization)
+  - 10 tests passing (config, creation, forward, classifier, numerical stability, conv1d, SSM, S4, block)
+
 ## v0.4.0 Roadmap
 
 ### Attention — Implemented in v0.4.0
@@ -87,31 +98,33 @@
 - [x] Multi-query attention (MQA)
 - [x] Grouped Query Attention (GQA)
 
-### Quantization
-- INT4 weight-only quantization
-- INT8 activation quantization
-- GPTQ-style post-training quantization
+### Quantization — Implemented in v0.4.0
+- [x] INT4 weight-only quantization (src/quantization/int4.rs — group-quantized, nibble-packed)
+- [x] INT8 activation quantization (src/quantization/int8.rs)
+- [x] GPTQ-style post-training quantization (src/quantization/gptq.rs)
 
-### Export and Interop
-- ONNX-like model export
-- Weight conversion utilities for interop with other frameworks
+### Export and Interop — Implemented in v0.4.0
+- [x] ONNX-like model export (src/export/onnx.rs — pure-Rust, oxicode serialization)
+- [x] Weight conversion utilities for interop with other frameworks (src/export/weights.rs)
 
-### Efficient Fine-Tuning
-- LoRA (Low-Rank Adaptation)
-- Adapter layers
-- Prefix tuning
+### Efficient Fine-Tuning — Implemented in v0.4.0
+- [x] LoRA (Low-Rank Adaptation) (src/lora/linear.rs)
+- [x] Adapter layers (src/lora/adapter.rs — bottleneck adapters with optional residual)
+- [x] Prefix tuning (src/layers/prefix_tuning.rs — reparameterized prefix tokens)
 
-### Distributed Training
-- Gradient compression (TopK sparsification, PowerSGD)
-- Pipeline parallelism
-- Tensor parallelism primitives
+### Distributed Training — Implemented in v0.4.0
+- [x] Gradient compression (TopK sparsification, PowerSGD) (src/training/gradient_compression.rs)
+- [x] Pipeline parallelism (src/training/pipeline_parallel.rs — GPipe FThenB + 1F1B schedules)
+- [x] Tensor parallelism primitives (src/training/tensor_parallel.rs — column/row parallel + parallel embedding)
 
-### Architecture Search
-- Neural Architecture Search (NAS) integration
-- Differentiable NAS (DARTS)
+### Architecture Search — Implemented in v0.4.0 (partially disabled)
+- [x] Neural Architecture Search (NAS) integration (src/nas/ — ENAS, multi-objective, hardware-aware)
+- [x] Differentiable NAS (DARTS/GDAS/SNAS) (src/nas/gdas.rs, src/nas/snas.rs)
+- NOTE: `pub mod nas;` is disabled in lib.rs pending repair of truncated source files in nas/search_algorithms.rs and related files
 
 ## Known Issues / Technical Debt
 
 - Some doc tests are marked `#[ignore]` pending API stabilization
 - WASM target requires additional feature gating for large model weights
 - GPU acceleration stubs exist in `hardware/` but require `scirs2-core::gpu` completion
+- NAS module disabled in lib.rs: src/nas/search_algorithms.rs and several other nas/ files have truncated/malformed source (missing closing braces, mangled identifiers). Needs reconstruction before re-enabling `pub mod nas;`.

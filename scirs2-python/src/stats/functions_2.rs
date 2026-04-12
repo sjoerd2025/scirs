@@ -107,7 +107,7 @@ pub fn mode_py(data: &Bound<'_, PyArray1<f64>>) -> PyResult<f64> {
         ));
     }
     let mut values: Vec<f64> = arr.iter().copied().collect();
-    values.sort_by(|a, b| a.partial_cmp(b).expect("Operation failed"));
+    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let mut max_count = 0;
     let mut mode = values[0];
     let mut current_count = 1;

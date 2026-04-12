@@ -581,7 +581,7 @@ pub fn generate_signed_url(
     let mut hasher = Sha256::new();
     hasher.update(path.as_bytes());
     hasher.update(timestamp.to_string().as_bytes());
-    let signature = format!("{:x}", hasher.finalize());
+    let signature = hex::encode(hasher.finalize());
     let short_sig = &signature[0..16]; // Use first 16 chars
 
     let signed_url = match provider {

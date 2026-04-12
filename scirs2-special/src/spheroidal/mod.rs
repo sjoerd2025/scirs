@@ -84,8 +84,18 @@
 pub mod helpers;
 pub mod oblate;
 pub mod prolate;
+pub mod swf;
+pub mod wave_functions;
 
 // Re-export all public functions
 pub use helpers::*;
 pub use oblate::*;
 pub use prolate::*;
+pub use swf::{
+    spheroidal_eigenvalue_mn, spheroidal_ps, spheroidal_wronskian, SpheroidalEigenvalue,
+    SpheroidalKind,
+};
+pub use wave_functions::{
+    angular_spheroidal, associated_legendre, radial_spheroidal_1, spherical_bessel_j,
+    spheroidal_eigenvalue as spheroidal_eigenvalue_wf, SpheroidType, SpheroidalConfig,
+};

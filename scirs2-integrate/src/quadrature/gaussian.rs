@@ -31,9 +31,7 @@ fn symtrid_eig(diag: &[f64], offdiag: &[f64]) -> IntegrateResult<(Vec<f64>, Vec<
     let mut d = diag.to_vec();
     // e[i] holds the i-th off-diagonal entry (e[0] unused / zero)
     let mut e = vec![0.0_f64; n];
-    for i in 0..offdiag.len() {
-        e[i + 1] = offdiag[i];
-    }
+    e[1..=offdiag.len()].copy_from_slice(offdiag);
 
     // Q is stored column-major: q[col][row]; we only need the first row.
     // We accumulate Q as an n×n matrix but only the first row matters.
@@ -94,7 +92,8 @@ fn symtrid_eig(diag: &[f64], offdiag: &[f64]) -> IntegrateResult<(Vec<f64>, Vec<
             }
 
             g = cos_c * g + sin_c * e[i];
-            let new_d_next = sin_prev * (sin_prev * d[i] - cos_prev * e[i]) + cos_c * (cos_c * d[i] - sin_c * e[i]);
+            let new_d_next = sin_prev * (sin_prev * d[i] - cos_prev * e[i])
+                + cos_c * (cos_c * d[i] - sin_c * e[i]);
             d[i + 1] = d[i + 1] - (new_d_next - d[i + 1]);
             p = cos_c * (cos_c * d[i] - sin_c * e[i]) - sin_prev * g;
             if i > 0 {
@@ -144,8 +143,8 @@ fn symtrid_eig(diag: &[f64], offdiag: &[f64]) -> IntegrateResult<(Vec<f64>, Vec<
 fn symtrid_eig_robust(diag: &[f64], offdiag: &[f64]) -> IntegrateResult<(Vec<f64>, Vec<f64>)> {
     let n = diag.len();
 
-    let mut d = diag.to_vec();     // diagonal elements
-    // e[i] = off-diagonal T_{i, i+1}.  We use e[0..n-1]; e[n-1] unused.
+    let mut d = diag.to_vec(); // diagonal elements
+                               // e[i] = off-diagonal T_{i, i+1}.  We use e[0..n-1]; e[n-1] unused.
     let mut e = vec![0.0_f64; n];
     for (i, &val) in offdiag.iter().enumerate() {
         e[i] = val;
@@ -242,7 +241,7 @@ fn symtrid_eig_robust(diag: &[f64], offdiag: &[f64]) -> IntegrateResult<(Vec<f64
                 for k in 0..n {
                     let qi = z[k][i];
                     let qi1 = z[k][i + 1];
-                    z[k][i]     = c_rot * qi - s_rot * qi1;
+                    z[k][i] = c_rot * qi - s_rot * qi1;
                     z[k][i + 1] = s_rot * qi + c_rot * qi1;
                 }
             }
@@ -373,9 +372,7 @@ pub fn gauss_chebyshev_t1(n: usize) -> (Vec<f64>, Vec<f64>) {
 /// Analytical formula: x_k = cos(kπ/(n+1)),  w_k = π/(n+1) * sin²(kπ/(n+1)).
 pub fn gauss_chebyshev_t2(n: usize) -> (Vec<f64>, Vec<f64>) {
     let np1 = (n + 1) as f64;
-    let nodes: Vec<f64> = (1..=n)
-        .map(|k| (k as f64 * PI / np1).cos())
-        .collect();
+    let nodes: Vec<f64> = (1..=n).map(|k| (k as f64 * PI / np1).cos()).collect();
     let weights: Vec<f64> = (1..=n)
         .map(|k| {
             let s = (k as f64 * PI / np1).sin();
@@ -436,10 +433,8 @@ pub fn gauss_jacobi(n: usize, alpha: f64, beta: f64) -> IntegrateResult<(Vec<f64
 
     // Total measure: 2^(α+β+1) * B(α+1, β+1) = 2^(α+β+1) * Γ(α+1)Γ(β+1)/Γ(α+β+2)
     // Use log-gamma for numerical stability
-    let ln_mu0 = (ab + 1.0) * 2.0_f64.ln()
-        + lgamma(alpha + 1.0)
-        + lgamma(beta + 1.0)
-        - lgamma(ab + 2.0);
+    let ln_mu0 =
+        (ab + 1.0) * 2.0_f64.ln() + lgamma(alpha + 1.0) + lgamma(beta + 1.0) - lgamma(ab + 2.0);
     let mu0 = ln_mu0.exp();
 
     golub_welsch(&diag, &offdiag, mu0)
@@ -557,6 +552,7 @@ pub fn gauss_kronrod_g7k15<F: Fn(f64) -> f64>(f: F, a: f64, b: f64) -> (f64, f64
     ];
 
     #[rustfmt::skip]
+    #[allow(clippy::excessive_precision)]
     const WGK: [f64; 15] = [
         0.022_935_322_010_529_22,
         0.063_092_092_629_978_55,
@@ -577,6 +573,7 @@ pub fn gauss_kronrod_g7k15<F: Fn(f64) -> f64>(f: F, a: f64, b: f64) -> (f64, f64
 
     // Gauss 7-point weights corresponding to odd-indexed Kronrod points (1,3,5,7,9,11,13)
     #[rustfmt::skip]
+    #[allow(clippy::excessive_precision)]
     const WG7: [f64; 7] = [
         0.129_484_966_168_869_69,
         0.279_705_391_489_276_64,
@@ -655,24 +652,24 @@ mod tests {
     #[test]
     fn test_gl_integrate_x_squared() {
         // ∫_0^1 x² dx = 1/3
-        let result = quad_gauss_legendre(|x| x * x, 0.0, 1.0, 5).expect("quad_gauss_legendre should succeed");
-        assert!(
-            (result - 1.0 / 3.0).abs() < 1e-12,
-            "result={result}"
-        );
+        let result = quad_gauss_legendre(|x| x * x, 0.0, 1.0, 5)
+            .expect("quad_gauss_legendre should succeed");
+        assert!((result - 1.0 / 3.0).abs() < 1e-12, "result={result}");
     }
 
     #[test]
     fn test_gl_integrate_sin_0_to_pi() {
         // ∫_0^π sin(x) dx = 2
-        let result = quad_gauss_legendre(|x| x.sin(), 0.0, PI, 10).expect("quad_gauss_legendre should succeed");
+        let result = quad_gauss_legendre(|x| x.sin(), 0.0, PI, 10)
+            .expect("quad_gauss_legendre should succeed");
         assert!((result - 2.0).abs() < 1e-12, "result={result}");
     }
 
     #[test]
     fn test_gl_integrate_exp() {
         // ∫_0^1 e^x dx = e - 1
-        let result = quad_gauss_legendre(|x: f64| x.exp(), 0.0, 1.0, 8).expect("quad_gauss_legendre should succeed");
+        let result = quad_gauss_legendre(|x: f64| x.exp(), 0.0, 1.0, 8)
+            .expect("quad_gauss_legendre should succeed");
         let exact = std::f64::consts::E - 1.0;
         assert!((result - exact).abs() < 1e-12, "result={result}");
     }
@@ -682,7 +679,8 @@ mod tests {
         // A degree-2n-1 polynomial is integrated exactly by n-point GL rule.
         // Use n=3: integrates exactly polynomials up to degree 5.
         // ∫_{-1}^{1} x^5 dx = 0
-        let result = quad_gauss_legendre(|x: f64| x.powi(5), -1.0, 1.0, 3).expect("quad_gauss_legendre should succeed");
+        let result = quad_gauss_legendre(|x: f64| x.powi(5), -1.0, 1.0, 3)
+            .expect("quad_gauss_legendre should succeed");
         assert!(result.abs() < 1e-14, "result={result}");
     }
 
@@ -691,14 +689,16 @@ mod tests {
     #[test]
     fn test_hermite_integral_of_weight() {
         // ∫_{-∞}^{∞} exp(-x²) dx = √π   (f=1, weight included)
-        let result = quad_gauss_hermite(|_x| 1.0_f64, 20).expect("quad_gauss_hermite should succeed");
+        let result =
+            quad_gauss_hermite(|_x| 1.0_f64, 20).expect("quad_gauss_hermite should succeed");
         assert!((result - PI.sqrt()).abs() < 1e-10, "result={result}");
     }
 
     #[test]
     fn test_hermite_integral_of_x2() {
         // ∫ x² exp(-x²) dx = √π/2
-        let result = quad_gauss_hermite(|x: f64| x * x, 20).expect("quad_gauss_hermite should succeed");
+        let result =
+            quad_gauss_hermite(|x: f64| x * x, 20).expect("quad_gauss_hermite should succeed");
         let exact = PI.sqrt() / 2.0;
         assert!((result - exact).abs() < 1e-10, "result={result}");
     }
@@ -717,7 +717,11 @@ mod tests {
     fn test_laguerre_integral_of_weight() {
         // ∫_0^∞ exp(-x) dx = 1  (f=1)
         let (nodes, weights) = gauss_laguerre(15).expect("gauss_laguerre should succeed");
-        let sum: f64 = nodes.iter().zip(weights.iter()).map(|(&x, &w)| w * 1.0_f64 * (-x).exp() / (-x).exp()).sum();
+        let sum: f64 = nodes
+            .iter()
+            .zip(weights.iter())
+            .map(|(&x, &w)| w * 1.0_f64 * (-x).exp() / (-x).exp())
+            .sum();
         // Alternatively: weights sum to μ₀ = 1
         let ws: f64 = weights.iter().sum();
         assert!((ws - 1.0).abs() < 1e-10, "weight sum={ws}");
@@ -754,7 +758,11 @@ mod tests {
     fn test_chebyshev_t1_integrates_even_poly() {
         // ∫_{-1}^{1} x² / √(1-x²) dx = π/2
         let (nodes, weights) = gauss_chebyshev_t1(10);
-        let result: f64 = nodes.iter().zip(weights.iter()).map(|(&x, &w)| w * x * x).sum();
+        let result: f64 = nodes
+            .iter()
+            .zip(weights.iter())
+            .map(|(&x, &w)| w * x * x)
+            .sum();
         assert!((result - PI / 2.0).abs() < 1e-12, "result={result}");
     }
 
@@ -829,10 +837,12 @@ mod tests {
         // Verify that GL integration is exact for polynomial up to degree 2n-1.
         // n=4 integrates exactly up to degree 7.
         // ∫_{-1}^{1} x^7 dx = 0 (odd function)
-        let result = quad_gauss_legendre(|x: f64| x.powi(7), -1.0, 1.0, 4).expect("quad_gauss_legendre should succeed");
+        let result = quad_gauss_legendre(|x: f64| x.powi(7), -1.0, 1.0, 4)
+            .expect("quad_gauss_legendre should succeed");
         assert!(result.abs() < 1e-13, "result={result}");
         // ∫_{-1}^{1} x^6 dx = 2/7
-        let result = quad_gauss_legendre(|x: f64| x.powi(6), -1.0, 1.0, 4).expect("quad_gauss_legendre should succeed");
+        let result = quad_gauss_legendre(|x: f64| x.powi(6), -1.0, 1.0, 4)
+            .expect("quad_gauss_legendre should succeed");
         assert!((result - 2.0 / 7.0).abs() < 1e-13, "result={result}");
     }
 }

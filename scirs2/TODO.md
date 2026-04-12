@@ -20,25 +20,33 @@ The `scirs2` meta-crate is the all-in-one convenience entry-point for the SciRS2
 
 ---
 
-## v0.4.0 Planned
+## v0.4.2 Completed (2026-04-12)
 
-- [ ] `cuda` feature group: gates GPU-accelerated paths in sub-crates when CUDA kernels land
-- [ ] `rocm` feature group: AMD GPU acceleration
-- [ ] `distributed` feature: enables cluster/MPI abstractions in scirs2-core and sub-crates
+- [x] `cuda` feature group: gates GPU-accelerated paths in sub-crates when CUDA kernels land
+- [x] `rocm` feature group: AMD GPU acceleration
+- [x] `distributed` feature: enables cluster/MPI abstractions via scirs2-core/array_protocol_distributed
+- [x] `benchmarks` feature: expose benchmark helpers from scirs2-datasets
+- [x] Expand `prelude` to cover more commonly-used types from new v0.4.2 additions
+  - [x] `GpuBuffer`, `GpuDataType` from scirs2-core (always available)
+  - [x] `DefragPlanner` from scirs2-core::memory::defrag (memory_management feature)
+  - [x] `Precision`, `HMatrixKernel` from scirs2-linalg (linalg feature)
+  - [x] `CmaEs`, `CmaEsConfig`, `CmaEsResult` from scirs2-optimize::global (optimize feature)
+  - [x] `Ball`, `ball_sin`, `ball_cos` from scirs2-special::validated (special feature)
+- [x] Auto-generated feature matrix in documentation (docs.rs all-features already set)
+- [x] `jit` feature: gates JAX-style functional transformation framework (implies autograd)
+- [x] `vmap`/`pmap` re-exports from scirs2-autograd::transforms under `scirs2::transforms`
+- [x] `mobile` feature group: iOS Metal + Android NNAPI gated paths (placeholder, future)
+- [x] Structured `scirs2::nn` re-export namespace for neural architecture types
+- [x] `symbolic` feature: planned scirs2-symbolic crate integration (placeholder, future)
 - [ ] Re-export `scirs2_wasm` module under `wasm` feature for WASM builds
-- [ ] `benchmarks` feature: expose benchmark helpers from scirs2-datasets
-- [ ] Expand `prelude` to cover more commonly-used types from new v0.4.0 additions
-- [ ] Auto-generated feature matrix in documentation (docs.rs all-features already set)
 
 ---
 
 ## v0.5.0 Planned
 
-- [ ] `jit` feature: gates JAX-style functional transformation framework
-- [ ] `vmap`/`pmap` re-exports from scirs2-autograd under top-level `scirs2::transforms`
-- [ ] `mobile` feature group: iOS Metal + Android NNAPI gated paths
-- [ ] Structured `scirs2::nn` re-export namespace for neural architecture types
-- [ ] `symbolic` feature: planned scirs2-symbolic crate integration
+- [ ] Wire `cuda`/`rocm`/`mobile` features to actual GPU kernel dispatch once platform crates land
+- [ ] Wire `symbolic` to scirs2-symbolic once that crate is created
+- [ ] Add `wasm` feature re-exporting scirs2-core WASM backend
 
 ---
 

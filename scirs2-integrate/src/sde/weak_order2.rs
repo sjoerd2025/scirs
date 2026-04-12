@@ -212,9 +212,7 @@ pub fn simulate_weak2(
     config: &WeakSdeConfig,
 ) -> IntegrateResult<SdeResult> {
     if config.dt <= 0.0 {
-        return Err(IntegrateError::InvalidInput(
-            "dt must be positive".into(),
-        ));
+        return Err(IntegrateError::InvalidInput("dt must be positive".into()));
     }
     if config.n_steps == 0 {
         return Err(IntegrateError::InvalidInput(
@@ -367,11 +365,7 @@ pub fn expected_value_test(
 ) -> IntegrateResult<f64> {
     let result = simulate_weak2(x0, drift, diffusion, config)?;
     // Mean at the final step
-    let mc_mean = result
-        .mean_path
-        .last()
-        .copied()
-        .unwrap_or(x0);
+    let mc_mean = result.mean_path.last().copied().unwrap_or(x0);
     let exact = exact_mean(t_final);
     Ok((mc_mean - exact).abs())
 }
@@ -438,13 +432,8 @@ mod tests {
             ..Default::default()
         };
 
-        let result = simulate_weak2(
-            x0,
-            move |x| mu * x,
-            move |x| sigma * x,
-            &cfg,
-        )
-        .expect("GBM simulation should succeed");
+        let result = simulate_weak2(x0, move |x| mu * x, move |x| sigma * x, &cfg)
+            .expect("GBM simulation should succeed");
 
         let mc_mean = *result.mean_path.last().unwrap_or(&x0);
         let err = (mc_mean - exact_mean).abs();
@@ -528,11 +517,7 @@ mod tests {
             .map(|&dt| (dt, dt * dt))
             .collect();
         let rate = weak_convergence_rate(&data);
-        assert!(
-            (rate - 2.0).abs() < 0.01,
-            "rate = {}, expected 2.0",
-            rate
-        );
+        assert!((rate - 2.0).abs() < 0.01, "rate = {}, expected 2.0", rate);
     }
 
     /// `simulate_weak2` with `store_all_paths = true` stores all trajectories.
@@ -546,8 +531,8 @@ mod tests {
             store_all_paths: true,
             ..Default::default()
         };
-        let result = simulate_weak2(0.0, |_| 0.0, |_| 1.0, &cfg)
-            .expect("simulate_weak2 should succeed");
+        let result =
+            simulate_weak2(0.0, |_| 0.0, |_| 1.0, &cfg).expect("simulate_weak2 should succeed");
         let ap = result.all_paths.expect("all_paths should be Some");
         assert_eq!(ap.len(), 10, "should have 10 paths");
         for path in &ap {
@@ -565,8 +550,8 @@ mod tests {
             seed: 1,
             ..Default::default()
         };
-        let result = simulate_weak2(1.0, |x| -x, |_| 0.1, &cfg)
-            .expect("simulate_weak2 should succeed");
+        let result =
+            simulate_weak2(1.0, |x| -x, |_| 0.1, &cfg).expect("simulate_weak2 should succeed");
         assert_eq!(result.time.len(), 51, "time should have n_steps+1 entries");
         assert_eq!(result.mean_path.len(), 51);
         assert_eq!(result.variance_path.len(), 51);

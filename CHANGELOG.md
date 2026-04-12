@@ -5,6 +5,72 @@ All notable changes to the SciRS2 project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-04-12
+
+### Added
+
+#### Wave 40: Metal GPU Fixes, NAS, Integration Tests
+- **scirs2-core**: Metal GPU batch dispatch fixes (no expect()); removed all `.expect()` calls in GPU backends
+- **scirs2-optimize**: GDAS/SNAS/Predictor-based Neural Architecture Search (NAS) algorithms
+- **Integration tests**: sparse_linalg/stats_datasets/fft_signal/neural_optimize cross-crate pipelines
+- **scirs2-optimize**: NAS module wired to lib.rs with full test coverage
+
+#### Wave 41: Generators, Embeddings, Causality, and Physics
+- **scirs2-datasets**: ndarray generators + dataset sharding support
+- **scirs2-text**: Universal Sentence Encoder (USE), SimCSE contrastive embeddings, HDP topic model, Unicode tokenizer
+- **scirs2-series**: PC (Peter-Clark) causality discovery algorithm
+- **scirs2-integrate**: Particle filter for sequential Monte Carlo inference
+- **scirs2-special**: Spheroidal wave functions + Hill/Mathieu mixed-precision solvers
+- **scirs2-interpolate**: Physics-informed RBF + random RBF interpolation
+- **scirs2-fft**: Ring-buffer streaming STFT + cache-oblivious FFT
+
+#### Wave 42: Integration Pipelines, Async GPU, and Advanced I/O
+- 6 integration test pipelines: ML/signal/NLP/vision/graph/scientific end-to-end tests
+- **scirs2-core**: Async GPU memory transfer + unified memory manager + RRB-tree persistent data structure + Tracy profiler integration
+- **scirs2-signal**: GPU-accelerated spectrograms + matched filter bank
+- **scirs2-linalg**: Auto-precision dispatch + GPU eigensolvers + mixed CPU/GPU linear solver
+- **scirs2-io**: Apache Iceberg table format + DataFusion query provider + vectorized expression eval + join support
+- **scirs2-special**: Hecke L-functions + elliptic L-functions + ball arithmetic + connection formulas
+
+#### Wave 43: Stream Allocator, Object Store, and Advanced Numerics
+- **scirs2-core**: Stream allocator + memory defragmentation + NUMA bandwidth optimization
+- **scirs2-io**: Object-store abstraction + S3 multipart upload + adaptive compression + mini-batch sampler
+- **scirs2-special**: GPU auto-dispatch + f16 mixed-precision + Clebsch-Gordan SU(2)/SU(3)/SO(5) + Hall polynomials
+- **scirs2-sparse**: ILU(0) mixed CPU/GPU preconditioning
+- **scirs2-optimize**: Subspace embedding (Johnson-Lindenstrauss/Gaussian/sparse + sketched least-squares)
+- **scirs2-python**: special/interpolate/integrate Python bindings + no-unwrap fixes
+- **scirs2-numpy**: DLPack protocol + masked arrays + structured dtype + PyUntypedArray
+
+#### Wave 44: NAS Repair, Mamba SSM, CMA-ES, Enhanced Tokenizer
+- **scirs2-neural**: NAS repair with 74 tests; Mamba state space model (SSM) verified
+- **scirs2-optimize**: CMA-ES (Covariance Matrix Adaptation Evolution Strategy) optimizer with 10 tests
+- **scirs2-text**: Enhanced BPE tokenizer with chat templates (14 tests)
+- Numerical validation tests (40 tests); cross-crate consistency tests (16 tests)
+
+#### Wave 45: H-Matrix, Streaming FFT, DLPack, HuggingFace, and More
+- **scirs2-linalg**: H-matrix hierarchical compression (10 tests)
+- **scirs2-special**: Spheroidal + Mathieu-Hill function solvers (25 tests)
+- **scirs2-fft**: Streaming FFT + out-of-core transforms (18 tests)
+- **scirs2-signal**: Batched Welch PSD + EFDD operational modal analysis (12 tests)
+- **scirs2-numpy**: Array protocol + DLPack zero-copy exchange (27 tests)
+- **scirs2-datasets**: HuggingFace-compatible + dataset sharding + generators (493 lib tests)
+- **scirs2-io**: GCS + Azure SAS token support + exactly-once delivery semantics (35 tests)
+- **scirs2-interpolate**: GPU RBF + physics-informed + deep kriging + active learning (25 tests)
+- **scirs2-text**: Sentence embeddings + multilingual support + HDP topic model (34 tests)
+- **scirs2-metrics**: Rotated IoU bounding box metric (17 tests)
+- **scirs2-integrate**: GPU Lattice-Boltzmann (LBM) + ODE ensemble + sparse grid quadrature (27 tests)
+
+### Changed
+- Version bump from 0.4.1 to 0.4.2
+- scirs2-python pyproject.toml version updated to 0.4.2
+
+### Quality Gate
+- cargo check --workspace --all-features: PASS (0 errors, 0 warnings)
+- cargo nextest (excl. python/datasets): 27,139 passed, 195 skipped
+- scirs2-datasets --lib: 493 passed
+- **Total tests: 27,632 passing**
+- No-unwrap policy: PASS
+
 ## [0.4.1] - 2026-03-28
 
 ### Changed

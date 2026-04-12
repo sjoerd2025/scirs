@@ -53,6 +53,7 @@ pub mod examples;
 pub mod fractional_brownian;
 pub mod jump_diffusion;
 pub mod milstein;
+pub mod particle_filter;
 pub mod processes;
 pub mod rough_sde;
 pub mod runge_kutta_sde;
@@ -221,7 +222,7 @@ impl SdeSolution {
                         "All solutions in ensemble must have the same number of steps".to_string(),
                     ));
                 }
-                mean_x = mean_x + &sol.x[step];
+                mean_x += &sol.x[step];
             }
             mean_x /= n_ensemble as f64;
             result.push(t, mean_x);
@@ -252,7 +253,7 @@ impl SdeSolution {
             let mut var_x = Array1::zeros(dim);
             for sol in solutions {
                 let diff = &sol.x[step] - &mean_sol.x[step];
-                var_x = var_x + &diff.mapv(|v| v * v);
+                var_x += &diff.mapv(|v| v * v);
             }
             var_x /= (n_ensemble - 1) as f64;
             result.push(t, var_x);
@@ -281,7 +282,12 @@ impl Default for SdeOptions {
 
 /// Compute the number of steps needed for a given time span and step size,
 /// clamping to `max_steps` as a safety limit.
-pub(crate) fn compute_n_steps(t0: f64, t1: f64, dt: f64, max_steps: usize) -> IntegrateResult<usize> {
+pub(crate) fn compute_n_steps(
+    t0: f64,
+    t1: f64,
+    dt: f64,
+    max_steps: usize,
+) -> IntegrateResult<usize> {
     if dt <= 0.0 {
         return Err(IntegrateError::InvalidInput(format!(
             "Step size dt must be positive, got {}",
@@ -291,7 +297,8 @@ pub(crate) fn compute_n_steps(t0: f64, t1: f64, dt: f64, max_steps: usize) -> In
     let n = ((t1 - t0) / dt).ceil() as usize;
     if n > max_steps {
         return Err(IntegrateError::InvalidInput(format!(
-            "Required steps {} exceeds maximum {}", n, max_steps
+            "Required steps {} exceeds maximum {}",
+            n, max_steps
         )));
     }
     Ok(n.max(1))

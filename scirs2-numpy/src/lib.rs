@@ -73,15 +73,20 @@ as well as the [`PyReadonlyArray::try_as_matrix`] and [`PyReadwriteArray::try_as
 
 pub mod array;
 mod array_like;
+pub mod array_protocol;
 pub mod borrow;
 pub mod convert;
 pub mod datetime;
+pub mod dlpack;
 mod dtype;
 mod error;
+pub mod masked;
 pub mod npyffi;
 mod slice_container;
 mod strings;
+mod structured;
 mod sum_products;
+pub mod untyped;
 mod untyped_array;
 
 pub use ndarray;
@@ -98,6 +103,10 @@ pub use crate::array_like::{
     AllowTypeChange, PyArrayLike, PyArrayLike0, PyArrayLike1, PyArrayLike2, PyArrayLike3,
     PyArrayLike4, PyArrayLike5, PyArrayLike6, PyArrayLikeDyn, TypeMustMatch,
 };
+pub use crate::array_protocol::{
+    parse_typestr, register_array_protocol_module, ArrayInterfaceDict, ArrayProtocol,
+    ArrayProtocolError, NdArrayWrapper,
+};
 pub use crate::borrow::{
     PyReadonlyArray, PyReadonlyArray0, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
     PyReadonlyArray4, PyReadonlyArray5, PyReadonlyArray6, PyReadonlyArrayDyn, PyReadwriteArray,
@@ -105,11 +114,21 @@ pub use crate::borrow::{
     PyReadwriteArray5, PyReadwriteArray6, PyReadwriteArrayDyn,
 };
 pub use crate::convert::{IntoPyArray, NpyIndex, ToNpyDims, ToPyArray};
+pub use crate::dlpack::{
+    dlpack_from_slice, dlpack_to_vec_f64, register_dlpack_module, validate_dlpack_tensor,
+    DLDataType, DLDataTypeCode, DLDevice, DLDeviceType, DLManagedTensor, DLPackCapsule, DLTensor,
+    DLTensorInfo, DlpackError,
+};
 pub use crate::dtype::{dtype, Complex32, Complex64, Element, PyArrayDescr, PyArrayDescrMethods};
 pub use crate::error::{BorrowError, FromVecError, NotContiguousError};
+pub use crate::masked::{masked_array, masked_less, register_masked_module, MaskedArray};
 pub use crate::npyffi::{PY_ARRAY_API, PY_UFUNC_API};
 pub use crate::strings::{PyFixedString, PyFixedUnicode};
+pub use crate::structured::{
+    register_structured_module, DtypeField, StructuredArray, StructuredDtype,
+};
 pub use crate::sum_products::{dot, einsum, inner};
+pub use crate::untyped::{register_untyped_module, UntypedArray};
 pub use crate::untyped_array::{PyUntypedArray, PyUntypedArrayMethods};
 
 pub use ndarray::{array, Ix1, Ix2, Ix3, Ix4, Ix5, Ix6, IxDyn};

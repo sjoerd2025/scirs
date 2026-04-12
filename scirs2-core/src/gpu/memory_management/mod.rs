@@ -27,6 +27,7 @@
 pub mod allocators;
 pub mod pool;
 pub mod transfer;
+pub mod unified_memory;
 
 // Re-export all public items to preserve the original flat public API
 pub use allocators::{
@@ -42,3 +43,4 @@ pub use transfer::{
     BufferLifetime, MemoryPressure, MemoryPressureLevel, TransferDirection, TransferQueue,
     TransferStatistics,
 };
+pub use unified_memory::{SyncState, UnifiedAllocator, UnifiedBuffer};

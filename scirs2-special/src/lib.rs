@@ -44,7 +44,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-special = "0.4.1"
+//! scirs2-special = "0.4.2"
 //! ```
 //!
 //!
@@ -96,7 +96,7 @@
 //!
 //! ## 🔒 Version Information
 //!
-//! - **Version**: 0.4.1
+//! - **Version**: 0.4.2
 //! - **Release Date**: March 27, 2026
 //! - **Repository**: [github.com/cool-japan/scirs](https://github.com/cool-japan/scirs)
 
@@ -157,6 +157,10 @@ pub mod physics_engineering;
 pub mod polylogarithm;
 pub mod precision;
 mod property_tests;
+// Validated numerics (ball arithmetic)
+pub mod hill;
+pub mod mathieu_hill;
+pub mod mixed_precision;
 pub mod python_interop;
 #[cfg(test)]
 mod quickcheck_tests;
@@ -167,6 +171,7 @@ pub mod stability_analysis;
 mod statistical;
 mod struve;
 pub mod utility;
+pub mod validated;
 mod validation;
 #[cfg(feature = "plotting")]
 pub mod visualization;
@@ -190,12 +195,24 @@ pub mod theta_functions;
 pub mod chromatic;
 // Clebsch-Gordan coefficients
 pub mod clebsch_gordan;
+// Clebsch-Gordan series for Lie groups (SU(3), SO(5), general)
+pub mod clebsch_gordan_lie;
+// GPU auto-dispatch for batch evaluation of special functions
+pub mod gpu_dispatch;
+// Hall polynomials for p-group extensions
+pub mod hall_polynomials;
 // Dedekind zeta function
 pub mod dedekind_zeta;
 // Symbolic differentiation
 pub mod differentiation;
 // Elliptic modular functions
 pub mod elliptic_modular;
+// Connection formula generator
+pub mod connection_formulas;
+// Elliptic curve L-functions
+pub mod elliptic_l;
+// Hecke L-functions and Maass forms
+pub mod hecke_l;
 // Dirichlet L-functions
 pub mod l_functions;
 // Lame functions
@@ -419,6 +436,28 @@ pub use spherical_harmonics::{
 pub use spheroidal::{
     obl_ang1, obl_cv, obl_cv_seq, obl_rad1, obl_rad2, pro_ang1, pro_cv, pro_cv_seq, pro_rad1,
     pro_rad2,
+};
+// Advanced spheroidal wave functions (Legendre-expansion based)
+pub use spheroidal::{
+    angular_spheroidal, associated_legendre, radial_spheroidal_1, spherical_bessel_j,
+    spheroidal_eigenvalue_wf, SpheroidType, SpheroidalConfig,
+};
+// Simplified spheroidal wave function API (SpheroidalKind-based)
+pub use spheroidal::{
+    spheroidal_eigenvalue_mn, spheroidal_ps, spheroidal_wronskian, SpheroidalEigenvalue,
+    SpheroidalKind,
+};
+// Hill's equation
+pub use hill::{hill_floquet, mathieu_hill, CurveType, HillEquation, HillResult, StabilityCurve};
+// Generalized Hill's equation (HillCoefficients-based API)
+pub use mathieu_hill::{
+    hill_characteristic_exponent, hill_periodic_solution, hill_stability_check,
+    hill_stability_exponent, HillCoefficients,
+};
+// Mixed-precision batch dispatch
+pub use mixed_precision::{
+    auto_dispatch_bessel_j0, auto_dispatch_erf, auto_dispatch_gamma, batch_eval_mixed,
+    MixedPrecisionConfig,
 };
 pub use statistical::{
     expm1_array, log1p_array, log_abs_gamma, log_softmax, logistic, logistic_derivative, logsumexp,

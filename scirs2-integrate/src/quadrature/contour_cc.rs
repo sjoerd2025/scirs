@@ -33,10 +33,11 @@ use std::f64::consts::PI;
 // ---------------------------------------------------------------------------
 
 /// Contour type for complex-path integration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub enum ContourType {
     /// Standard real-line integration (no deformation).
+    #[default]
     Real,
     /// Upper semicircle `z = r exp(iθ)`, θ ∈ [-π, π].
     SemiCircle {
@@ -62,12 +63,6 @@ pub enum ContourType {
         /// x-coordinates of the poles to indent around.
         indent_at: Vec<f64>,
     },
-}
-
-impl Default for ContourType {
-    fn default() -> Self {
-        Self::Real
-    }
 }
 
 /// Configuration for adaptive/contour CC quadrature.
@@ -169,7 +164,11 @@ fn cc_nodes_weights(n: usize) -> (Vec<f64>, Vec<f64>) {
         let half = m / 2;
         let mut s = 0.0_f64;
         for k in 1..=half {
-            let bk = if k == half && m % 2 == 0 { 1.0 } else { 2.0 };
+            let bk = if k == half && m.is_multiple_of(2) {
+                1.0
+            } else {
+                2.0
+            };
             let denom = 4.0 * (k as f64).powi(2) - 1.0;
             s += bk / denom * (2.0 * PI * j as f64 * k as f64 / mf).cos();
         }
@@ -189,18 +188,21 @@ fn cc_nodes_weights_interval(n: usize, a: f64, b: f64) -> (Vec<f64>, Vec<f64>) {
 }
 
 /// Estimate error for CC on `[a,b]` using `n` points and half-level `n/2+1`.
-fn cc_error_estimate(
-    f: &impl Fn(f64) -> f64,
-    a: f64,
-    b: f64,
-    n: usize,
-) -> (f64, f64, usize) {
+fn cc_error_estimate(f: &impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> (f64, f64, usize) {
     let n_coarse = (n / 2 + 1).max(2);
     let (x_fine, w_fine) = cc_nodes_weights_interval(n, a, b);
     let (x_coarse, w_coarse) = cc_nodes_weights_interval(n_coarse, a, b);
 
-    let val_fine: f64 = x_fine.iter().zip(w_fine.iter()).map(|(&xi, &wi)| wi * f(xi)).sum();
-    let val_coarse: f64 = x_coarse.iter().zip(w_coarse.iter()).map(|(&xi, &wi)| wi * f(xi)).sum();
+    let val_fine: f64 = x_fine
+        .iter()
+        .zip(w_fine.iter())
+        .map(|(&xi, &wi)| wi * f(xi))
+        .sum();
+    let val_coarse: f64 = x_coarse
+        .iter()
+        .zip(w_coarse.iter())
+        .map(|(&xi, &wi)| wi * f(xi))
+        .sum();
 
     let error = (val_fine - val_coarse).abs();
     let n_evals = n + n_coarse;
@@ -252,7 +254,11 @@ pub fn adaptive_cc(
         let worst_idx = intervals
             .iter()
             .enumerate()
-            .max_by(|a, b| a.1 .3.partial_cmp(&b.1 .3).unwrap_or(std::cmp::Ordering::Equal))
+            .max_by(|a, b| {
+                a.1 .3
+                    .partial_cmp(&b.1 .3)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
             .map(|(i, _)| i)
             .unwrap_or(0);
 
@@ -330,9 +336,7 @@ pub fn contour_integrate_cc(
     n_pts: usize,
 ) -> IntegrateResult<(f64, f64)> {
     if n_pts < 2 {
-        return Err(IntegrateError::InvalidInput(
-            "n_pts must be >= 2".into(),
-        ));
+        return Err(IntegrateError::InvalidInput("n_pts must be >= 2".into()));
     }
     match contour {
         ContourType::Real => {
@@ -448,7 +452,13 @@ pub fn filon_cc_oscillatory(f: impl Fn(f64) -> f64, omega: f64, a: f64, b: f64, 
 }
 
 /// Filon-type CC rule for `∫_a^b f(x) sin(ω x) dx`.
-pub fn filon_cc_oscillatory_sin(f: impl Fn(f64) -> f64, omega: f64, a: f64, b: f64, n: usize) -> f64 {
+pub fn filon_cc_oscillatory_sin(
+    f: impl Fn(f64) -> f64,
+    omega: f64,
+    a: f64,
+    b: f64,
+    n: usize,
+) -> f64 {
     let (nodes, weights) = cc_nodes_weights_interval(n, a, b);
     nodes
         .iter()
@@ -472,8 +482,7 @@ mod tests {
             tol: 1e-12,
             ..Default::default()
         };
-        let result = adaptive_cc(|x| x * x, 0.0, 1.0, &cfg)
-            .expect("adaptive_cc should succeed");
+        let result = adaptive_cc(|x| x * x, 0.0, 1.0, &cfg).expect("adaptive_cc should succeed");
         assert!(
             (result.value - 1.0 / 3.0).abs() < 1e-10,
             "value = {}, expected = {}",
@@ -572,8 +581,8 @@ mod tests {
             max_levels: 10,
             ..Default::default()
         };
-        let result = adaptive_cc(|x: f64| x.exp(), 0.0, 1.0, &cfg)
-            .expect("adaptive_cc should succeed");
+        let result =
+            adaptive_cc(|x: f64| x.exp(), 0.0, 1.0, &cfg).expect("adaptive_cc should succeed");
         assert!(result.converged, "should converge for smooth function");
     }
 

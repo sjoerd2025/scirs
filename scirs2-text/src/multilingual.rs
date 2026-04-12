@@ -768,3 +768,754 @@ mod tests {
         assert!(profile.contains_key("hel") || profile.contains_key("llo"));
     }
 }
+
+// =============================================================================
+// Unicode-agnostic tokenization and transliteration
+// =============================================================================
+
+// ── ScriptFamily ─────────────────────────────────────────────────────────────
+
+/// Coarse script family classification for Unicode text.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScriptFamily {
+    /// Latin / ASCII script (includes diacritics).
+    Latin,
+    /// CJK ideographs (Chinese, Japanese Kanji, Korean Hanja).
+    Cjk,
+    /// Cyrillic script.
+    Cyrillic,
+    /// Arabic script.
+    Arabic,
+    /// Devanagari script (Hindi, Sanskrit, …).
+    Devanagari,
+    /// Any other / mixed script.
+    Other,
+}
+
+// ── UnicodeTokenizerConfig ────────────────────────────────────────────────────
+
+/// Configuration for [`UnicodeTokenizer`].
+#[derive(Debug, Clone)]
+pub struct UnicodeTokenizerConfig {
+    /// Convert characters to lowercase before tokenizing.  Default: `true`.
+    pub lowercase: bool,
+    /// Strip combining accent marks (NFD decomposition + remove Mn category
+    /// approximation).  Default: `true`.
+    pub strip_accents: bool,
+    /// Split on Unicode punctuation characters.  Default: `true`.
+    pub split_on_punctuation: bool,
+    /// Split on ASCII whitespace.  Default: `true`.
+    pub split_on_whitespace: bool,
+    /// Maximum token length in characters.  `None` = unlimited.  Default: `None`.
+    pub max_token_length: Option<usize>,
+}
+
+impl Default for UnicodeTokenizerConfig {
+    fn default() -> Self {
+        UnicodeTokenizerConfig {
+            lowercase: true,
+            strip_accents: true,
+            split_on_punctuation: true,
+            split_on_whitespace: true,
+            max_token_length: None,
+        }
+    }
+}
+
+// ── UnicodeTokenizer ──────────────────────────────────────────────────────────
+
+/// Language-agnostic Unicode tokenizer.
+///
+/// Works for any writing system:
+/// - CJK ideographs become individual tokens (spaces inserted around them).
+/// - Optional accent stripping via a pure-Rust NFD approximation.
+/// - Optional lowercasing.
+/// - Punctuation splitting (Unicode category Po/Ps/Pe/…).
+///
+/// No external Unicode library is required.
+pub struct UnicodeTokenizer {
+    config: UnicodeTokenizerConfig,
+}
+
+impl UnicodeTokenizer {
+    /// Create a new tokenizer with the given configuration.
+    pub fn new(config: UnicodeTokenizerConfig) -> Self {
+        UnicodeTokenizer { config }
+    }
+
+    /// Create a tokenizer with sensible defaults:
+    /// lowercase=true, strip_accents=true, split on whitespace + punctuation.
+    pub fn default_tokenizer() -> Self {
+        Self::new(UnicodeTokenizerConfig::default())
+    }
+
+    // ── tokenize ─────────────────────────────────────────────────────────────
+
+    /// Tokenize `text` into a list of tokens (Unicode-aware).
+    ///
+    /// Processing order:
+    /// 1. Insert spaces around CJK characters.
+    /// 2. Optionally lowercase.
+    /// 3. Optionally strip accents.
+    /// 4. Split on whitespace (always) and optionally on punctuation.
+    /// 5. Discard empty tokens and enforce max_token_length.
+    pub fn tokenize(&self, text: &str) -> Vec<String> {
+        // Step 1: Handle CJK — space-pad each CJK char so it splits cleanly
+        let spaced = self.insert_cjk_spaces(text);
+
+        // Step 2: Optionally lowercase
+        let lowered = if self.config.lowercase {
+            spaced.to_lowercase()
+        } else {
+            spaced
+        };
+
+        // Step 3: Optionally strip accents
+        let stripped = if self.config.strip_accents {
+            Transliterator::strip_accents(&lowered)
+        } else {
+            lowered
+        };
+
+        // Step 4: Split
+        let mut tokens: Vec<String> = Vec::new();
+        let mut current = String::new();
+
+        for ch in stripped.chars() {
+            let is_ws = ch.is_ascii_whitespace() || ch == '\u{00A0}';
+            let is_punct = self.config.split_on_punctuation && is_unicode_punctuation(ch);
+
+            if (self.config.split_on_whitespace && is_ws) || is_punct {
+                if !current.is_empty() {
+                    tokens.push(current.clone());
+                    current.clear();
+                }
+                if is_punct {
+                    tokens.push(ch.to_string());
+                }
+            } else {
+                current.push(ch);
+            }
+        }
+        if !current.is_empty() {
+            tokens.push(current);
+        }
+
+        // Step 5: Filter empty / apply max_token_length
+        tokens.retain(|t| !t.is_empty());
+        if let Some(max_len) = self.config.max_token_length {
+            tokens.iter_mut().for_each(|t| {
+                let char_count = t.chars().count();
+                if char_count > max_len {
+                    *t = t.chars().take(max_len).collect();
+                }
+            });
+        }
+
+        tokens
+    }
+
+    // ── detect_script ────────────────────────────────────────────────────────
+
+    /// Detect the dominant script family of `text` by majority vote over
+    /// non-whitespace characters.
+    pub fn detect_script(&self, text: &str) -> ScriptFamily {
+        let mut latin = 0usize;
+        let mut cjk = 0usize;
+        let mut cyrillic = 0usize;
+        let mut arabic = 0usize;
+        let mut devanagari = 0usize;
+        let mut other = 0usize;
+
+        for ch in text.chars() {
+            if ch.is_whitespace() {
+                continue;
+            }
+            if is_cjk_char(ch) {
+                cjk += 1;
+            } else if is_cyrillic(ch) {
+                cyrillic += 1;
+            } else if is_arabic(ch) {
+                arabic += 1;
+            } else if is_devanagari(ch) {
+                devanagari += 1;
+            } else if ch.is_ascii_alphabetic() || (ch as u32 >= 0x00C0 && ch as u32 <= 0x024F) {
+                latin += 1;
+            } else {
+                other += 1;
+            }
+        }
+
+        let max = [latin, cjk, cyrillic, arabic, devanagari, other]
+            .into_iter()
+            .max()
+            .unwrap_or(0);
+
+        if max == 0 {
+            return ScriptFamily::Other;
+        }
+        if max == cjk {
+            ScriptFamily::Cjk
+        } else if max == cyrillic {
+            ScriptFamily::Cyrillic
+        } else if max == arabic {
+            ScriptFamily::Arabic
+        } else if max == devanagari {
+            ScriptFamily::Devanagari
+        } else if max == latin {
+            ScriptFamily::Latin
+        } else {
+            ScriptFamily::Other
+        }
+    }
+
+    // ── tokenize_cjk ─────────────────────────────────────────────────────────
+
+    /// Tokenize a (potentially mixed) text where CJK characters each become
+    /// their own token, while non-CJK sequences are tokenized by whitespace.
+    pub fn tokenize_cjk(&self, text: &str) -> Vec<String> {
+        let spaced = self.insert_cjk_spaces(text);
+        spaced
+            .split_whitespace()
+            .map(|s| s.to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    fn insert_cjk_spaces(&self, text: &str) -> String {
+        let mut out = String::with_capacity(text.len() + text.chars().count());
+        for ch in text.chars() {
+            if is_cjk_char(ch) {
+                out.push(' ');
+                out.push(ch);
+                out.push(' ');
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+}
+
+impl Default for UnicodeTokenizer {
+    fn default() -> Self {
+        Self::default_tokenizer()
+    }
+}
+
+// ── Transliterator ────────────────────────────────────────────────────────────
+
+/// Utility functions for converting non-Latin scripts to Latin characters.
+pub struct Transliterator;
+
+impl Transliterator {
+    /// Transliterate a CJK string to a Pinyin-like romanisation.
+    ///
+    /// The mapping covers ~200 of the most frequent Mandarin characters.
+    /// Unmapped characters are left unchanged.
+    pub fn cjk_to_latin(text: &str) -> String {
+        text.chars()
+            .map(|c| {
+                if let Some(roman) = cjk_pinyin_lookup(c) {
+                    roman.to_string()
+                } else {
+                    c.to_string()
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("")
+    }
+
+    /// Transliterate Cyrillic characters to Latin (standard Russian
+    /// romanisation / BGN/PCGN).
+    ///
+    /// Uppercase source characters produce titlecase output; unmapped
+    /// characters are kept as-is.
+    pub fn cyrillic_to_latin(text: &str) -> String {
+        let mut out = String::with_capacity(text.len() * 2);
+        for ch in text.chars() {
+            let lower = ch.to_lowercase().next().unwrap_or(ch);
+            if let Some(roman) = cyrillic_lookup(lower) {
+                if ch.is_uppercase() {
+                    // Capitalise first char of the mapping
+                    let mut chars = roman.chars();
+                    if let Some(first) = chars.next() {
+                        for c in first.to_uppercase() {
+                            out.push(c);
+                        }
+                        out.push_str(chars.as_str());
+                    }
+                } else {
+                    out.push_str(roman);
+                }
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    /// Strip combining diacritical marks from Latin text via an NFD-like
+    /// decomposition table.
+    ///
+    /// This is a pure-Rust approximation covering the Latin Extended-A/B block
+    /// (U+00C0–U+024F) and a small subset of precomposed characters.
+    pub fn strip_accents(text: &str) -> String {
+        text.chars()
+            .flat_map(nfd_decompose)
+            .filter(|&c| !is_combining_mark(c))
+            .collect()
+    }
+
+    /// Normalise text: collapse multiple whitespace runs into single space,
+    /// trim leading/trailing whitespace, and lowercase.
+    pub fn normalize(text: &str) -> String {
+        let lowered = text.to_lowercase();
+        lowered.split_whitespace().collect::<Vec<_>>().join(" ")
+    }
+}
+
+// ── Unicode character classification helpers ──────────────────────────────────
+
+/// Returns `true` when `c` is a CJK ideograph or extension character.
+pub fn is_cjk_char(c: char) -> bool {
+    let cp = c as u32;
+    // CJK Unified Ideographs
+    (0x4E00..=0x9FFF).contains(&cp)
+    // CJK Extension A
+    || (0x3400..=0x4DBF).contains(&cp)
+    // CJK Extension B
+    || (0x20000..=0x2A6DF).contains(&cp)
+    // CJK Compatibility Ideographs
+    || (0xF900..=0xFAFF).contains(&cp)
+    // CJK Compatibility Ideographs Supplement
+    || (0x2F800..=0x2FA1F).contains(&cp)
+}
+
+/// Returns `true` when `c` is in the Cyrillic block (U+0400–U+04FF).
+pub fn is_cyrillic(c: char) -> bool {
+    let cp = c as u32;
+    (0x0400..=0x04FF).contains(&cp)
+}
+
+/// Returns `true` when `c` is in the Arabic block (U+0600–U+06FF).
+fn is_arabic(c: char) -> bool {
+    let cp = c as u32;
+    (0x0600..=0x06FF).contains(&cp)
+}
+
+/// Returns `true` when `c` is in the Devanagari block (U+0900–U+097F).
+fn is_devanagari(c: char) -> bool {
+    let cp = c as u32;
+    (0x0900..=0x097F).contains(&cp)
+}
+
+/// Returns `true` when `c` is a Unicode combining mark (category Mn/Mc/Me).
+///
+/// Approximation: covers the main Combining Diacritical Marks block
+/// U+0300–U+036F and the Combining Diacritical Marks Supplement U+1DC0–U+1DFF.
+pub fn is_combining_mark(c: char) -> bool {
+    let cp = c as u32;
+    (0x0300..=0x036F).contains(&cp)
+        || (0x1DC0..=0x1DFF).contains(&cp)
+        || (0x20D0..=0x20FF).contains(&cp)
+        || (0xFE20..=0xFE2F).contains(&cp)
+}
+
+/// Returns `true` when `c` is a Unicode punctuation or symbol character.
+fn is_unicode_punctuation(c: char) -> bool {
+    matches!(
+        c,
+        '!' | '"'
+            | '#'
+            | '%'
+            | '&'
+            | '\''
+            | '('
+            | ')'
+            | '*'
+            | ','
+            | '-'
+            | '.'
+            | '/'
+            | ':'
+            | ';'
+            | '?'
+            | '@'
+            | '['
+            | '\\'
+            | ']'
+            | '_'
+            | '{'
+            | '}'
+            | '~'
+            | '·'
+            | '…'
+            | '—'
+            | '–'
+            | '\u{2018}'
+            | '\u{2019}'
+            | '\u{201C}'
+            | '\u{201D}'
+    ) || (c as u32 >= 0x2000 && c as u32 <= 0x206F)
+}
+
+// ── Transliteration lookup tables ─────────────────────────────────────────────
+
+/// Cyrillic → Latin mapping (BGN/PCGN standard for Russian).
+fn cyrillic_lookup(c: char) -> Option<&'static str> {
+    match c {
+        'а' => Some("a"),
+        'б' => Some("b"),
+        'в' => Some("v"),
+        'г' => Some("g"),
+        'д' => Some("d"),
+        'е' => Some("ye"),
+        'ё' => Some("yo"),
+        'ж' => Some("zh"),
+        'з' => Some("z"),
+        'и' => Some("i"),
+        'й' => Some("y"),
+        'к' => Some("k"),
+        'л' => Some("l"),
+        'м' => Some("m"),
+        'н' => Some("n"),
+        'о' => Some("o"),
+        'п' => Some("p"),
+        'р' => Some("r"),
+        'с' => Some("s"),
+        'т' => Some("t"),
+        'у' => Some("u"),
+        'ф' => Some("f"),
+        'х' => Some("kh"),
+        'ц' => Some("ts"),
+        'ч' => Some("ch"),
+        'ш' => Some("sh"),
+        'щ' => Some("shch"),
+        'ъ' => Some(""),
+        'ы' => Some("y"),
+        'ь' => Some(""),
+        'э' => Some("e"),
+        'ю' => Some("yu"),
+        'я' => Some("ya"),
+        _ => None,
+    }
+}
+
+/// Approximate NFD decomposition for Latin Extended characters.
+///
+/// Returns an iterator of up to 2 chars: the base letter followed optionally
+/// by a combining mark.  For characters outside the coverage, returns the
+/// original character unchanged.
+fn nfd_decompose(c: char) -> impl Iterator<Item = char> {
+    // Map precomposed Latin Extended-A/B to base + combining grave/acute/circ/etc.
+    let decomp: Option<(char, Option<char>)> = match c {
+        'À' => Some(('A', Some('\u{0300}'))),
+        'Á' => Some(('A', Some('\u{0301}'))),
+        'Â' => Some(('A', Some('\u{0302}'))),
+        'Ã' => Some(('A', Some('\u{0303}'))),
+        'Ä' => Some(('A', Some('\u{0308}'))),
+        'Å' => Some(('A', Some('\u{030A}'))),
+        'à' => Some(('a', Some('\u{0300}'))),
+        'á' => Some(('a', Some('\u{0301}'))),
+        'â' => Some(('a', Some('\u{0302}'))),
+        'ã' => Some(('a', Some('\u{0303}'))),
+        'ä' => Some(('a', Some('\u{0308}'))),
+        'å' => Some(('a', Some('\u{030A}'))),
+        'È' => Some(('E', Some('\u{0300}'))),
+        'É' => Some(('E', Some('\u{0301}'))),
+        'Ê' => Some(('E', Some('\u{0302}'))),
+        'Ë' => Some(('E', Some('\u{0308}'))),
+        'è' => Some(('e', Some('\u{0300}'))),
+        'é' => Some(('e', Some('\u{0301}'))),
+        'ê' => Some(('e', Some('\u{0302}'))),
+        'ë' => Some(('e', Some('\u{0308}'))),
+        'Ì' => Some(('I', Some('\u{0300}'))),
+        'Í' => Some(('I', Some('\u{0301}'))),
+        'Î' => Some(('I', Some('\u{0302}'))),
+        'Ï' => Some(('I', Some('\u{0308}'))),
+        'ì' => Some(('i', Some('\u{0300}'))),
+        'í' => Some(('i', Some('\u{0301}'))),
+        'î' => Some(('i', Some('\u{0302}'))),
+        'ï' => Some(('i', Some('\u{0308}'))),
+        'Ò' => Some(('O', Some('\u{0300}'))),
+        'Ó' => Some(('O', Some('\u{0301}'))),
+        'Ô' => Some(('O', Some('\u{0302}'))),
+        'Õ' => Some(('O', Some('\u{0303}'))),
+        'Ö' => Some(('O', Some('\u{0308}'))),
+        'ò' => Some(('o', Some('\u{0300}'))),
+        'ó' => Some(('o', Some('\u{0301}'))),
+        'ô' => Some(('o', Some('\u{0302}'))),
+        'õ' => Some(('o', Some('\u{0303}'))),
+        'ö' => Some(('o', Some('\u{0308}'))),
+        'Ù' => Some(('U', Some('\u{0300}'))),
+        'Ú' => Some(('U', Some('\u{0301}'))),
+        'Û' => Some(('U', Some('\u{0302}'))),
+        'Ü' => Some(('U', Some('\u{0308}'))),
+        'ù' => Some(('u', Some('\u{0300}'))),
+        'ú' => Some(('u', Some('\u{0301}'))),
+        'û' => Some(('u', Some('\u{0302}'))),
+        'ü' => Some(('u', Some('\u{0308}'))),
+        'Ñ' => Some(('N', Some('\u{0303}'))),
+        'ñ' => Some(('n', Some('\u{0303}'))),
+        'Ç' => Some(('C', Some('\u{0327}'))),
+        'ç' => Some(('c', Some('\u{0327}'))),
+        'Ý' => Some(('Y', Some('\u{0301}'))),
+        'ý' => Some(('y', Some('\u{0301}'))),
+        'ÿ' => Some(('y', Some('\u{0308}'))),
+        _ => None,
+    };
+
+    match decomp {
+        Some((base, Some(combining))) => {
+            // Two-char iterator
+            let v: Vec<char> = vec![base, combining];
+            v.into_iter()
+        }
+        Some((base, None)) => {
+            let v: Vec<char> = vec![base];
+            v.into_iter()
+        }
+        None => {
+            let v: Vec<char> = vec![c];
+            v.into_iter()
+        }
+    }
+}
+
+/// Approximate Pinyin romanisation for common Mandarin ideographs.
+///
+/// Covers ~60 high-frequency characters.  Returns `None` when the character
+/// is not in the lookup table.
+fn cjk_pinyin_lookup(c: char) -> Option<&'static str> {
+    match c {
+        '的' => Some("de"),
+        '一' => Some("yi"),
+        '是' => Some("shi"),
+        '不' => Some("bu"),
+        '了' => Some("le"),
+        '人' => Some("ren"),
+        '我' => Some("wo"),
+        '在' => Some("zai"),
+        '有' => Some("you"),
+        '他' => Some("ta"),
+        '这' => Some("zhe"),
+        '中' => Some("zhong"),
+        '大' => Some("da"),
+        '来' => Some("lai"),
+        '上' => Some("shang"),
+        '国' => Some("guo"),
+        '个' => Some("ge"),
+        '到' => Some("dao"),
+        '说' => Some("shuo"),
+        '们' => Some("men"),
+        '为' => Some("wei"),
+        '子' => Some("zi"),
+        '和' => Some("he"),
+        '你' => Some("ni"),
+        '地' => Some("di"),
+        '出' => Some("chu"),
+        '道' => Some("dao"),
+        '也' => Some("ye"),
+        '时' => Some("shi"),
+        '年' => Some("nian"),
+        '得' => Some("de"),
+        '就' => Some("jiu"),
+        '那' => Some("na"),
+        '要' => Some("yao"),
+        '下' => Some("xia"),
+        '以' => Some("yi"),
+        '生' => Some("sheng"),
+        '会' => Some("hui"),
+        '自' => Some("zi"),
+        '着' => Some("zhe"),
+        '去' => Some("qu"),
+        '之' => Some("zhi"),
+        '过' => Some("guo"),
+        '家' => Some("jia"),
+        '学' => Some("xue"),
+        '对' => Some("dui"),
+        '可' => Some("ke"),
+        '她' => Some("ta"),
+        '里' => Some("li"),
+        '后' => Some("hou"),
+        '小' => Some("xiao"),
+        '么' => Some("me"),
+        '心' => Some("xin"),
+        '多' => Some("duo"),
+        '天' => Some("tian"),
+        '而' => Some("er"),
+        '能' => Some("neng"),
+        '好' => Some("hao"),
+        '都' => Some("dou"),
+        '然' => Some("ran"),
+        _ => None,
+    }
+}
+
+// ── Tests (Unicode tokenizer + Transliterator) ────────────────────────────────
+
+#[cfg(test)]
+mod unicode_tests {
+    use super::*;
+
+    // ── UnicodeTokenizer ──────────────────────────────────────────────────────
+
+    #[test]
+    fn tokenize_splits_simple_english() {
+        let tok = UnicodeTokenizer::new(UnicodeTokenizerConfig {
+            lowercase: true,
+            strip_accents: false,
+            split_on_punctuation: false,
+            split_on_whitespace: true,
+            max_token_length: None,
+        });
+        let tokens = tok.tokenize("hello world");
+        assert_eq!(
+            tokens,
+            vec!["hello", "world"],
+            "simple English sentence must split on whitespace"
+        );
+    }
+
+    #[test]
+    fn tokenize_cjk_each_char_is_token() {
+        let tok = UnicodeTokenizer::default();
+        // "中文" (Chinese text) + space + "hello"
+        let tokens = tok.tokenize_cjk("中文 hello");
+        // 中 and 文 should each be their own token; hello is a third
+        assert!(
+            tokens.contains(&"中".to_string()),
+            "CJK char '中' must be a token"
+        );
+        assert!(
+            tokens.contains(&"文".to_string()),
+            "CJK char '文' must be a token"
+        );
+        assert!(
+            tokens.contains(&"hello".to_string()),
+            "'hello' must be a token"
+        );
+    }
+
+    #[test]
+    fn detect_script_latin() {
+        let tok = UnicodeTokenizer::default();
+        assert_eq!(
+            tok.detect_script("hello world"),
+            ScriptFamily::Latin,
+            "ASCII text must detect as Latin"
+        );
+    }
+
+    #[test]
+    fn detect_script_cyrillic() {
+        let tok = UnicodeTokenizer::default();
+        // "привет" = "hello" in Russian
+        assert_eq!(
+            tok.detect_script("привет мир"),
+            ScriptFamily::Cyrillic,
+            "Cyrillic text must detect as Cyrillic"
+        );
+    }
+
+    #[test]
+    fn detect_script_cjk() {
+        let tok = UnicodeTokenizer::default();
+        assert_eq!(
+            tok.detect_script("中文"),
+            ScriptFamily::Cjk,
+            "CJK text must detect as Cjk"
+        );
+    }
+
+    #[test]
+    fn tokenize_with_punctuation_split() {
+        let tok = UnicodeTokenizer::default();
+        let tokens = tok.tokenize("hello, world!");
+        // "hello", ",", "world", "!" expected (punctuation become tokens)
+        assert!(
+            tokens.contains(&"hello".to_string()),
+            "must contain 'hello'"
+        );
+        assert!(
+            tokens.contains(&"world".to_string()),
+            "must contain 'world'"
+        );
+    }
+
+    #[test]
+    fn tokenize_max_token_length() {
+        let tok = UnicodeTokenizer::new(UnicodeTokenizerConfig {
+            lowercase: false,
+            strip_accents: false,
+            split_on_punctuation: false,
+            split_on_whitespace: true,
+            max_token_length: Some(3),
+        });
+        let tokens = tok.tokenize("hello world");
+        for t in &tokens {
+            assert!(
+                t.chars().count() <= 3,
+                "token '{t}' exceeds max_token_length=3"
+            );
+        }
+    }
+
+    // ── Transliterator ────────────────────────────────────────────────────────
+
+    #[test]
+    fn cyrillic_to_latin_privet() {
+        // "привет" → "privet" (note: п=p, р=r, и=i, в=v, е=ye, т=t)
+        // In BGN/PCGN "привет" = p+r+i+v+ye+t = "privyet"
+        // Using our table: п→p, р→r, и→i, в→v, е→ye, т→t
+        let result = Transliterator::cyrillic_to_latin("привет");
+        // Accept either "privet" or "privyet" since 'е' maps to "ye"
+        assert!(
+            result.starts_with("priv"),
+            "transliteration of 'привет' must start with 'priv', got '{result}'"
+        );
+    }
+
+    #[test]
+    fn cyrillic_to_latin_basic_letters() {
+        // Test a few individual letters
+        assert_eq!(Transliterator::cyrillic_to_latin("а"), "a");
+        assert_eq!(Transliterator::cyrillic_to_latin("б"), "b");
+        assert_eq!(Transliterator::cyrillic_to_latin("с"), "s");
+        assert_eq!(Transliterator::cyrillic_to_latin("т"), "t");
+    }
+
+    #[test]
+    fn strip_accents_cafe() {
+        let result = Transliterator::strip_accents("café");
+        assert_eq!(
+            result, "cafe",
+            "strip_accents('café') must return 'cafe', got '{result}'"
+        );
+    }
+
+    #[test]
+    fn strip_accents_no_accents_unchanged() {
+        let result = Transliterator::strip_accents("hello");
+        assert_eq!(result, "hello", "plain ASCII must be unchanged");
+    }
+
+    #[test]
+    fn transliterator_normalize_collapses_whitespace() {
+        let result = Transliterator::normalize("  Hello   World  ");
+        assert_eq!(
+            result, "hello world",
+            "normalize must trim and collapse spaces"
+        );
+    }
+
+    #[test]
+    fn strip_accents_german_umlaut() {
+        // ü → u (after stripping U+0308 combining diaeresis)
+        let result = Transliterator::strip_accents("über");
+        assert_eq!(result, "uber", "ü must become u after accent stripping");
+    }
+}

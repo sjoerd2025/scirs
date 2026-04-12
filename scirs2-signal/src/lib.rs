@@ -37,7 +37,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-signal = "0.4.1"
+//! scirs2-signal = "0.4.2"
 //! ```
 //!
 //! ```rust
@@ -49,7 +49,7 @@
 //! let filtered = convolve(&signal, &kernel, "same").expect("operation should succeed");
 //! ```
 //!
-//! ## 🔒 Version: 0.4.1 (March 27, 2026)
+//! ## 🔒 Version: 0.4.2 (March 27, 2026)
 
 // Core error handling - ESSENTIAL
 pub mod error;
@@ -180,8 +180,16 @@ pub mod dl_denoising;
 pub mod echo_cancellation;
 // GPU-accelerated signal processing
 pub mod gpu;
+// GPU-accelerated spectrogram computation
+pub mod gpu_spectrograms;
+// GPU-accelerated matched filter bank
+pub mod gpu_matched_filter;
 // Operational modal analysis
 pub mod modal_analysis;
+// Batched Welch PSD for parallel multi-channel processing
+pub mod welch_batch;
+// Enhanced FDD (EFDD) with damping estimation
+pub mod oma_efdd;
 // Neural audio processing
 pub mod neural_audio;
 // Phase estimation (ESPRIT, MUSIC)
@@ -363,6 +371,12 @@ pub use resampling::{
     lagrange_delay_filter, resample, resample_poly, resample_to_length, sinc_delay_filter,
     upsample, ResamplingConfig, ResamplingQuality, WindowType as ResamplingWindowType,
 };
+
+// Re-export batched Welch PSD
+pub use welch_batch::{BatchedWelch, WelchConfig, WelchResult, WelchWindow};
+
+// Re-export EFDD
+pub use oma_efdd::{efdd, EfddConfig, EfddMode, EfddResult};
 
 #[cfg(test)]
 mod tests {

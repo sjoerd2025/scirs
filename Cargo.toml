@@ -65,14 +65,14 @@ android_min_api = 21
 supported_architectures = ["aarch64", "armv7"]
 
 [workspace.package]
-version = "0.4.1"  # scirs2 0.4.1
+version = "0.4.2"  # scirs2 0.4.2
 edition = "2021"
 authors = ["COOLJAPAN OU (Team KitaSan)"]
 description = "A Rust port of SciPy with AI/ML extensions - Scientific Computing and AI Library"
 license = "Apache-2.0"
 repository = "https://github.com/cool-japan/scirs"
 keywords = ["scientific", "mathematics", "scipy", "ai", "machine-learning"]
-categories = ["science", "mathematics", "algorithms", "machine-learning"]
+categories = ["science", "mathematics", "algorithms"]
 
 [workspace.dependencies]
 # Core array computing (no_std support via default-features = false)
@@ -121,9 +121,9 @@ chrono = "0.4.44"
 # Python bindings (optional)
 # NOTE: default-features = false to avoid auto-initialize which breaks manylinux builds
 # extension-module should be enabled only in actual Python extension module crates
-pyo3 = { version = "0.28.2", default-features = false, features = ["macros"] }
+pyo3 = { version = "0.28.3", default-features = false, features = ["macros"] }
 numpy = { version = "0.28.0" }  # Keep for non-SciRS2 compatibility
-scirs2-numpy = { version = "0.4.1", path = "./scirs2-numpy" }  # SciRS2 fork with ndarray 0.17
+scirs2-numpy = { version = "0.4.2", path = "./scirs2-numpy" }  # SciRS2 fork with ndarray 0.17
 
 # Linear algebra and math (heavy dependencies - minimize features)
 nalgebra = { version = "0.34.1", default-features = false }
@@ -132,7 +132,7 @@ argmin = { version = "0.11.0", default-features = false }
 sprs = { version = "0.11.4", default-features = false }
 
 # OxiFFT - Pure Rust high-performance FFT (FFTW-compatible algorithms)
-oxifft = { version = "0.1.3" }
+oxifft = { version = "0.1.4" }
 
 # OxiBLAS - Pure Rust BLAS/LAPACK implementation (replaces OpenBLAS)
 # Using crates.io 0.2 series for stable releases
@@ -163,7 +163,7 @@ libc = "0.2.183"
 cached = "0.59.0"
 byteorder = "1.5"
 rmp-serde = "1.3"
-sha2 = "0.10"
+sha2 = "0.11"
 crc32fast = "1.5"
 hex = "0.4"
 digest = "0.11"
@@ -285,7 +285,7 @@ rusqlite = { version = "=0.37.0" }
 
 # Real-time streaming
 tokio-tungstenite = { version = "0.29" }
-rumqttc = { version = "0.25" }
+rumqttc = { package = "rumqttc-v4-next", version = "0.29", default-features = false, features = ["use-rustls-ring"] }
 eventsource-client = { version = "0.17" }
 tonic = { version = "0.14" }
 # prost removed - not used in any crate
@@ -329,9 +329,15 @@ opentelemetry-otlp = { version = "0.31.1", features = ["grpc-tonic", "metrics", 
 # perf-event for Linux performance counters
 perf-event = { version = "0.4.9" }
 
+# Tracy profiler bindings (C dep, feature-gated, disabled by default)
+tracy-client = { version = "0.18", default-features = false, features = ["timer-fallback"] }
+
+# libnuma bindings for Linux NUMA operations (C dep, feature-gated, Linux only)
+libnuma = { version = "0.0.4" }
+
 # GUI libraries
-egui = { version = "0.33" }
-eframe = { version = "0.33" }
+egui = { version = "0.34" }
+eframe = { version = "0.34" }
 
 # Async Python support (successor to pyo3-asyncio)
 pyo3-async-runtimes = { version = "0.28.0", default-features = false, features = ["tokio-runtime"] }
@@ -339,37 +345,37 @@ pyo3-async-runtimes = { version = "0.28.0", default-features = false, features =
 # Python integration (optional)
 
 # Base scirs2 crates
-scirs2-core = { version = "0.4.1", path = "./scirs2-core", default-features = false }
-scirs2 = { version = "0.4.1", path = "./scirs2", default-features = false }
-scirs2-linalg = { version = "0.4.1", path = "./scirs2-linalg", default-features = false }
-scirs2-integrate = { version = "0.4.1", path = "./scirs2-integrate", default-features = false }
-scirs2-interpolate = { version = "0.4.1", path = "./scirs2-interpolate", default-features = false }
-scirs2-optimize = { version = "0.4.1", path = "./scirs2-optimize", default-features = false }
-scirs2-fft = { version = "0.4.1", path = "./scirs2-fft", default-features = false }
-scirs2-stats = { version = "0.4.1", path = "./scirs2-stats", default-features = false }
-scirs2-special = { version = "0.4.1", path = "./scirs2-special", default-features = false }
-scirs2-signal = { version = "0.4.1", path = "./scirs2-signal", default-features = false }
-scirs2-sparse = { version = "0.4.1", path = "./scirs2-sparse" }
-scirs2-spatial = { version = "0.4.1", path = "./scirs2-spatial" }
+scirs2-core = { version = "0.4.2", path = "./scirs2-core", default-features = false }
+scirs2 = { version = "0.4.2", path = "./scirs2", default-features = false }
+scirs2-linalg = { version = "0.4.2", path = "./scirs2-linalg", default-features = false }
+scirs2-integrate = { version = "0.4.2", path = "./scirs2-integrate", default-features = false }
+scirs2-interpolate = { version = "0.4.2", path = "./scirs2-interpolate", default-features = false }
+scirs2-optimize = { version = "0.4.2", path = "./scirs2-optimize", default-features = false }
+scirs2-fft = { version = "0.4.2", path = "./scirs2-fft", default-features = false }
+scirs2-stats = { version = "0.4.2", path = "./scirs2-stats", default-features = false }
+scirs2-special = { version = "0.4.2", path = "./scirs2-special", default-features = false }
+scirs2-signal = { version = "0.4.2", path = "./scirs2-signal", default-features = false }
+scirs2-sparse = { version = "0.4.2", path = "./scirs2-sparse" }
+scirs2-spatial = { version = "0.4.2", path = "./scirs2-spatial" }
 
 # Advanced modules
-scirs2-cluster = { version = "0.4.1", path = "./scirs2-cluster" }
-scirs2-ndimage = { version = "0.4.1", path = "./scirs2-ndimage" }
-scirs2-io = { version = "0.4.1", path = "./scirs2-io" }
-scirs2-datasets = { version = "0.4.1", path = "./scirs2-datasets", default-features = false }
+scirs2-cluster = { version = "0.4.2", path = "./scirs2-cluster" }
+scirs2-ndimage = { version = "0.4.2", path = "./scirs2-ndimage" }
+scirs2-io = { version = "0.4.2", path = "./scirs2-io" }
+scirs2-datasets = { version = "0.4.2", path = "./scirs2-datasets", default-features = false }
 
 # AI/ML modules
-scirs2-neural = { version = "0.4.1", path = "./scirs2-neural" }
+scirs2-neural = { version = "0.4.2", path = "./scirs2-neural" }
 # scirs2-optim moved to independent OptiRS project
-scirs2-graph = { version = "0.4.1", path = "./scirs2-graph" }
-scirs2-transform = { version = "0.4.1", path = "./scirs2-transform" }
-scirs2-metrics = { version = "0.4.1", path = "./scirs2-metrics", default-features = false }
-scirs2-text = { version = "0.4.1", path = "./scirs2-text" }
-scirs2-vision = { version = "0.4.1", path = "./scirs2-vision" }
-scirs2-series = { version = "0.4.1", path = "./scirs2-series" }
-scirs2-autograd = { version = "0.4.1", path = "./scirs2-autograd" }
-scirs2-wasm = { version = "0.4.1", path = "./scirs2-wasm" }  # WebAssembly bindings
-scirs2-python = { version = "0.4.1", path = "./scirs2-python" }  # Python bindings
+scirs2-graph = { version = "0.4.2", path = "./scirs2-graph" }
+scirs2-transform = { version = "0.4.2", path = "./scirs2-transform" }
+scirs2-metrics = { version = "0.4.2", path = "./scirs2-metrics", default-features = false }
+scirs2-text = { version = "0.4.2", path = "./scirs2-text" }
+scirs2-vision = { version = "0.4.2", path = "./scirs2-vision" }
+scirs2-series = { version = "0.4.2", path = "./scirs2-series" }
+scirs2-autograd = { version = "0.4.2", path = "./scirs2-autograd" }
+scirs2-wasm = { version = "0.4.2", path = "./scirs2-wasm" }  # WebAssembly bindings
+scirs2-python = { version = "0.4.2", path = "./scirs2-python" }  # Python bindings
 
 
 [profile.release]

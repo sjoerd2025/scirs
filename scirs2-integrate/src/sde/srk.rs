@@ -83,7 +83,10 @@ pub struct SRKSolver {
 impl SRKSolver {
     /// Create a new solver with the given variant and default options.
     pub fn new(variant: SRKVariant) -> Self {
-        Self { variant, opts: SdeOptions::default() }
+        Self {
+            variant,
+            opts: SdeOptions::default(),
+        }
     }
 
     /// Create a solver with custom options.
@@ -204,8 +207,14 @@ where
     let mut t = t0;
 
     for step in 0..n_steps {
-        let h = if step == n_steps - 1 { t1 - t } else { dt.min(t1 - t) };
-        if h <= 0.0 { break; }
+        let h = if step == n_steps - 1 {
+            t1 - t
+        } else {
+            dt.min(t1 - t)
+        };
+        if h <= 0.0 {
+            break;
+        }
         let sqrt_h = h.sqrt();
 
         // Generate ΔW ~ N(0, h·I_m) and ΔV ~ N(0, h·I_m) independent
@@ -232,7 +241,7 @@ where
         let diff_term = g0.dot(&dw);
 
         // Milstein + higher-order stochastic correction per Brownian component j:
-        //   For each j: 
+        //   For each j:
         //   milstein_j = ½ (g1_j - g0_j) / sqrt_h * ((ΔW_j)^2/h - h) / 2
         //   iito_j = ¼ (g1_j + g0_j) / sqrt_h * (ΔW_j * h - ΔZ_j) / sqrt_h
         // where ΔZ_j ≈ h/2 * (ΔW_j + ΔV_j/√3)  (Rößler approximation)
@@ -254,8 +263,8 @@ where
                 let g_diff = g1_ij - g0_ij;
                 let g_sum = g1_ij + g0_ij;
 
-                stoch_correction[i] += 0.5 * g_diff / sqrt_h * milstein_factor
-                    + 0.25 * g_sum / sqrt_h * ito_factor;
+                stoch_correction[i] +=
+                    0.5 * g_diff / sqrt_h * milstein_factor + 0.25 * g_sum / sqrt_h * ito_factor;
             }
         }
 
@@ -377,8 +386,14 @@ where
     let mut t = t0;
 
     for step in 0..n_steps {
-        let h = if step == n_steps - 1 { t1 - t } else { dt.min(t1 - t) };
-        if h <= 0.0 { break; }
+        let h = if step == n_steps - 1 {
+            t1 - t
+        } else {
+            dt.min(t1 - t)
+        };
+        if h <= 0.0 {
+            break;
+        }
         let sqrt_h = h.sqrt();
 
         // Brownian increments ΔW_j ~ N(0, h)
@@ -549,8 +564,14 @@ where
     let b3 = 2.0_f64 / 9.0;
 
     for step in 0..n_steps {
-        let h = if step == n_steps - 1 { t1 - t } else { dt.min(t1 - t) };
-        if h <= 0.0 { break; }
+        let h = if step == n_steps - 1 {
+            t1 - t
+        } else {
+            dt.min(t1 - t)
+        };
+        if h <= 0.0 {
+            break;
+        }
         let sqrt_h = h.sqrt();
 
         // ΔW ~ N(0, h·I_m), ΔV ~ N(0, h·I_m) independent
@@ -637,13 +658,17 @@ fn validate_dimensions(
     if f.len() != n_state {
         return Err(IntegrateError::DimensionMismatch(format!(
             "Drift output dimension {} != state dimension {}",
-            f.len(), n_state
+            f.len(),
+            n_state
         )));
     }
     if g.nrows() != n_state || g.ncols() != m {
         return Err(IntegrateError::DimensionMismatch(format!(
             "Diffusion matrix shape ({},{}) != expected ({},{})",
-            g.nrows(), g.ncols(), n_state, m
+            g.nrows(),
+            g.ncols(),
+            n_state,
+            m
         )));
     }
     Ok(())
@@ -660,7 +685,12 @@ mod tests {
     use scirs2_core::ndarray::{array, Array2};
     use scirs2_core::random::prelude::seeded_rng;
 
-    fn make_gbm(mu: f64, sigma: f64, s0: f64, t1: f64) -> SdeProblem<
+    fn make_gbm(
+        mu: f64,
+        sigma: f64,
+        s0: f64,
+        t1: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {
@@ -677,7 +707,13 @@ mod tests {
         )
     }
 
-    fn make_ou_additive(theta: f64, mu_ou: f64, sigma: f64, x0: f64, t1: f64) -> SdeProblem<
+    fn make_ou_additive(
+        theta: f64,
+        mu_ou: f64,
+        sigma: f64,
+        x0: f64,
+        t1: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {
@@ -686,7 +722,11 @@ mod tests {
             [0.0, t1],
             1,
             move |_t, x| array![theta * (mu_ou - x[0])],
-            move |_t, _x| { let mut g = Array2::zeros((1, 1)); g[[0, 0]] = sigma; g },
+            move |_t, _x| {
+                let mut g = Array2::zeros((1, 1));
+                g[[0, 0]] = sigma;
+                g
+            },
         )
     }
 
@@ -706,7 +746,11 @@ mod tests {
         let mut rng = seeded_rng(42);
         let sol = platen15(&prob, 0.01, &mut rng).expect("platen15 should succeed");
         for xi in &sol.x {
-            assert!(xi[0] > 0.0, "Platen15 GBM should stay positive, got {}", xi[0]);
+            assert!(
+                xi[0] > 0.0,
+                "Platen15 GBM should stay positive, got {}",
+                xi[0]
+            );
         }
     }
 
@@ -733,7 +777,9 @@ mod tests {
         assert!(
             rel_err < 0.05,
             "Platen15 GBM mean {:.4} vs analytic {:.4}, rel_err {:.4}",
-            mean, analytic, rel_err
+            mean,
+            analytic,
+            rel_err
         );
     }
 
@@ -767,7 +813,9 @@ mod tests {
         assert!(
             rel_err < 0.05,
             "SRI2 GBM mean {:.4} vs analytic {:.4}, rel_err {:.4}",
-            mean, analytic, rel_err
+            mean,
+            analytic,
+            rel_err
         );
     }
 
@@ -803,7 +851,9 @@ mod tests {
         assert!(
             abs_err < 0.15,
             "SRA3 OU mean {:.4} vs analytic {:.4}, abs_err {:.4}",
-            mean, analytic, abs_err
+            mean,
+            analytic,
+            abs_err
         );
     }
 
@@ -813,8 +863,15 @@ mod tests {
         for variant in [SRKVariant::Platen15, SRKVariant::SRI2, SRKVariant::SRA3] {
             let solver = SRKSolver::new(variant);
             let mut rng = seeded_rng(0);
-            let sol = solver.solve(&prob, 0.1, &mut rng).expect("solver.solve should succeed");
-            assert_eq!(sol.len(), 11, "Variant {:?} should produce 11 steps", variant);
+            let sol = solver
+                .solve(&prob, 0.1, &mut rng)
+                .expect("solver.solve should succeed");
+            assert_eq!(
+                sol.len(),
+                11,
+                "Variant {:?} should produce 11 steps",
+                variant
+            );
         }
     }
 
@@ -843,9 +900,13 @@ mod tests {
     #[test]
     fn test_save_only_last() {
         let prob = make_gbm(0.05, 0.2, 1.0, 1.0);
-        let opts = SdeOptions { save_all_steps: false, ..Default::default() };
+        let opts = SdeOptions {
+            save_all_steps: false,
+            ..Default::default()
+        };
         let mut rng = seeded_rng(0);
-        let sol = platen15_with_options(&prob, 0.01, &mut rng, &opts).expect("platen15_with_options should succeed");
+        let sol = platen15_with_options(&prob, 0.01, &mut rng, &opts)
+            .expect("platen15_with_options should succeed");
         assert_eq!(sol.len(), 2, "Should have only initial + final states");
     }
 

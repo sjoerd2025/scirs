@@ -107,10 +107,10 @@
 - [ ] GPU overlap-save convolution for real-time filtering
 
 ### Streaming FFT for Large Data
-- [ ] Streaming FFT processor with configurable buffer and overlap
-- [ ] Out-of-core 2D FFT for images too large for RAM
-- [ ] Streaming spectrogram with rolling window output
-- [ ] Ring-buffer STFT for online/real-time applications
+- [x] Streaming FFT processor with configurable buffer and overlap — Implemented in v0.4.2 (`streaming.rs` `StreamingFft`, overlap-add/overlap-save, Hann/Hamming/Blackman/Rectangular windows)
+- [x] Out-of-core 2D FFT for images too large for RAM — Implemented in v0.4.2 (`outofcore.rs` `OutOfCoreFft2D`, row/column decomposition, disk-based transpose via `tempfile`)
+- [x] Streaming spectrogram with rolling window output — Implemented in v0.4.2 (`ring_buffer_stft.rs` `StreamingSpectrogram`)
+- [x] Ring-buffer STFT for online/real-time applications — Implemented in v0.4.2 (`ring_buffer_stft.rs` `RingBufferStft` with overlap-add reconstruction)
 
 ### Quantum FFT
 - [x] Quantum Fourier Transform circuit simulation (via `scirs2-core` quantum primitives) — Implemented in v0.4.0 (`quantum/qft.rs`)
@@ -127,8 +127,8 @@
 ### Performance
 - [ ] AVX-512 butterfly kernels for radix-4 and radix-8 FFT stages
 - [ ] NEON/SVE butterfly kernels for ARM
-- [ ] Cache-oblivious recursive FFT (Frigo-Johnson style)
-- [ ] FFT plan serialization for ahead-of-time compilation
+- [x] Cache-oblivious recursive FFT (Frigo-Johnson style) — Implemented in v0.4.0 (`cache_oblivious.rs`); real-input variant `cache_oblivious_rfft` added in v0.4.2
+- [x] FFT plan serialization for ahead-of-time compilation — Implemented in v0.4.0 (`fft_plan.rs`, `plan_serialization.rs`)
 
 ---
 

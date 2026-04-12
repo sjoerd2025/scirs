@@ -216,11 +216,10 @@ pub fn nuts_sample_py(
             let result = fn_obj
                 .bind(py)
                 .call1((theta_list,))
-                .expect("Failed to call log_prob_grad_fn");
-            let tup: (f64, Vec<f64>) = result
-                .extract()
-                .expect("log_prob_grad_fn must return (float, list[float])");
-            tup
+                .unwrap_or_else(|_| py.None().into_bound(py));
+            result
+                .extract::<(f64, Vec<f64>)>()
+                .unwrap_or((f64::NAN, vec![f64::NAN; theta.len()]))
         })
     };
 

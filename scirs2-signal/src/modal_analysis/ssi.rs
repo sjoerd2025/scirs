@@ -103,9 +103,9 @@ fn truncated_svd_sym(m: &Array2<f64>, rank: usize, n_iter: usize) -> (Array2<f64
         // Random start for diversity
         let mut v: Array1<f64> = Array1::from_iter((0..n).map(|i| {
             // Deterministic pseudo-random start using index (wrapping to avoid overflow)
-            let seed = i
-                .wrapping_mul(6364136223846793005_usize)
-                .wrapping_add(1442695040888963407_usize);
+            let seed = (i as u64)
+                .wrapping_mul(6364136223846793005_u64)
+                .wrapping_add(1442695040888963407_u64);
             let f = (seed >> 33) as f64 / ((u64::MAX >> 33) as f64);
             f - 0.5
         }));

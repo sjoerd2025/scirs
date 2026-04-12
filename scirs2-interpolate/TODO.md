@@ -63,16 +63,16 @@
 ## v0.4.0 Roadmap
 
 ### GPU-Accelerated Scattered Data
-- [ ] GPU-accelerated RBF solve: CUDA kernel for dense system assembly and direct solve
-- [ ] GPU batch evaluation: thousands of query points in parallel for RBF and Kriging
+- [x] GPU-accelerated RBF solve: CPU-simulated GPU dispatch for dense system assembly and direct solve — Implemented in v0.4.2 (`gpu_rbf.rs`)
+- [x] GPU batch evaluation: block-chunked parallel evaluation for RBF — Implemented in v0.4.2 (`gpu_rbf.rs`)
 - [ ] GPU-accelerated k-d tree queries for large scattered datasets
 
 ### Machine Learning Enhanced Interpolation
-- [ ] Physics-Informed interpolation: enforce PDE residuals as constraints
+- [x] Physics-Informed interpolation: enforce PDE residuals as constraints — Implemented in v0.4.2 (`physics_interp.rs`)
 - [ ] Neural-network-enhanced interpolation: learned correction terms on top of RBF
 - [ ] Gaussian Process surrogate with automatic kernel structure discovery
-- [ ] Deep Kriging: deep neural feature maps combined with Kriging
-- [ ] Active learning for adaptive sampling: minimize interpolation error with fewest evaluations
+- [x] Deep Kriging: deep neural feature maps combined with Kriging — Implemented in v0.4.2 (`deep_kriging/mlp_kriging.rs`)
+- [x] Active learning for adaptive sampling: minimize interpolation error with fewest evaluations — Implemented in v0.4.2 (`active_learning.rs`)
 
 ### New Interpolation Methods
 - [x] Hermite-Birkhoff interpolation: arbitrary derivative data at arbitrary points — Implemented in v0.4.0

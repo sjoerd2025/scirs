@@ -8,8 +8,9 @@ use pyo3::types::{PyAny, PyDict};
 use scirs2_numpy::{PyArray1, PyArrayMethods};
 
 use super::types::{
-    PyBeta, PyBinomial, PyCauchy, PyChiSquare, PyExponential, PyF, PyGamma, PyGeometric, PyLaplace,
-    PyLogistic, PyLognormal, PyNormal, PyPareto, PyPoisson, PyStudentT, PyUniform, PyWeibull,
+    PyBernoulli, PyBeta, PyBinomial, PyCauchy, PyChiSquare, PyExponential, PyF, PyGamma,
+    PyGeometric, PyHypergeometric, PyLaplace, PyLogistic, PyLognormal, PyNegativeBinomial,
+    PyNormal, PyPareto, PyPoisson, PyStudentT, PyUniform, PyWeibull,
 };
 
 // Import functions from other modules for register_module
@@ -156,6 +157,9 @@ pub fn register_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLogistic>()?;
     m.add_class::<PyPareto>()?;
     m.add_class::<PyGeometric>()?;
+    m.add_class::<PyBernoulli>()?;
+    m.add_class::<PyNegativeBinomial>()?;
+    m.add_class::<PyHypergeometric>()?;
     m.add_function(wrap_pyfunction!(pearsonr_py, m)?)?;
     m.add_function(wrap_pyfunction!(spearmanr_py, m)?)?;
     m.add_function(wrap_pyfunction!(kendalltau_py, m)?)?;

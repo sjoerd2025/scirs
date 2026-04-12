@@ -123,20 +123,20 @@
 ### Foundation Model Interface
 - [x] Fine-tuning interface for pre-trained time series foundation models (TimeGPT-style) — Implemented in v0.4.0 (`foundation/fine_tuning.rs`)
 - [x] Zero-shot forecasting adapter layer — Implemented in v0.4.0 (`foundation/zero_shot.rs`)
-- [ ] Prompt-based time series conditioning API
+- [x] Prompt-based time series conditioning API — Implemented in v0.4.2 (`prompt_conditioning/mod.rs`: enum-based prompts, `PromptConditioner`, trend/seasonal/anomaly/level/noise/custom signals)
 
 ### Neural ODE for Time Series
 - [x] Latent ODE / ODE-RNN for irregular time series — Implemented in v0.4.0 (`neural_ode/latent_ode.rs`, `neural_ode/ode_rnn.rs`)
 - [x] Continuous normalizing flow models for density estimation — Implemented in v0.4.0 (`neural_ode/cnf.rs`, `neural_ode/ffjord.rs`)
-- [ ] Physics-informed neural time series models
+- [x] Physics-informed neural time series models — Implemented in v0.4.2 (`physics_ts/` module: `PhysicsInformedTs`, ODE/conservation/monotonicity/bounded-variation constraints)
 
 ### Ultra-Long Context Handling
 - [x] FlashAttention integration for TFT with very long lookback windows (10k+) — Implemented in v0.4.0 (`tft/flash_attention_tft.rs`)
 - [x] State-space sequence models (Mamba / S4) for linear-time long-range dependencies — Implemented in v0.4.0 (`ssm/s4.rs`, `ssm/mamba.rs`, `state_space/s4.rs`, `state_space/mamba.rs`)
-- [ ] Hierarchical attention with sparse patterns for ultra-long sequences
+- [x] Hierarchical attention with sparse patterns for ultra-long sequences — Implemented in v0.4.2 (`hierarchical_attention/mod.rs`: local-window O(N·W), pooled O((N/s)²), global-token O(G·N) levels)
 
 ### Advanced Causality — Note: PCMCI implemented in v0.4.0 Wave 1
-- [ ] PC algorithm for causal structure learning from time series
+- [x] PC algorithm for causal structure learning from time series — Implemented in v0.4.2 (`causality/pc.rs`: skeleton, v-structures, Meek rules; also `causality/pc_stable.rs` for time-series variant)
 - [x] PCMCI algorithm (Peter and Clark Momentary Conditional Independence) — Implemented in v0.4.0
 - [x] Causal discovery with latent confounders (FCI for time series) — Implemented in v0.4.0 (`causality/fci.rs`)
 
@@ -146,9 +146,9 @@
 - [x] Nonparametric GARCH via GP volatility functions — Implemented in v0.4.0 (`volatility/gp_garch.rs`)
 
 ### Streaming Enhancements
-- [ ] RIVER integration bridge for additional online learners
+- [x] RIVER integration bridge for additional online learners — Implemented in v0.4.2 (`online_learner/mod.rs`: `OnlineLearner` trait, `OnlineLinearRegression`, `OnlineStandardScaler`, `Pipeline`, `OnlineHoeffdingTree`, `OnlineMetrics`)
 - [x] Incremental cointegration testing in streaming VAR — Implemented in v0.4.0 (`streaming/cointegration.rs`)
-- [ ] Online hierarchical reconciliation with incremental MinT
+- [x] Online hierarchical reconciliation with incremental MinT — Implemented in v0.4.2 (`hierarchical/online.rs`: incremental MinT/WLS/OLS with streaming covariance updates)
 
 ---
 

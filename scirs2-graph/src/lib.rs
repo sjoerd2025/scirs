@@ -30,7 +30,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! scirs2-graph = "0.4.1"
+//! scirs2-graph = "0.4.2"
 //! ```
 //!
 //! ```rust,no_run
@@ -43,7 +43,7 @@
 //! g.add_edge(0, 1, 1.0);
 //! ```
 //!
-//! ## 🔒 Version: 0.4.1
+//! ## 🔒 Version: 0.4.2
 //!
 //! ## API Stability and Versioning
 //!
@@ -86,6 +86,7 @@ pub mod numerical_accuracy_validation;
 pub mod parallel_algorithms;
 pub mod performance;
 pub mod spectral;
+pub mod spectral_graph;
 pub mod streaming;
 pub mod temporal;
 pub mod temporal_graph;

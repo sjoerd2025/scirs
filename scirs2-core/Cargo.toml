@@ -108,6 +108,9 @@ prometheus = { workspace = true, optional = true }  # Prometheus metrics
 
 # Memory profiling uses Pure Rust OS APIs (libc on Unix, windows-sys on Windows)
 
+# Tracy profiler integration (C dep, feature-gated — never in default or `all` features)
+tracy-client = { workspace = true, optional = true }
+
 # Testing and validation dependencies
 statrs = { workspace = true, optional = true }  # Statistical functions for validation
 quickcheck = { workspace = true, optional = true }  # Property-based testing
@@ -159,9 +162,10 @@ objc2-metal-performance-shaders-graph = { workspace = true, optional = true }  #
 cudarc = { workspace = true, optional = true }  # CUDA runtime
 
 
-# Linux-specific profiling dependencies
+# Linux-specific profiling and system dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
 perf-event = { workspace = true, optional = true }  # Linux perf integration
+libnuma = { workspace = true, optional = true }  # NUMA operations (C dep, Linux only, feature-gated)
 
 # Windows-specific dependencies
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -230,6 +234,8 @@ profiling_otlp = ["std", "profiling_opentelemetry", "opentelemetry-otlp"]  # OTL
 profiling_memory = ["std", "profiling", "libc"]  # Memory profiling with Pure Rust OS APIs (requires std)
 profiling_perf = ["std", "profiling", "perf-event"]  # Linux perf integration (platform-specific) (requires std)
 profiling_all = ["std", "profiling_advanced", "profiling_flame", "profiling_chrome", "profiling_opentelemetry", "profiling_prometheus", "profiling_otlp", "profiling_memory"]  # All profiling features (requires std)
+tracy = ["std", "dep:tracy-client", "tracy-client/enable"]  # Tracy profiler integration (C dep + enable flag, feature-gated, NOT in `all`) (requires std)
+libnuma = ["std", "dep:libnuma"]  # libnuma-backed NUMA operations (C dep, Linux only, feature-gated, NOT in `all`) (requires std)
 instrumentation = ["std", "profiling_advanced"]  # Instrumentation framework (requires std)
 random = ["std", "array"]  # Random number generation utilities with ndarray support (requires std)
 types = []  # Type conversion utilities (works in no_std)

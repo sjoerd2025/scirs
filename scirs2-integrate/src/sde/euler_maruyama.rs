@@ -122,8 +122,9 @@ where
     let mut sol = SdeSolution::with_capacity(capacity);
     sol.push(t0, prob.x0.clone());
 
-    let normal = Normal::new(0.0_f64, 1.0_f64)
-        .map_err(|e| IntegrateError::ComputationError(format!("Normal distribution error: {}", e)))?;
+    let normal = Normal::new(0.0_f64, 1.0_f64).map_err(|e| {
+        IntegrateError::ComputationError(format!("Normal distribution error: {}", e))
+    })?;
 
     let mut x = prob.x0.clone();
     let mut t = t0;
@@ -141,9 +142,7 @@ where
         let sqrt_dt = dt_actual.sqrt();
 
         // Generate m-dimensional Brownian increment ΔW ~ N(0, dt_actual * I_m)
-        let dw: Array1<f64> = Array1::from_shape_fn(m, |_| {
-            normal.sample(rng) * sqrt_dt
-        });
+        let dw: Array1<f64> = Array1::from_shape_fn(m, |_| normal.sample(rng) * sqrt_dt);
 
         // Evaluate drift f(t, x) and diffusion g(t, x)
         let drift = (prob.f_drift)(t, &x);
@@ -276,7 +275,11 @@ where
 
         // Two-point Rademacher increments: ±√dt each component
         let dw: Array1<f64> = Array1::from_shape_fn(m, |_| {
-            if rng.random::<bool>() { sqrt_dt } else { -sqrt_dt }
+            if rng.random::<bool>() {
+                sqrt_dt
+            } else {
+                -sqrt_dt
+            }
         });
 
         let drift = (prob.f_drift)(t, &x);
@@ -325,7 +328,11 @@ mod tests {
     use scirs2_core::ndarray::{array, Array2};
     use scirs2_core::random::prelude::{seeded_rng, SeedableRng};
 
-    fn make_gbm_prob(mu: f64, sigma: f64, x0: f64) -> SdeProblem<
+    fn make_gbm_prob(
+        mu: f64,
+        sigma: f64,
+        x0: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {
@@ -386,7 +393,8 @@ mod tests {
     fn test_weak_em_solution_length() {
         let prob = make_gbm_prob(0.05, 0.2, 1.0);
         let mut rng = seeded_rng(1);
-        let sol = weak_euler_maruyama(&prob, 0.1, &mut rng).expect("weak_euler_maruyama should succeed");
+        let sol =
+            weak_euler_maruyama(&prob, 0.1, &mut rng).expect("weak_euler_maruyama should succeed");
         assert_eq!(sol.len(), 11);
     }
 
@@ -426,7 +434,8 @@ mod tests {
             save_all_steps: false,
             ..Default::default()
         };
-        let sol = euler_maruyama_with_options(&prob, 0.01, &mut rng, &opts).expect("euler_maruyama_with_options should succeed");
+        let sol = euler_maruyama_with_options(&prob, 0.01, &mut rng, &opts)
+            .expect("euler_maruyama_with_options should succeed");
         // Should have initial + final = 2 entries
         assert_eq!(sol.len(), 2);
     }

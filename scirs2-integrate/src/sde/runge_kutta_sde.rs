@@ -344,7 +344,13 @@ mod tests {
     use scirs2_core::ndarray::{array, Array2};
     use scirs2_core::random::prelude::seeded_rng;
 
-    fn make_ou_prob(theta: f64, mu: f64, sigma: f64, x0: f64, t1: f64) -> SdeProblem<
+    fn make_ou_prob(
+        theta: f64,
+        mu: f64,
+        sigma: f64,
+        x0: f64,
+        t1: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {
@@ -361,7 +367,11 @@ mod tests {
         )
     }
 
-    fn make_gbm_prob(mu: f64, sigma: f64, s0: f64) -> SdeProblem<
+    fn make_gbm_prob(
+        mu: f64,
+        sigma: f64,
+        s0: f64,
+    ) -> SdeProblem<
         impl Fn(f64, &Array1<f64>) -> Array1<f64>,
         impl Fn(f64, &Array1<f64>) -> Array2<f64>,
     > {

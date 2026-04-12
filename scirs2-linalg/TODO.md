@@ -72,10 +72,10 @@
 ### Mixed-Precision Arithmetic
 - [x] f16/bf16 storage with f32 accumulation for matmul — Implemented in v0.4.0 (`mixed_precision/f16_gemm.rs`, `mixed_precision/gemm.rs`, `mixed_precision/operations.rs`)
 - [x] Iterative refinement with higher-precision residual correction — Implemented in v0.4.0
-- [ ] Automatically select precision based on condition number estimate
+- [x] Automatically select precision based on condition number estimate — implemented in v0.4.2 (`auto_precision.rs`)
 
 ### Structured Matrix Exploits
-- [ ] Hierarchical matrix (H-matrix) compression for dense-but-rank-structured matrices
+- [x] Hierarchical matrix (H-matrix) compression for dense-but-rank-structured matrices — Implemented in v0.4.2 (`hmatrix.rs`: ACA, matvec, SVD recompression, Frobenius norm)
 - [x] H^2-matrix arithmetic (O(n log n) matrix-vector products) — Implemented in v0.4.0 (`hmatrix_h2.rs`)
 - [x] Sequentially semi-separable (SSS) matrix operations — Implemented in v0.4.0 (`sss_matrix.rs`)
 
@@ -86,8 +86,8 @@
 
 ### GPU Acceleration
 - [x] GPU-accelerated GEMM via OxiBLAS GPU backend — Implemented in v0.4.0 (`gpu_gemm/` module)
-- [ ] GPU eigensolvers (cuSOLVER-equivalent in pure Rust)
-- [ ] Mixed CPU/GPU solver: factor on GPU, refine on CPU
+- [x] GPU eigensolvers (cuSOLVER-equivalent in pure Rust) — implemented in v0.4.2 (`gpu_eigen.rs`)
+- [x] Mixed CPU/GPU solver: factor on GPU, refine on CPU — implemented in v0.4.2 (`gpu_eigen.rs`)
 
 ### Additional Algorithms
 - [x] Rank-revealing QR (RRQR) with column pivoting — Implemented in v0.4.0

@@ -9,7 +9,7 @@
 use crate::error::OptimizeError;
 use crate::nas::random_nas::{ArchFitness, NASResult};
 use crate::nas::search_space::{Architecture, SearchSpace};
-use scirs2_core::random::{rngs::StdRng, Rng, SeedableRng};
+use scirs2_core::random::{rngs::StdRng, Rng, RngExt, SeedableRng};
 
 /// Configuration for the evolutionary NAS algorithm.
 #[derive(Debug, Clone)]

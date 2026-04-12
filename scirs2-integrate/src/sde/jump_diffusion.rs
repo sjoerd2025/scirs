@@ -101,10 +101,9 @@ pub fn merton_jump_diffusion(
     // Compensated drift
     let mu_comp = mu - lambda * k_bar;
 
-    let normal = Normal::new(0.0, 1.0)
-        .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
-    let uniform = Uniform::new(0.0_f64, 1.0_f64)
-        .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+    let normal = Normal::new(0.0, 1.0).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+    let uniform =
+        Uniform::new(0.0_f64, 1.0_f64).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
 
     let n_steps = ((t_span.1 - t_span.0) / dt).ceil() as usize;
     let mut path = Vec::with_capacity(n_steps + 1);
@@ -200,8 +199,8 @@ where
     validate_t_span(t_span)?;
 
     // Inter-arrival times: Exp(lambda)
-    let uniform = Uniform::new(0.0_f64, 1.0_f64)
-        .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+    let uniform =
+        Uniform::new(0.0_f64, 1.0_f64).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
 
     let mut path = Vec::new();
     path.push((t_span.0, 0.0));
@@ -267,22 +266,34 @@ pub fn kou_double_exponential(
     rng: &mut StdRng,
 ) -> IntegrateResult<Vec<(f64, f64)>> {
     if sigma <= 0.0 {
-        return Err(IntegrateError::InvalidInput(format!("sigma must be > 0, got {sigma}")));
+        return Err(IntegrateError::InvalidInput(format!(
+            "sigma must be > 0, got {sigma}"
+        )));
     }
     if lambda < 0.0 {
-        return Err(IntegrateError::InvalidInput(format!("lambda must be >= 0, got {lambda}")));
+        return Err(IntegrateError::InvalidInput(format!(
+            "lambda must be >= 0, got {lambda}"
+        )));
     }
     if !(0.0 < p && p < 1.0) {
-        return Err(IntegrateError::InvalidInput(format!("p must be in (0,1), got {p}")));
+        return Err(IntegrateError::InvalidInput(format!(
+            "p must be in (0,1), got {p}"
+        )));
     }
     if eta1 <= 1.0 {
-        return Err(IntegrateError::InvalidInput(format!("eta1 must be > 1, got {eta1}")));
+        return Err(IntegrateError::InvalidInput(format!(
+            "eta1 must be > 1, got {eta1}"
+        )));
     }
     if eta2 <= 0.0 {
-        return Err(IntegrateError::InvalidInput(format!("eta2 must be > 0, got {eta2}")));
+        return Err(IntegrateError::InvalidInput(format!(
+            "eta2 must be > 0, got {eta2}"
+        )));
     }
     if s0 <= 0.0 {
-        return Err(IntegrateError::InvalidInput(format!("s0 must be > 0, got {s0}")));
+        return Err(IntegrateError::InvalidInput(format!(
+            "s0 must be > 0, got {s0}"
+        )));
     }
     validate_t_span(t_span)?;
     validate_dt(dt)?;
@@ -292,10 +303,9 @@ pub fn kou_double_exponential(
     let k_bar = p * eta1 / (eta1 - 1.0) + (1.0 - p) * eta2 / (eta2 + 1.0) - 1.0;
     let mu_comp = mu - lambda * k_bar;
 
-    let normal = Normal::new(0.0, 1.0)
-        .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
-    let uniform = Uniform::new(0.0_f64, 1.0_f64)
-        .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+    let normal = Normal::new(0.0, 1.0).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+    let uniform =
+        Uniform::new(0.0_f64, 1.0_f64).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
 
     let n_steps = ((t_span.1 - t_span.0) / dt).ceil() as usize;
     let mut path = Vec::with_capacity(n_steps + 1);
@@ -399,8 +409,8 @@ where
     /// Returns a vector of `(t, X(t))` pairs.
     pub fn solve(&self, dt: f64, rng: &mut StdRng) -> IntegrateResult<Vec<(f64, f64)>> {
         validate_dt(dt)?;
-        let normal = Normal::new(0.0, 1.0)
-            .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
+        let normal =
+            Normal::new(0.0, 1.0).map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
         let uniform = Uniform::new(0.0_f64, 1.0_f64)
             .map_err(|e| IntegrateError::InvalidInput(e.to_string()))?;
 
@@ -462,7 +472,8 @@ fn poisson_sample(lambda: f64, rng: &mut StdRng, uniform: &Uniform<f64>) -> Inte
 fn validate_t_span(t_span: (f64, f64)) -> IntegrateResult<()> {
     if t_span.0 >= t_span.1 {
         Err(IntegrateError::InvalidInput(format!(
-            "t_span must satisfy t0 < t1, got {:?}", t_span
+            "t_span must satisfy t0 < t1, got {:?}",
+            t_span
         )))
     } else {
         Ok(())
@@ -487,50 +498,67 @@ mod tests {
     #[test]
     fn test_merton_positive_price() {
         let mut rng = seeded_rng(42);
-        let path = merton_jump_diffusion(
-            0.05, 0.2, 1.0, -0.1, 0.2, 100.0, (0.0, 1.0), 0.01, &mut rng,
-        ).expect("merton_jump_diffusion should succeed");
+        let path =
+            merton_jump_diffusion(0.05, 0.2, 1.0, -0.1, 0.2, 100.0, (0.0, 1.0), 0.01, &mut rng)
+                .expect("merton_jump_diffusion should succeed");
         assert!(!path.is_empty());
-        assert!(path.iter().all(|&(_, s)| s > 0.0), "Merton S must stay positive");
+        assert!(
+            path.iter().all(|&(_, s)| s > 0.0),
+            "Merton S must stay positive"
+        );
     }
 
     #[test]
     fn test_merton_no_jumps() {
         // When lambda = 0, Merton reduces to GBM
         let mut rng = seeded_rng(1);
-        let path = merton_jump_diffusion(
-            0.05, 0.2, 0.0, 0.0, 0.0, 100.0, (0.0, 1.0), 0.01, &mut rng,
-        ).expect("merton_jump_diffusion should succeed");
+        let path =
+            merton_jump_diffusion(0.05, 0.2, 0.0, 0.0, 0.0, 100.0, (0.0, 1.0), 0.01, &mut rng)
+                .expect("merton_jump_diffusion should succeed");
         assert!(path.iter().all(|&(_, s)| s > 0.0));
     }
 
     #[test]
     fn test_merton_invalid_sigma() {
         let mut rng = seeded_rng(0);
-        assert!(merton_jump_diffusion(0.05, -0.2, 1.0, 0.0, 0.1, 100.0, (0.0, 1.0), 0.01, &mut rng).is_err());
+        assert!(merton_jump_diffusion(
+            0.05,
+            -0.2,
+            1.0,
+            0.0,
+            0.1,
+            100.0,
+            (0.0, 1.0),
+            0.01,
+            &mut rng
+        )
+        .is_err());
     }
 
     #[test]
     fn test_merton_invalid_s0() {
         let mut rng = seeded_rng(0);
-        assert!(merton_jump_diffusion(0.05, 0.2, 1.0, 0.0, 0.1, -1.0, (0.0, 1.0), 0.01, &mut rng).is_err());
+        assert!(
+            merton_jump_diffusion(0.05, 0.2, 1.0, 0.0, 0.1, -1.0, (0.0, 1.0), 0.01, &mut rng)
+                .is_err()
+        );
     }
 
     #[test]
     fn test_compound_poisson_basic() {
         let mut rng = seeded_rng(7);
-        let normal = Normal::new(0.0_f64, 1.0).expect("Normal::new should succeed with valid params");
-        let path = compound_poisson_process(
-            2.0,
-            |r| normal.sample(r),
-            (0.0, 5.0),
-            &mut rng,
-        ).expect("compound_poisson_process should succeed");
+        let normal =
+            Normal::new(0.0_f64, 1.0).expect("Normal::new should succeed with valid params");
+        let path = compound_poisson_process(2.0, |r| normal.sample(r), (0.0, 5.0), &mut rng)
+            .expect("compound_poisson_process should succeed");
         // At minimum: (0.0, 0.0) and (5.0, x_final)
         assert!(path.len() >= 2);
         assert!((path[0].0).abs() < 1e-12, "starts at t0");
         assert!((path[0].1).abs() < 1e-12, "starts at 0");
-        assert!((path.last().expect("path is non-empty").0 - 5.0).abs() < 1e-12, "ends at t1");
+        assert!(
+            (path.last().expect("path is non-empty").0 - 5.0).abs() < 1e-12,
+            "ends at t1"
+        );
     }
 
     #[test]
@@ -547,7 +575,8 @@ mod tests {
                 |_r| 1.0, // unit jumps
                 (0.0, t_end),
                 &mut rng,
-            ).expect("compound_poisson_process should succeed");
+            )
+            .expect("compound_poisson_process should succeed");
             // subtract 2 for start/end points
             total_jumps += path.len().saturating_sub(2);
         }
@@ -570,24 +599,62 @@ mod tests {
     fn test_kou_positive_price() {
         let mut rng = seeded_rng(42);
         let path = kou_double_exponential(
-            0.05, 0.2, 1.0, 0.4, 5.0, 3.0, 100.0, (0.0, 1.0), 0.01, &mut rng,
-        ).expect("kou_double_exponential should succeed");
-        assert!(path.iter().all(|&(_, s)| s > 0.0), "Kou S must stay positive");
+            0.05,
+            0.2,
+            1.0,
+            0.4,
+            5.0,
+            3.0,
+            100.0,
+            (0.0, 1.0),
+            0.01,
+            &mut rng,
+        )
+        .expect("kou_double_exponential should succeed");
+        assert!(
+            path.iter().all(|&(_, s)| s > 0.0),
+            "Kou S must stay positive"
+        );
     }
 
     #[test]
     fn test_kou_invalid_params() {
         let mut rng = seeded_rng(0);
         // eta1 must be > 1
-        assert!(kou_double_exponential(0.05, 0.2, 1.0, 0.4, 0.5, 3.0, 100.0, (0.0, 1.0), 0.01, &mut rng).is_err());
+        assert!(kou_double_exponential(
+            0.05,
+            0.2,
+            1.0,
+            0.4,
+            0.5,
+            3.0,
+            100.0,
+            (0.0, 1.0),
+            0.01,
+            &mut rng
+        )
+        .is_err());
         // p must be in (0,1)
-        assert!(kou_double_exponential(0.05, 0.2, 1.0, 0.0, 5.0, 3.0, 100.0, (0.0, 1.0), 0.01, &mut rng).is_err());
+        assert!(kou_double_exponential(
+            0.05,
+            0.2,
+            1.0,
+            0.0,
+            5.0,
+            3.0,
+            100.0,
+            (0.0, 1.0),
+            0.01,
+            &mut rng
+        )
+        .is_err());
     }
 
     #[test]
     fn test_jump_diffusion_problem() {
         let mut rng = seeded_rng(99);
-        let normal = Normal::new(0.0_f64, 0.5).expect("Normal::new should succeed with valid params");
+        let normal =
+            Normal::new(0.0_f64, 0.5).expect("Normal::new should succeed with valid params");
         let prob = JumpDiffusionProblem::new(
             |x, _t| 0.05 * x,
             |x, _t| 0.2 * x,
@@ -595,8 +662,11 @@ mod tests {
             move |r| normal.sample(r),
             100.0,
             (0.0, 1.0),
-        ).expect("JumpDiffusionProblem::new should succeed");
-        let path = prob.solve(0.01, &mut rng).expect("prob.solve should succeed");
+        )
+        .expect("JumpDiffusionProblem::new should succeed");
+        let path = prob
+            .solve(0.01, &mut rng)
+            .expect("prob.solve should succeed");
         assert!(!path.is_empty());
         assert!((path[0].0 - 0.0).abs() < 1e-12);
         assert!((path[0].1 - 100.0).abs() < 1e-12);
@@ -604,7 +674,8 @@ mod tests {
 
     #[test]
     fn test_poisson_sample_zero_rate() {
-        let uniform = Uniform::new(0.0_f64, 1.0).expect("Uniform::new should succeed with valid range");
+        let uniform =
+            Uniform::new(0.0_f64, 1.0).expect("Uniform::new should succeed with valid range");
         let mut rng = seeded_rng(0);
         let n = poisson_sample(0.0, &mut rng, &uniform).expect("poisson_sample should succeed");
         assert_eq!(n, 0);

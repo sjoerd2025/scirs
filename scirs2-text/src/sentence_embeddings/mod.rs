@@ -2,16 +2,18 @@
 //!
 //! This module provides:
 //!
-//! - **[`SentenceEmbedder`]**: aggregates token-level embeddings into a
-//!   single sentence vector using several pooling strategies, mirroring the
-//!   Sentence-BERT family of models.
-//! - **[`SimCseTrainer`]**: computes the InfoNCE contrastive loss used by
-//!   the SimCSE self-supervised training procedure
-//!   (Gao et al., 2021 <https://arxiv.org/abs/2104.08821>).
+//! - **[`SentenceEmbedder`]**: aggregates token-level embeddings (token-ID
+//!   based, using `ndarray`) into a single sentence vector using several
+//!   pooling strategies, mirroring the Sentence-BERT family of models.
+//! - **[`SimCseTrainer`]** (legacy, ndarray-based): computes the InfoNCE
+//!   contrastive loss for pre-computed embeddings.
+//! - **[`encoder::SentenceEncoder`]**: word-level sentence encoder with a
+//!   `HashMap<String, Vec<f32>>` lookup table, suitable for use without
+//!   pre-tokenised token IDs.
+//! - **[`simcse::SimCSETrainer`]**: unsupervised SimCSE trainer with a full
+//!   training loop (noise augmentation + NT-Xent + gradient-free update).
 //!
-//! Neither component requires external neural-network infrastructure; they
-//! work with plain `ndarray` arrays and can be driven by any tokenizer that
-//! produces integer token IDs.
+//! Neither component requires external neural-network infrastructure.
 //!
 //! # Example
 //!
@@ -31,6 +33,16 @@
 //! let emb = embedder.embed_tokens(&token_ids);
 //! assert_eq!(emb.len(), 64);
 //! ```
+
+/// Word-level sentence encoder (USE-style, `HashMap` vocabulary).
+pub mod encoder;
+/// Unsupervised SimCSE trainer with noise augmentation and NT-Xent loss.
+pub mod simcse;
+
+pub use encoder::{
+    PoolingStrategy as SentenceEncoderPooling, SentenceEncoder, SentenceEncoderConfig,
+};
+pub use simcse::{SimCSELoss, SimCSETrainer};
 
 use std::fmt::Debug;
 

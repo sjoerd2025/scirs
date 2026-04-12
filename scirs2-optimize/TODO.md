@@ -88,6 +88,7 @@
 - [x] BOBYQA: quadratic model-based bound-constrained
 - [x] Pattern search: coordinate (compass) search, Hooke-Jeeves
 - [x] Mesh Adaptive Direct Search (MADS) framework
+- [x] CMA-ES (Covariance Matrix Adaptation Evolution Strategy) — `global/cmaes.rs` (v0.4.2, Wave 44)
 
 ### Proximal & Convex Methods
 - [x] ISTA (Iterative Soft-Thresholding Algorithm) and FISTA (accelerated)
@@ -171,15 +172,15 @@
 - [x] Classical simulation of small QAOA circuits for benchmarking — Implemented in v0.4.0 (`quantum_classical/statevector.rs`)
 
 ### Neural Architecture Search (NAS) Improvements
-- [ ] DARTS (Differentiable Architecture Search) implementation
-- [ ] GDAS and SNAS for efficient one-shot NAS
-- [ ] Predictor-based NAS (surrogate model over architecture space)
-- [ ] Hardware-aware NAS with latency constraints
+- [x] DARTS (Differentiable Architecture Search) implementation — darts/mod.rs
+- [x] GDAS and SNAS for efficient one-shot NAS — darts/gdas.rs, darts/snas.rs (v0.4.2)
+- [x] Predictor-based NAS (surrogate model over architecture space) — darts/predictor_nas.rs (v0.4.2)
+- [x] Hardware-aware NAS with latency constraints — hardware_nas/mod.rs
 
 ### High-Dimensional Optimization
 - [x] Coordinate descent with random and greedy selection rules — Implemented in v0.4.0 (`coordinate_descent/` module)
 - [x] Randomized Kaczmarz and block Kaczmarz for large linear systems — Implemented in v0.4.0 (`kaczmarz/` module)
-- [ ] Subspace embedding methods for dimensionality-reduced optimization
+- [x] Subspace embedding methods for dimensionality-reduced optimization — Implemented in v0.4.2 (`subspace_embedding.rs`)
 - [x] Sketched gradient descent for massive least-squares — Implemented in v0.4.0 (`sketched/` module)
 
 ### Advanced Integer Programming

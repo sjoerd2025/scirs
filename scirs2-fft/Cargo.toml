@@ -88,3 +88,47 @@ required-features = ["rustfft-backend"]
 [[example]]
 name = "memory_usage_benchmarking"
 required-features = ["rustfft-backend"]
+
+[[example]]
+name = "memory_efficient_fft"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "memory_profiling_example"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "adaptive_planning_example"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "advanced_fft"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "advanced_planning_strategies"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "auto_tuning_example"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "context_example"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "parallel_planning_simple"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "plan_optimization_example"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "strided_fft_example"
+required-features = ["rustfft-backend"]
+
+[[example]]
+name = "backend_example"
+required-features = ["rustfft-backend"]

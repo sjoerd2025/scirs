@@ -132,7 +132,7 @@ argmin = { version = "0.11.0", default-features = false }
 sprs = { version = "0.11.4", default-features = false }
 
 # OxiFFT - Pure Rust high-performance FFT (FFTW-compatible algorithms)
-oxifft = { version = "0.1.4" }
+oxifft = { version = "0.2.0" }
 
 # OxiBLAS - Pure Rust BLAS/LAPACK implementation (replaces OpenBLAS)
 # Using crates.io 0.2 series for stable releases

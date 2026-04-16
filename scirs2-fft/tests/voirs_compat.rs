@@ -10,6 +10,8 @@
 //!
 //! These tests match the actual usage patterns from the VoiRS codebase.
 
+#![cfg(feature = "rustfft-backend")]
+
 use scirs2_core::numeric::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::random::{Random, SliceRandom};

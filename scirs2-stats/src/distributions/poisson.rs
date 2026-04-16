@@ -93,13 +93,12 @@ impl<F: Float + NumCast + std::fmt::Display> Poisson<F> {
         // Convert k to integer value for factorial calculation
         let k_int = <u64 as NumCast>::from(k_std).expect("Operation failed");
 
-        // Calculate PMF using the formula:
-        // PMF = (mu^k * e^(-mu)) / k!
-        let mu_pow_k = self.mu.powf(k_std);
-        let exp_neg_mu = (-self.mu).exp();
-        let k_factorial = factorial(k_int);
-
-        mu_pow_k * exp_neg_mu / F::from(k_factorial).expect("Failed to convert to float")
+        // Calculate PMF in log-space to avoid integer factorial overflow:
+        // ln(PMF) = k*ln(mu) - mu - ln(k!)
+        // then exp() to recover PMF.
+        // This is numerically stable for all k, including k >= 21.
+        let k_f = F::from(k_int).expect("Failed to convert to float");
+        (k_f * self.mu.ln() - self.mu - ln_factorial::<F>(k_int)).exp()
     }
 
     /// Calculate the cumulative distribution function (CDF) at a given point
@@ -265,26 +264,19 @@ impl<F: Float + NumCast + std::fmt::Display> DiscreteDistribution<F> for Poisson
     }
 }
 
-/// Compute natural logarithm of factorial
-#[allow(dead_code)]
+/// Compute natural logarithm of factorial using a sum-of-logs loop.
+///
+/// This is exact (to f64 precision) for all n, unlike Stirling's approximation
+/// which has ~0.2% relative error near n=21 and cannot achieve 1e-6 tolerance.
 fn ln_factorial<F: Float + NumCast>(n: u64) -> F {
     if n <= 1 {
         return F::zero();
     }
-
-    // Use Stirling's approximation for large n
-    if n > 20 {
-        let n_f = F::from(n).expect("Failed to convert to float");
-        let pi = F::from(std::f64::consts::PI).expect("Failed to convert to float");
-        let e = F::from(std::f64::consts::E).expect("Failed to convert to float");
-
-        let half = F::from(0.5).expect("Failed to convert constant to float");
-        return half * (F::from(2.0).expect("Failed to convert constant to float") * pi * n_f).ln()
-            + n_f * (n_f / e).ln();
+    let mut result = F::zero();
+    for i in 2..=n {
+        result = result + F::from(i).expect("Failed to convert to float").ln();
     }
-
-    // Direct calculation for small n
-    F::from((factorial(n) as f64).ln()).expect("Operation failed")
+    result
 }
 
 /// Implementation of SampleableDistribution for Poisson
@@ -427,5 +419,46 @@ mod tests {
         assert!(!is_integer(1.1));
         assert!(!is_integer(0.5));
         assert!(!is_integer(-3.7));
+    }
+
+    /// Regression test for GitHub issue #122:
+    /// Poisson PMF returned wildly wrong (exponentially growing) values for k>=21
+    /// due to u64 integer factorial overflowing at 21! and returning u64::MAX.
+    /// Fix: PMF now computed entirely in log-space via ln_factorial (sum-of-logs).
+    #[test]
+    fn test_issue_122_poisson_pmf_large_k() {
+        let lambda = 10.0_f64;
+        let poisson = Poisson::new(lambda, 0.0).expect("Poisson::new failed");
+
+        // Reference values computed via math.exp(k*math.log(10) - 10 - math.lgamma(k+1))
+        // i.e. the same log-space formula now used by pmf().
+        // All values must be in [0, 1]; values > 1 were the reporter's symptom before the fix.
+        let cases: &[(f64, f64)] = &[
+            (20.0, 1.866_081_313_999_e-3),
+            (21.0, 8.886_101_495_232_e-4),
+            (22.0, 4.039_137_043_287_e-4),
+            (23.0, 1.756_146_540_560_e-4),
+            (24.0, 7.317_277_252_332_e-5),
+            (25.0, 2.926_910_900_933_e-5),
+        ];
+
+        for &(k, expected) in cases {
+            let got = poisson.pmf(k);
+            // A PMF value > 1.0 is mathematically impossible and was the
+            // observable symptom before the fix.
+            assert!(
+                got <= 1.0,
+                "pmf({k}) = {got} exceeds 1.0 (overflow artifact)"
+            );
+            assert!(
+                got >= 0.0,
+                "pmf({k}) = {got} is negative (should never happen)"
+            );
+            let rel_err = (got - expected).abs() / expected;
+            assert!(
+                rel_err < 1e-6,
+                "pmf({k}): got {got:.9e}, expected {expected:.9e}, rel_err={rel_err:.3e}"
+            );
+        }
     }
 }
